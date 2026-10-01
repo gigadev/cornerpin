@@ -15,6 +15,7 @@ stays switched off until a Google client id exists.
 | API | http://localhost:8000 |
 | API docs (try requests here) | http://localhost:8000/docs |
 | Postgres + PostGIS | `localhost:5434`, database `cornerpin` |
+| Uploaded photos and documents | the `var/storage` folder in the repo (gitignored) |
 
 ## Accounts for smoke testing (dev database)
 
@@ -78,8 +79,10 @@ with one on the dev site just creates a new buyer account with no portal.
 | `owner@other.cornerpin.test` | Owner of **Other Land Co.** (tenant `1aca3c52-936f-5fd9-8a5b-aa1b6e00ae2e`); used to prove one owner can't open another's portal |
 | `visitor+<project>-<time>@cornerpin.test` | Made up per run; a new buyer account |
 
+Its uploads go to `var/e2e-storage`, emptied at the start of each run.
+
 **pytest** (`uv run pytest`) uses another separate database, `cornerpin_test`, rebuilt on every
-run. It has two tenants, `alpha` and `bravo`, each with `owner@<tenant>.test` and
+run, and a temporary folder for uploads. It has two tenants, `alpha` and `bravo`, each with `owner@<tenant>.test` and
 `buyer@<tenant>.test`.
 
 ## Keys and settings that are test-only

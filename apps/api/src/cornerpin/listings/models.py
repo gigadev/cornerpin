@@ -8,7 +8,15 @@ from typing import Any, ClassVar
 from uuid import UUID
 
 from geoalchemy2 import Geometry, WKBElement
-from sqlalchemy import DateTime, ForeignKeyConstraint, Numeric, SmallInteger, Text, func
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    ForeignKeyConstraint,
+    Numeric,
+    SmallInteger,
+    Text,
+    func,
+)
 from sqlalchemy.dialects.postgresql import CITEXT, ENUM
 from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column
 from sqlalchemy.types import TypeEngine
@@ -33,6 +41,14 @@ class ListingType(StrEnum):
 class ReleaseStatus(StrEnum):
     UPCOMING = "upcoming"
     RELEASED = "released"
+
+
+class DocumentKind(StrEnum):
+    PLAT = "plat"
+    SURVEY = "survey"
+    COVENANTS = "covenants"
+    UTILITIES = "utilities"
+    OTHER = "other"
 
 
 def _values(enum: type[StrEnum]) -> list[str]:
@@ -147,3 +163,34 @@ class LotPriceChange(Base):
     changed_by: Mapped[UUID | None]
     changed_by_email: Mapped[str | None] = mapped_column(CITEXT)
     changed_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class LotPhoto(Base):
+    __tablename__ = "lot_media"
+    __table_args__ = (ForeignKeyConstraint(["lot_id", "tenant_id"], ["lots.id", "lots.tenant_id"]),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    lot_id: Mapped[UUID]
+    storage_key: Mapped[str] = mapped_column(Text)
+    content_type: Mapped[str] = mapped_column(Text)
+    caption: Mapped[str] = mapped_column(Text, server_default="")
+    sort_order: Mapped[int] = mapped_column(server_default="0")
+    width: Mapped[int | None]
+    height: Mapped[int | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class LotDocument(Base):
+    __tablename__ = "lot_documents"
+    __table_args__ = (ForeignKeyConstraint(["lot_id", "tenant_id"], ["lots.id", "lots.tenant_id"]),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    lot_id: Mapped[UUID]
+    kind: Mapped[DocumentKind] = mapped_column(_enum(DocumentKind, "lot_document_kind"))
+    title: Mapped[str] = mapped_column(Text)
+    storage_key: Mapped[str] = mapped_column(Text)
+    content_type: Mapped[str] = mapped_column(Text)
+    size_bytes: Mapped[int] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())

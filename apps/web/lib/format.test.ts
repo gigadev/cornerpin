@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  documentLabel,
   formatAcres,
+  formatBytes,
   formatPrice,
   formatWhen,
   parseDollars,
@@ -59,5 +61,21 @@ describe("parseOptionalNumber", () => {
 describe("statusLabel", () => {
   it("names every status", () => {
     expect(statusLabel("on_hold")).toBe("On hold");
+  });
+});
+
+describe("formatBytes", () => {
+  it.each([
+    [512, "512 B"],
+    [839_680, "820 KB"],
+    [2_516_582, "2.4 MB"],
+  ])("%s -> %s", (bytes, expected) => {
+    expect(formatBytes(bytes)).toBe(expected);
+  });
+});
+
+describe("documentLabel", () => {
+  it("names every kind", () => {
+    expect(documentLabel("covenants")).toBe("Covenants");
   });
 });

@@ -1,7 +1,9 @@
 import { Breadcrumbs } from "@/components/portal/breadcrumbs";
 import { DeleteLotButton } from "@/components/portal/delete-button";
+import { DocumentsCard } from "@/components/portal/documents-card";
 import { LotForm } from "@/components/portal/lot-form";
 import { LotHistory } from "@/components/portal/lot-history";
+import { PhotosCard } from "@/components/portal/photos-card";
 import { PublishedBadge, StatusBadge } from "@/components/portal/status-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTenant, loadOr404 } from "@/lib/api/portal";
@@ -23,12 +25,17 @@ export default async function LotPage({
     }),
     here,
   );
-  const subdivision = await loadOr404(
-    api.GET("/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}", {
-      params: { path: { tenant_id: tenantId, subdivision_id: lot.subdivision_id } },
-    }),
-    here,
-  );
+  const lotPath = { params: { path: { tenant_id: tenantId, lot_id: lotId } } };
+  const [subdivision, photos, documents] = await Promise.all([
+    loadOr404(
+      api.GET("/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}", {
+        params: { path: { tenant_id: tenantId, subdivision_id: lot.subdivision_id } },
+      }),
+      here,
+    ),
+    loadOr404(api.GET("/v1/tenants/{tenant_id}/lots/{lot_id}/photos", lotPath), here),
+    loadOr404(api.GET("/v1/tenants/{tenant_id}/lots/{lot_id}/documents", lotPath), here),
+  ]);
 
   return (
     <div className="grid gap-6">
@@ -45,6 +52,24 @@ export default async function LotPage({
         <PublishedBadge published={lot.published} />
         <span className="text-muted-foreground tabular-nums">{formatPrice(lot.price)}</span>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Photos</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <PhotosCard tenantId={tenantId} lotId={lotId} photos={photos} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Documents</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DocumentsCard tenantId={tenantId} lotId={lotId} documents={documents} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

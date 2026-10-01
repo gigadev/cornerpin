@@ -5,17 +5,22 @@ The settings are pointed at the test database before anything reads them, so cod
 that uses the default engines (the API, the outbox) also runs against it."""
 
 import os
+import tempfile
 from collections.abc import Iterator
 from dataclasses import dataclass
 from uuid import UUID
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import OperationalError
 
+from cornerpin.core.auth import service
+from cornerpin.core.auth.deps import SESSION_COOKIE
 from cornerpin.core.config import get_settings
 from cornerpin.devtools import recreate_database
+from cornerpin.main import create_app
 
 TEST_DATABASE = "cornerpin_test"
 
@@ -25,6 +30,8 @@ TEST_API_URL = make_url(_dev.api_database_url).set(database=TEST_DATABASE)
 os.environ["DATABASE_URL"] = TEST_OWNER_URL.render_as_string(hide_password=False)
 os.environ["API_DATABASE_URL"] = TEST_API_URL.render_as_string(hide_password=False)
 os.environ["OUTBOX_RUNNER"] = "off"
+# Uploaded files go to a throwaway folder, not the developer's var/storage.
+os.environ["STORAGE_DIR"] = tempfile.mkdtemp(prefix="cornerpin-test-storage-")
 get_settings.cache_clear()
 
 
@@ -138,3 +145,12 @@ def build_tenant(conn: Connection, label: str) -> TenantData:
 def tenants(db: Databases) -> tuple[TenantData, TenantData]:
     with db.owner.begin() as conn:
         return build_tenant(conn, "alpha"), build_tenant(conn, "bravo")
+
+
+@pytest.fixture
+def alpha_owner(db: Databases, tenants: tuple[TenantData, TenantData]) -> Iterator[TestClient]:
+    """An API client signed in as the alpha tenant's owner."""
+    with TestClient(create_app()) as client:
+        signed_in = service.sign_in_verified_email("owner@alpha.test", None, "/app", "pytest")
+        client.cookies.set(SESSION_COOKIE, signed_in.session_token)
+        yield client

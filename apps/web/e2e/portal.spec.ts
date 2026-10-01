@@ -97,3 +97,90 @@ test("other tenants' and unknown records are not found", async ({ page }) => {
     expect(response?.status(), path).toBe(404);
   }
 });
+
+// P1-05 acceptance: upload, reorder and caption photos; documents download.
+
+// A 1x1 PNG and a minimal PDF: enough for the server's checks, small enough to inline.
+const PNG = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M/wHwAEBgIApD5fRAAAAABJRU5ErkJggg==",
+  "base64",
+);
+const PDF = Buffer.from("%PDF-1.4\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n");
+
+type SubdivisionDetail = { id: string; slug: string; phases: { id: string; name: string }[] };
+
+/** A fresh lot in Juniper Bench for this viewport, so parallel runs never share photos. */
+async function newLot(page: Page, number: string): Promise<string> {
+  const base = `/v1/tenants/${DEMO_TENANT_ID}`;
+  const list = (await (await page.request.get(`${base}/subdivisions`)).json()) as {
+    id: string;
+    slug: string;
+  }[];
+  const juniper = list.find((s) => s.slug === "juniper-bench");
+  if (!juniper) throw new Error("Juniper Bench is not seeded");
+  const detail = (await (
+    await page.request.get(`${base}/subdivisions/${juniper.id}`)
+  ).json()) as SubdivisionDetail;
+  const phase = detail.phases[0];
+  if (!phase) throw new Error("Juniper Bench has no phases");
+  const created = await page.request.post(`${base}/subdivisions/${juniper.id}/lots`, {
+    data: { number, phase_id: phase.id },
+  });
+  expect(created.status()).toBe(201);
+  return ((await created.json()) as { id: string }).id;
+}
+
+test("owner uploads, captions and reorders photos, and downloads a document", async ({
+  page,
+}, testInfo) => {
+  page.on("dialog", (dialog) => void dialog.accept());
+  const lotId = await newLot(page, `P-${viewport(testInfo.project.name)}`);
+  await page.goto(`/app/${DEMO_TENANT_ID}/lots/${lotId}`);
+
+  // Photos: two at once.
+  await page.getByLabel("Add photos").setInputFiles([
+    { name: "front.png", mimeType: "image/png", buffer: PNG },
+    { name: "road.png", mimeType: "image/png", buffer: PNG },
+  ]);
+  await expect(page.getByLabel("Caption for photo 2")).toBeVisible();
+
+  await page.getByLabel("Caption for photo 1").fill("Front of the lot");
+  await page.getByLabel("Caption for photo 1").press("Enter");
+  await expect(page.getByAltText("Front of the lot")).toBeVisible();
+  await page.getByLabel("Caption for photo 2").fill("View from the road");
+  await page.getByLabel("Caption for photo 2").press("Enter");
+  await expect(page.getByAltText("View from the road")).toBeVisible();
+
+  // Reorder: the road view goes first, and stays first after a reload.
+  await page.getByRole("button", { name: "Move photo 2 earlier" }).click();
+  await expect(page.getByLabel("Caption for photo 1")).toHaveValue("View from the road");
+  await page.reload();
+  await expect(page.getByLabel("Caption for photo 1")).toHaveValue("View from the road");
+  await expect(page.getByLabel("Caption for photo 2")).toHaveValue("Front of the lot");
+
+  // The images themselves load through the API.
+  const first = page.getByAltText("View from the road");
+  await expect(first).toBeVisible();
+  expect(await first.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1);
+
+  // Documents: upload a plat and download it under its title.
+  await choose(page, "Kind", "Plat");
+  await page.getByLabel("Title").fill("Recorded plat");
+  await page.getByLabel("File", { exact: true }).setInputFiles({
+    name: "scan0042.pdf",
+    mimeType: "application/pdf",
+    buffer: PDF,
+  });
+  await page.getByRole("button", { name: "Upload document" }).click();
+  await expect(page.getByText("Recorded plat", { exact: true })).toBeVisible();
+
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("link", { name: "Download Recorded plat" }).click(),
+  ]);
+  expect(download.suggestedFilename()).toBe("Recorded plat.pdf");
+
+  // Deleting a photo takes it off the page.
+  await page.getByRole("button", { name: "Delete photo 2" }).click();
+  await expect(page.getByLabel("Caption for photo 2")).toHaveCount(0);
+});

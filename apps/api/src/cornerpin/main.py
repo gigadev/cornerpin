@@ -5,15 +5,16 @@ from fastapi import APIRouter, FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from cornerpin.core import accounts
+from cornerpin.core import accounts, storage
 from cornerpin.core.auth import routes as auth_routes
 from cornerpin.core.config import get_settings
 from cornerpin.core.outbox import InProcessRunner
+from cornerpin.listings import media_routes
 from cornerpin.listings import routes as listings_routes
 from cornerpin.notifications import handlers as notification_handlers
 
 # Importing a module that defines outbox handlers registers them.
-OUTBOX_HANDLER_MODULES = (notification_handlers,)
+OUTBOX_HANDLER_MODULES = (notification_handlers, storage)
 
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
@@ -59,6 +60,7 @@ def create_app() -> FastAPI:
     v1.include_router(auth_routes.router)
     v1.include_router(accounts.router)
     v1.include_router(listings_routes.router)
+    v1.include_router(media_routes.router)
     app.include_router(v1)
     return app
 

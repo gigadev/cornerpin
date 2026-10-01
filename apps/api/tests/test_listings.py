@@ -1,6 +1,5 @@
 """P1-04: owner portal CRUD for subdivisions, phases and lots, with status and price history."""
 
-from collections.abc import Iterator
 from typing import Any
 from uuid import uuid4
 
@@ -17,14 +16,6 @@ from cornerpin.main import create_app
 from .conftest import Databases, TenantData
 
 Json = dict[str, Any]
-
-
-@pytest.fixture
-def alpha_owner(db: Databases, tenants: tuple[TenantData, TenantData]) -> Iterator[TestClient]:
-    with TestClient(create_app()) as client:
-        signed_in = service.sign_in_verified_email("owner@alpha.test", None, "/app", "pytest")
-        client.cookies.set(SESSION_COOKIE, signed_in.session_token)
-        yield client
 
 
 def base(tenant: TenantData) -> str:

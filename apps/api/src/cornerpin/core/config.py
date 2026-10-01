@@ -54,6 +54,12 @@ class Settings(BaseSettings):
     smtp_port: int = 1025
     resend_api_key: str | None = None
 
+    # Uploaded photos and documents (ADR-025). "local" writes under storage_dir; "gcs" uses a
+    # Cloud Storage bucket and stays dormant until storage_bucket is set.
+    storage_backend: Literal["local", "gcs"] = "local"
+    storage_dir: Path = REPO_ROOT / "var" / "storage"
+    storage_bucket: str | None = None
+
     # "inprocess" runs the outbox in the API process (local, ADR-023); "off" leaves it to an
     # external dispatcher (Cloud Tasks, P1-09).
     outbox_runner: Literal["inprocess", "off"] = "inprocess"
@@ -75,6 +81,8 @@ class Settings(BaseSettings):
             problems.append("SECRET_KEY must be set")
         if TURNSTILE_TEST_SECRET_KEY in (self.turnstile_secret_key, self.turnstile_site_key):
             problems.append("Turnstile test keys are for local use only")
+        if self.storage_backend == "gcs" and not self.storage_bucket:
+            problems.append("STORAGE_BUCKET must be set for the gcs storage backend")
         if self.email_backend == "resend" and not self.resend_api_key:
             problems.append("RESEND_API_KEY must be set for the resend email backend")
         if problems:

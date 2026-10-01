@@ -35,6 +35,7 @@ not started yet is still binding: it describes how that part will be built.
 | [022](022-consent-per-tenant.md) | Contact consent is recorded per tenant and append-only | P1-02, P1-08 | Accepted |
 | [023](023-sign-in-sessions-and-outbox-start.md) | Sign-in, sessions, and starting the outbox in P1-03 | P1-03 | Accepted |
 | [024](024-owner-portal-rules.md) | Owner portal rules for editing, deleting and history | P1-04 | Accepted |
+| [025](025-photo-and-document-storage.md) | Photo and document storage | P1-05 | Accepted |
 
 ## Adding a decision
 

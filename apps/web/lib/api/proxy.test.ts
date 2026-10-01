@@ -36,8 +36,11 @@ describe("forwardResponseHeaders", () => {
     upstream.set("content-type", "application/json");
     upstream.set("server", "uvicorn");
 
+    upstream.set("content-disposition", 'attachment; filename="Recorded plat.pdf"');
+
     const headers = forwardResponseHeaders(upstream);
     expect(headers.getSetCookie()).toHaveLength(2);
+    expect(headers.get("content-disposition")).toContain("Recorded plat.pdf");
     expect(headers.get("cache-control")).toBe("no-store");
     expect(headers.has("server")).toBe(false);
   });

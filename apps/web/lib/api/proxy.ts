@@ -3,7 +3,12 @@
 // (ADR-006, ADR-023).
 
 const REQUEST_HEADERS = ["accept", "content-type", "cookie", "origin", "user-agent"] as const;
-const RESPONSE_HEADERS = ["cache-control", "content-type", "location"] as const;
+const RESPONSE_HEADERS = [
+  "cache-control",
+  "content-disposition",
+  "content-type",
+  "location",
+] as const;
 
 export function apiBaseUrl(): string {
   return process.env.API_BASE_URL ?? "http://localhost:8000";

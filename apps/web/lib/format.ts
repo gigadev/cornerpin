@@ -3,10 +3,37 @@ import type { components } from "@/lib/api/schema";
 export type LotStatus = components["schemas"]["LotStatus"];
 export type ListingType = components["schemas"]["ListingType"];
 export type ReleaseStatus = components["schemas"]["ReleaseStatus"];
+export type DocumentKind = components["schemas"]["DocumentKind"];
 
 export const LOT_STATUSES: readonly LotStatus[] = ["available", "on_hold", "sold"];
 export const LISTING_TYPES: readonly ListingType[] = ["land_only", "lot_and_home"];
 export const RELEASE_STATUSES: readonly ReleaseStatus[] = ["upcoming", "released"];
+export const DOCUMENT_KINDS: readonly DocumentKind[] = [
+  "plat",
+  "survey",
+  "covenants",
+  "utilities",
+  "other",
+];
+
+const DOCUMENT_LABELS: Record<DocumentKind, string> = {
+  plat: "Plat",
+  survey: "Survey",
+  covenants: "Covenants",
+  utilities: "Utilities",
+  other: "Other",
+};
+
+export function documentLabel(kind: DocumentKind): string {
+  return DOCUMENT_LABELS[kind];
+}
+
+/** A file size people read: "820 KB", "2.4 MB". */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 const STATUS_LABELS: Record<LotStatus, string> = {
   available: "Available",

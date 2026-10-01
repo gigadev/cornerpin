@@ -12,10 +12,13 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import Function
 
 from cornerpin.core.auth.deps import SignedInUser
+from cornerpin.core.storage import remove_later
 from cornerpin.core.tenancy import constraint_errors, tenant_session
 from cornerpin.listings.models import (
     ListingType,
     Lot,
+    LotDocument,
+    LotPhoto,
     LotPriceChange,
     LotStatus,
     LotStatusChange,
@@ -381,6 +384,13 @@ def delete_lot(tenant_id: UUID, lot_id: UUID, user: SignedInUser) -> Response:
     """Refused (409) while the lot has inquiries or hold requests; the database enforces it."""
     with tenant_session(user, tenant_id) as session:
         lot = _get(session, Lot, lot_id)
+        # Its photos and documents go with it; their files are removed once this commits.
+        for key in session.scalars(
+            select(LotPhoto.storage_key)
+            .where(LotPhoto.lot_id == lot_id)
+            .union_all(select(LotDocument.storage_key).where(LotDocument.lot_id == lot_id))
+        ):
+            remove_later(session, key)
         session.delete(lot)
         with constraint_errors(
             {
