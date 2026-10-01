@@ -1,10 +1,17 @@
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal, Self
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # apps/api/src/cornerpin/core/config.py -> repo root
 REPO_ROOT = Path(__file__).resolve().parents[5]
+
+# Cloudflare's published always-pass Turnstile test keys (CLAUDE.md). Local only.
+TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA"
+TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA"  # noqa: S105 -- public test key
+LOCAL_SECRET_KEY = "local-development-only-not-a-secret"  # noqa: S105 -- refused outside local
 
 
 class Settings(BaseSettings):
@@ -24,8 +31,55 @@ class Settings(BaseSettings):
     api_database_url: str = (
         "postgresql+psycopg://cornerpin_api:cornerpin_api@localhost:5434/cornerpin"
     )
+
+    # The origin people use; links in emails and the Origin check on writes use it.
+    web_origin: str = "http://localhost:3000"
+    # Signs short-lived OAuth state. Must be set outside local.
+    secret_key: str = LOCAL_SECRET_KEY
+
+    session_days: int = 30
+    magic_link_minutes: int = 15
+    magic_links_per_15_minutes: int = 5
+
+    turnstile_site_key: str = TURNSTILE_TEST_SITE_KEY
+    turnstile_secret_key: str = TURNSTILE_TEST_SECRET_KEY
+
+    # Google sign-in stays dormant until both are set (ADR-008).
+    google_client_id: str | None = None
+    google_client_secret: str | None = None
+
+    email_backend: Literal["smtp", "resend"] = "smtp"
+    email_from: str = "Cornerpin <no-reply@cornerpin.app>"
     smtp_host: str = "localhost"
     smtp_port: int = 1025
+    resend_api_key: str | None = None
+
+    # "inprocess" runs the outbox in the API process (local, ADR-023); "off" leaves it to an
+    # external dispatcher (Cloud Tasks, P1-09).
+    outbox_runner: Literal["inprocess", "off"] = "inprocess"
+
+    @property
+    def is_local(self) -> bool:
+        return self.environment == "local"
+
+    @property
+    def google_enabled(self) -> bool:
+        return bool(self.google_client_id and self.google_client_secret)
+
+    @model_validator(mode="after")
+    def _no_local_defaults_outside_local(self) -> Self:
+        if self.is_local:
+            return self
+        problems: list[str] = []
+        if self.secret_key == LOCAL_SECRET_KEY:
+            problems.append("SECRET_KEY must be set")
+        if TURNSTILE_TEST_SECRET_KEY in (self.turnstile_secret_key, self.turnstile_site_key):
+            problems.append("Turnstile test keys are for local use only")
+        if self.email_backend == "resend" and not self.resend_api_key:
+            problems.append("RESEND_API_KEY must be set for the resend email backend")
+        if problems:
+            raise ValueError("; ".join(problems))
+        return self
 
 
 @lru_cache

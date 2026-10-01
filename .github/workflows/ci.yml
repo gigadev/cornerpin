@@ -45,14 +45,41 @@ jobs:
 
   web:
     runs-on: ubuntu-latest
+    # The Playwright run starts the API on its own database and reads email from Mailpit.
+    services:
+      db:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: cornerpin
+          POSTGRES_USER: cornerpin
+          POSTGRES_PASSWORD: cornerpin
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U cornerpin -d cornerpin"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+      mailpit:
+        image: axllent/mailpit:latest
+        ports:
+          - 1025:1025
+          - 8025:8025
+    env:
+      DATABASE_URL: postgresql+psycopg://cornerpin:cornerpin@localhost:5434/cornerpin
+      API_DATABASE_URL: postgresql+psycopg://cornerpin_api:cornerpin_api@localhost:5434/cornerpin
     steps:
       - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v5
         with:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Generated API types are current
+        run: pnpm gen:api && git diff --exit-code apps/web/lib/api/
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm --filter web exec playwright install --with-deps chromium

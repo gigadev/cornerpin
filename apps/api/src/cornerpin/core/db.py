@@ -2,6 +2,8 @@
 
 - user_session: a signed-in user, optionally acting for a tenant they belong to.
 - public_session: an anonymous visitor; sees published listings only.
+- auth_session: sign-in and session lookup, before a user is known (ADR-023).
+- worker_session: the outbox runner (ADR-023).
 
 The login role holds no privileges of its own, so a connection used outside these helpers
 cannot read anything. user_id and tenant_id must come from the verified session, never from
@@ -43,8 +45,28 @@ def user_session(
 
 
 @contextmanager
+def _role_session(role: str, engine: Engine | None) -> Generator[Session]:
+    with Session(engine or api_engine()) as session, session.begin():
+        session.execute(text(f"SET LOCAL ROLE {role}"))
+        yield session
+
+
+@contextmanager
 def public_session(*, engine: Engine | None = None) -> Generator[Session]:
     """One transaction as cornerpin_public: published listings, read-only."""
-    with Session(engine or api_engine()) as session, session.begin():
-        session.execute(text("SET LOCAL ROLE cornerpin_public"))
+    with _role_session("cornerpin_public", engine) as session:
+        yield session
+
+
+@contextmanager
+def auth_session(*, engine: Engine | None = None) -> Generator[Session]:
+    """One transaction as cornerpin_auth. Only the auth module uses this."""
+    with _role_session("cornerpin_auth", engine) as session:
+        yield session
+
+
+@contextmanager
+def worker_session(*, engine: Engine | None = None) -> Generator[Session]:
+    """One transaction as cornerpin_worker. Only the outbox runner uses this."""
+    with _role_session("cornerpin_worker", engine) as session:
         yield session

@@ -9,6 +9,7 @@
     "lint": "pnpm -r --if-present lint",
     "test": "pnpm -r --if-present test",
     "build": "pnpm -r --if-present build",
-    "e2e": "pnpm -r --if-present e2e"
+    "e2e": "pnpm -r --if-present e2e",
+    "gen:api": "uv run python -m cornerpin.openapi apps/web/lib/api/openapi.json && pnpm --filter web exec openapi-typescript lib/api/openapi.json -o lib/api/schema.d.ts"
   }
 }

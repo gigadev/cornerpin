@@ -140,7 +140,8 @@ uv run pyright
 pnpm lint
 pnpm test
 pnpm build
-pnpm e2e                        # Playwright; first run: pnpm --filter web exec playwright install chromium
+pnpm e2e                        # Playwright; needs docker compose up; first run: pnpm --filter web exec playwright install chromium
+pnpm gen:api                    # regenerate TypeScript types after changing the API
 ```
 
 To run the apps:
@@ -150,7 +151,8 @@ uv run uvicorn cornerpin.main:app --reload    # API at http://localhost:8000
 pnpm --filter web dev                         # web at http://localhost:3000
 ```
 
-Mailpit's inbox is at http://localhost:8025.
+Mailpit's inbox is at http://localhost:8025. To sign in locally, open http://localhost:3000/signin
+and use `owner@demo.cornerpin.test` (the seeded demo owner); the link arrives in Mailpit.
 
 Locally, Mailpit receives the magic-link emails and Turnstile uses Cloudflare's always-pass
 test keys. Integrations that need a third-party account sit behind config and stay dormant

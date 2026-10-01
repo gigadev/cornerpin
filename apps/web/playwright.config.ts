@@ -1,10 +1,12 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const port = 3100;
-const baseURL = `http://localhost:${port}`;
+const webPort = 3100;
+const apiPort = 8100;
+const baseURL = `http://localhost:${webPort}`;
 
 // Smoke tests run against a production build so the service worker and manifest behave as
-// they will when deployed.
+// they will when deployed. The API runs on its own throwaway database (cornerpin_e2e) and sends
+// email to Mailpit, so `docker compose up -d` must be running.
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -25,10 +27,21 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
     },
   ],
-  webServer: {
-    command: `pnpm build && pnpm start --port ${port}`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 240_000,
-  },
+  webServer: [
+    {
+      command: `uv run python -m cornerpin.e2e_server ${apiPort}`,
+      cwd: "../..",
+      url: `http://localhost:${apiPort}/v1/health`,
+      env: { WEB_ORIGIN: baseURL },
+      reuseExistingServer: false,
+      timeout: 120_000,
+    },
+    {
+      command: `pnpm build && pnpm start --port ${webPort}`,
+      url: baseURL,
+      env: { API_BASE_URL: `http://localhost:${apiPort}` },
+      reuseExistingServer: !process.env.CI,
+      timeout: 240_000,
+    },
+  ],
 });

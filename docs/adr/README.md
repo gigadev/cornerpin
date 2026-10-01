@@ -32,7 +32,8 @@ not started yet is still binding: it describes how that part will be built.
 | [019](019-scaffold-specifics.md) | Scaffold specifics (P1-01) | P1-01 | Accepted |
 | [020](020-adrs-in-docs-folder.md) | ADRs live in docs/adr, one file per decision | now | Accepted |
 | [021](021-database-roles-and-policies.md) | Database roles and the shape of RLS policies | P1-02 | Accepted |
-| [022](022-consent-per-tenant.md) | Contact consent is recorded per tenant and append-only | P1-02, P1-08 | Proposed |
+| [022](022-consent-per-tenant.md) | Contact consent is recorded per tenant and append-only | P1-02, P1-08 | Accepted |
+| [023](023-sign-in-sessions-and-outbox-start.md) | Sign-in, sessions, and starting the outbox in P1-03 | P1-03 | Accepted |
 
 ## Adding a decision
 

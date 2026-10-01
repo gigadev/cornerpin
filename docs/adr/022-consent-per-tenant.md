@@ -1,6 +1,6 @@
 # ADR-022: Contact consent is recorded per tenant and append-only
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-01
 - **Applies from:** P1-02 (table), P1-08 (capture)
 
@@ -18,7 +18,7 @@ subdivision covers messages from another owner. Users are global (ADR-003).
   and time. The latest row per tenant, user and channel is the current state. The API role has
   no `UPDATE` or `DELETE` on it.
 
-This is the stricter of the two readings. It is marked Proposed until Scott confirms it.
+This is the stricter of the two readings. Scott confirmed it on 2026-10-01.
 
 ## Consequences
 

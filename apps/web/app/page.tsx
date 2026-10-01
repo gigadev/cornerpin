@@ -1,11 +1,14 @@
+import Link from "next/link";
+import { SiteHeader } from "@/components/site-header";
+
 export default function HomePage() {
   return (
     <>
-      <header className="border-b border-line">
-        <div className="mx-auto flex max-w-5xl items-center px-4 py-4">
-          <span className="text-lg font-semibold tracking-tight">Cornerpin</span>
-        </div>
-      </header>
+      <SiteHeader>
+        <Link href="/signin" className="underline">
+          Sign in
+        </Link>
+      </SiteHeader>
       <main className="mx-auto max-w-5xl px-4 py-10">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           Subdivision lots, on the map

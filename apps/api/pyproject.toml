@@ -5,11 +5,13 @@ description = "Cornerpin API: REST /v1, GraphQL /graphql, webhooks and /internal
 requires-python = ">=3.13"
 dependencies = [
     "alembic>=1.16",
+    "email-validator>=2.2",
     "fastapi>=0.116",
     "geoalchemy2>=0.17",
     "httpx>=0.28",
     "psycopg[binary]>=3.2",
     "pydantic-settings>=2.10",
+    "pyjwt[crypto]>=2.10",
     "sqlalchemy>=2.0.41",
     "uvicorn[standard]>=0.35",
 ]

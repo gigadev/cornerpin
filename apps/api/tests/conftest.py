@@ -1,20 +1,31 @@
 """Database fixtures. Tests that use `db` get a fresh `cornerpin_test` database on the local
-PostGIS container (docker compose up -d), migrated to head. Other tests need no database."""
+PostGIS container (docker compose up -d), migrated to head. Other tests need no database.
 
+The settings are pointed at the test database before anything reads them, so code under test
+that uses the default engines (the API, the outbox) also runs against it."""
+
+import os
 from collections.abc import Iterator
 from dataclasses import dataclass
-from pathlib import Path
 from uuid import UUID
 
 import pytest
-from alembic import command
-from alembic.config import Config
 from sqlalchemy import Connection, Engine, create_engine, text
 from sqlalchemy.engine import make_url
+from sqlalchemy.exc import OperationalError
 
-from cornerpin.core.config import REPO_ROOT, get_settings
+from cornerpin.core.config import get_settings
+from cornerpin.devtools import recreate_database
 
 TEST_DATABASE = "cornerpin_test"
+
+_dev = get_settings()
+TEST_OWNER_URL = make_url(_dev.database_url).set(database=TEST_DATABASE)
+TEST_API_URL = make_url(_dev.api_database_url).set(database=TEST_DATABASE)
+os.environ["DATABASE_URL"] = TEST_OWNER_URL.render_as_string(hide_password=False)
+os.environ["API_DATABASE_URL"] = TEST_API_URL.render_as_string(hide_password=False)
+os.environ["OUTBOX_RUNNER"] = "off"
+get_settings.cache_clear()
 
 
 @dataclass(frozen=True)
@@ -25,28 +36,13 @@ class Databases:
 
 @pytest.fixture(scope="session")
 def db() -> Iterator[Databases]:
-    settings = get_settings()
-    owner_url = make_url(settings.database_url).set(database=TEST_DATABASE)
-    api_url = make_url(settings.api_database_url).set(database=TEST_DATABASE)
-
-    admin = create_engine(
-        make_url(settings.database_url).set(database="postgres"), isolation_level="AUTOCOMMIT"
-    )
     try:
-        with admin.connect() as conn:
-            conn.execute(text(f"DROP DATABASE IF EXISTS {TEST_DATABASE} WITH (FORCE)"))
-            conn.execute(text(f"CREATE DATABASE {TEST_DATABASE}"))
-    except Exception as exc:
+        recreate_database(TEST_OWNER_URL)
+    except OperationalError as exc:
         pytest.fail(f"Postgres is not reachable; run `docker compose up -d` first ({exc})")
-    finally:
-        admin.dispose()
 
-    config = Config(str(Path(REPO_ROOT) / "alembic.ini"))
-    config.set_main_option("sqlalchemy.url", owner_url.render_as_string(hide_password=False))
-    command.upgrade(config, "head")
-
-    owner = create_engine(owner_url)
-    api = create_engine(api_url)
+    owner = create_engine(TEST_OWNER_URL)
+    api = create_engine(TEST_API_URL)
     yield Databases(owner=owner, api=api)
     owner.dispose()
     api.dispose()
