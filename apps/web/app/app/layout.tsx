@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/site-header";
 import { getMe } from "@/lib/api/server";
-import { SignOutButton } from "./sign-out-button";
+import { SignOutButton } from "@/components/sign-out-button";
 
 // The owner portal is online-only and never cached by the service worker (ADR-005).
 export const metadata: Metadata = { title: "Owner portal · Cornerpin", robots: { index: false } };

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { browserApi } from "@/lib/api/browser";
-import { safeNext } from "@/lib/safe-next";
+import { signInDestination } from "@/lib/safe-next";
 
 export function VerifyForm({ token }: { token: string }) {
   const [state, setState] = useState<"idle" | "working" | "failed">("idle");
@@ -13,7 +13,7 @@ export function VerifyForm({ token }: { token: string }) {
     const { data } = await browserApi.POST("/v1/auth/magic-link/verify", { body: { token } });
     if (data) {
       // A full navigation, so server components render with the new session cookie.
-      window.location.assign(safeNext(data.next));
+      window.location.assign(signInDestination(data.next));
     } else {
       setState("failed");
     }

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getMe, serverApi } from "@/lib/api/server";
-import { safeNext } from "@/lib/safe-next";
+import { signInDestination } from "@/lib/safe-next";
 import { SignInForm } from "./sign-in-form";
 
 export const metadata: Metadata = { title: "Sign in · Cornerpin", robots: { index: false } };
@@ -13,7 +13,8 @@ export default async function SignInPage({
   searchParams: Promise<{ next?: string; error?: string }>;
 }) {
   const { next, error } = await searchParams;
-  const nextPath = safeNext(next);
+  const nextPath = signInDestination(next);
+  // Already signed in: go on to the destination, which is never this page or the home page.
   if (await getMe()) redirect(nextPath);
 
   const api = await serverApi();

@@ -23,7 +23,10 @@ test("owner signs in by email link and reaches only their own portal", async ({
   const owner = projectOwner(testInfo);
   await clearInbox(request, owner);
 
-  await page.goto("/app");
+  // Start where a person does: the home page's "Sign in" link, which carries no destination.
+  await page.goto("/");
+  await page.getByRole("link", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/signin$/);
   await page.getByLabel("Email").fill(owner);
   // Cloudflare's test site key passes without interaction once the widget has loaded.
   const send = page.getByRole("button", { name: "Email me a sign-in link" });
@@ -35,7 +38,18 @@ test("owner signs in by email link and reaches only their own portal", async ({
   await page.goto(link);
   await page.getByRole("button", { name: "Sign in" }).click();
 
+  // Lands in the portal, not back on the home page.
   await expect(page).toHaveURL(/\/app$/);
+
+  // Signed in, the home page offers the portal instead of "Sign in", and the sign-in page
+  // passes straight through to the portal (it used to loop back home).
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "Sign in" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Owner portal" }).click();
+  await expect(page).toHaveURL(/\/app$/);
+  await page.goto("/signin");
+  await expect(page).toHaveURL(/\/app$/);
+
   await page.getByRole("link", { name: /Demo Land Co\./ }).click();
   await expect(page).toHaveURL(new RegExp(`/app/${DEMO_TENANT_ID}$`));
   await expect(page.getByRole("heading", { name: "Demo Land Co." })).toBeVisible();
@@ -51,6 +65,7 @@ test("owner signs in by email link and reaches only their own portal", async ({
   await page.goto("/app");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
   await page.goto("/app");
   await expect(page).toHaveURL(/\/signin/);
 });

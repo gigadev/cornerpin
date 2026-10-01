@@ -1,13 +1,27 @@
 import Link from "next/link";
+import { SignOutButton } from "@/components/sign-out-button";
 import { SiteHeader } from "@/components/site-header";
+import { getMe } from "@/lib/api/server";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const me = await getMe();
+
   return (
     <>
       <SiteHeader>
-        <Link href="/signin" className="underline">
-          Sign in
-        </Link>
+        {me ? (
+          <>
+            <span className="hidden text-muted-foreground sm:inline">{me.email}</span>
+            <Link href="/app" className="underline">
+              {me.memberships.length > 0 ? "Owner portal" : "Your account"}
+            </Link>
+            <SignOutButton />
+          </>
+        ) : (
+          <Link href="/signin" className="underline">
+            Sign in
+          </Link>
+        )}
       </SiteHeader>
       <main className="mx-auto max-w-5xl px-4 py-10">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">

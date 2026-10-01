@@ -153,7 +153,8 @@ pnpm --filter web dev                         # web at http://localhost:3300
 ```
 
 Mailpit's inbox is at http://localhost:8025. To sign in locally, open http://localhost:3300/signin
-and use `owner@demo.cornerpin.test` (the seeded demo owner); the link arrives in Mailpit.
+and use `owner@demo.cornerpin.test` (the seeded demo owner); the link arrives in Mailpit. All the
+test accounts, URLs and test-only keys are listed in [docs/TEST_ACCOUNTS.md](docs/TEST_ACCOUNTS.md).
 
 Locally, Mailpit receives the magic-link emails and Turnstile uses Cloudflare's always-pass
 test keys. Integrations that need a third-party account sit behind config and stay dormant
@@ -167,4 +168,5 @@ of Phase 1. It is not live yet.
 - [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md): phases, tasks, data model, PWA
   behaviour and expected running costs.
 - [docs/adr/](docs/adr/README.md): architecture decision records, one file per decision.
+- [docs/TEST_ACCOUNTS.md](docs/TEST_ACCOUNTS.md): local test accounts, URLs and test-only keys.
 - [CLAUDE.md](CLAUDE.md): working rules for Claude Code in this repo.
