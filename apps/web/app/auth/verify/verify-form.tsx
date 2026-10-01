@@ -36,7 +36,7 @@ export function VerifyForm({ token }: { token: string }) {
       type="button"
       onClick={signIn}
       disabled={state === "working"}
-      className="mt-6 w-full rounded bg-ink px-4 py-2 font-medium text-surface disabled:opacity-50"
+      className="mt-6 w-full rounded bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50"
     >
       {state === "working" ? "Signing in…" : "Sign in"}
     </button>

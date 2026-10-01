@@ -4,9 +4,14 @@ const webPort = 3100;
 const apiPort = 8100;
 const baseURL = `http://localhost:${webPort}`;
 
+const mobile = { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } };
+const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } };
+
 // Smoke tests run against a production build so the service worker and manifest behave as
 // they will when deployed. The API runs on its own throwaway database (cornerpin_e2e) and sends
 // email to Mailpit, so `docker compose up -d` must be running.
+//
+// Portal tests reuse a session saved by portal.setup.ts, one per viewport.
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -18,13 +23,20 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [
+    { name: "setup", testMatch: /portal\.setup\.ts/ },
+    { name: "mobile", use: mobile, testIgnore: /portal\./ },
+    { name: "desktop", use: desktop, testIgnore: /portal\./ },
     {
-      name: "mobile",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
+      name: "mobile-portal",
+      use: { ...mobile, storageState: "playwright/.auth/portal-mobile.json" },
+      testMatch: /portal\.spec\.ts/,
+      dependencies: ["setup"],
     },
     {
-      name: "desktop",
-      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
+      name: "desktop-portal",
+      use: { ...desktop, storageState: "playwright/.auth/portal-desktop.json" },
+      testMatch: /portal\.spec\.ts/,
+      dependencies: ["setup"],
     },
   ],
   webServer: [

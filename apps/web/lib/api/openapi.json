@@ -45,6 +45,427 @@
         "title": "Health",
         "type": "object"
       },
+      "Home": {
+        "description": "The house on a lot + home listing. All optional while a home is being finished.",
+        "properties": {
+          "bathrooms": {
+            "anyOf": [
+              {
+                "maximum": 50.0,
+                "minimum": 0.0,
+                "multipleOf": 0.5,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bathrooms"
+          },
+          "bedrooms": {
+            "anyOf": [
+              {
+                "maximum": 50.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bedrooms"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "square_feet": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 100000.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Square Feet"
+          }
+        },
+        "title": "Home",
+        "type": "object"
+      },
+      "ListingType": {
+        "enum": [
+          "land_only",
+          "lot_and_home"
+        ],
+        "title": "ListingType",
+        "type": "string"
+      },
+      "LotCreate": {
+        "properties": {
+          "acreage": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 1000000.0,
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acreage"
+          },
+          "home": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Home"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "listing_type": {
+            "$ref": "#/components/schemas/ListingType",
+            "default": "land_only"
+          },
+          "number": {
+            "pattern": "^[A-Za-z0-9-]{1,16}$",
+            "title": "Number",
+            "type": "string"
+          },
+          "phase_id": {
+            "format": "uuid",
+            "title": "Phase Id",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "maximum": 9999999999.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "published": {
+            "default": false,
+            "title": "Published",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LotStatus",
+            "default": "available"
+          }
+        },
+        "required": [
+          "number",
+          "phase_id"
+        ],
+        "title": "LotCreate",
+        "type": "object"
+      },
+      "LotDetail": {
+        "properties": {
+          "acreage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acreage"
+          },
+          "home": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Home"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "listing_type": {
+            "$ref": "#/components/schemas/ListingType"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "phase_id": {
+            "format": "uuid",
+            "title": "Phase Id",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "price_history": {
+            "items": {
+              "$ref": "#/components/schemas/PriceChange"
+            },
+            "title": "Price History",
+            "type": "array"
+          },
+          "published": {
+            "title": "Published",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LotStatus"
+          },
+          "status_history": {
+            "items": {
+              "$ref": "#/components/schemas/StatusChange"
+            },
+            "title": "Status History",
+            "type": "array"
+          },
+          "subdivision_id": {
+            "format": "uuid",
+            "title": "Subdivision Id",
+            "type": "string"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          },
+          "time_zone": {
+            "title": "Time Zone",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subdivision_id",
+          "subdivision_name",
+          "time_zone",
+          "phase_id",
+          "number",
+          "acreage",
+          "price",
+          "status",
+          "listing_type",
+          "home",
+          "published",
+          "updated_at",
+          "status_history",
+          "price_history"
+        ],
+        "title": "LotDetail",
+        "type": "object"
+      },
+      "LotStatus": {
+        "enum": [
+          "available",
+          "on_hold",
+          "sold"
+        ],
+        "title": "LotStatus",
+        "type": "string"
+      },
+      "LotSummary": {
+        "properties": {
+          "acreage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acreage"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "listing_type": {
+            "$ref": "#/components/schemas/ListingType"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "phase_id": {
+            "format": "uuid",
+            "title": "Phase Id",
+            "type": "string"
+          },
+          "phase_name": {
+            "title": "Phase Name",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "published": {
+            "title": "Published",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LotStatus"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "phase_id",
+          "phase_name",
+          "status",
+          "listing_type",
+          "price",
+          "acreage",
+          "published"
+        ],
+        "title": "LotSummary",
+        "type": "object"
+      },
+      "LotUpdate": {
+        "description": "Only the fields sent are changed; send null to clear acreage, price or home.",
+        "properties": {
+          "acreage": {
+            "anyOf": [
+              {
+                "exclusiveMaximum": 1000000.0,
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acreage"
+          },
+          "home": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Home"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "listing_type": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ListingType"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "number": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9-]{1,16}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "phase_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phase Id"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "maximum": 9999999999.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "published": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LotStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "LotUpdate",
+        "type": "object"
+      },
       "MagicLinkRequest": {
         "properties": {
           "email": {
@@ -166,6 +587,165 @@
         "title": "Membership",
         "type": "object"
       },
+      "PhaseCreate": {
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "release_status": {
+            "$ref": "#/components/schemas/ReleaseStatus",
+            "default": "upcoming"
+          },
+          "sort_order": {
+            "default": 0,
+            "maximum": 10000.0,
+            "minimum": 0.0,
+            "title": "Sort Order",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "PhaseCreate",
+        "type": "object"
+      },
+      "PhaseOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_count": {
+            "title": "Lot Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "release_status": {
+            "$ref": "#/components/schemas/ReleaseStatus"
+          },
+          "sort_order": {
+            "title": "Sort Order",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "sort_order",
+          "release_status",
+          "lot_count"
+        ],
+        "title": "PhaseOut",
+        "type": "object"
+      },
+      "PhaseUpdate": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "release_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReleaseStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sort_order": {
+            "anyOf": [
+              {
+                "maximum": 10000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sort Order"
+          }
+        },
+        "title": "PhaseUpdate",
+        "type": "object"
+      },
+      "PriceChange": {
+        "properties": {
+          "changed_at": {
+            "format": "date-time",
+            "title": "Changed At",
+            "type": "string"
+          },
+          "changed_by_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed By Email"
+          },
+          "from_price": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Price"
+          },
+          "to_price": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Price"
+          }
+        },
+        "required": [
+          "from_price",
+          "to_price",
+          "changed_by_email",
+          "changed_at"
+        ],
+        "title": "PriceChange",
+        "type": "object"
+      },
+      "ReleaseStatus": {
+        "enum": [
+          "upcoming",
+          "released"
+        ],
+        "title": "ReleaseStatus",
+        "type": "string"
+      },
       "SignInResult": {
         "properties": {
           "next": {
@@ -177,6 +757,297 @@
           "next"
         ],
         "title": "SignInResult",
+        "type": "object"
+      },
+      "StatusChange": {
+        "properties": {
+          "changed_at": {
+            "format": "date-time",
+            "title": "Changed At",
+            "type": "string"
+          },
+          "changed_by_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed By Email"
+          },
+          "from_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LotStatus"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "to_status": {
+            "$ref": "#/components/schemas/LotStatus"
+          }
+        },
+        "required": [
+          "from_status",
+          "to_status",
+          "changed_by_email",
+          "changed_at"
+        ],
+        "title": "StatusChange",
+        "type": "object"
+      },
+      "SubdivisionCreate": {
+        "properties": {
+          "description": {
+            "default": "",
+            "maxLength": 5000,
+            "title": "Description",
+            "type": "string"
+          },
+          "latitude": {
+            "maximum": 90.0,
+            "minimum": -90.0,
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "maximum": 180.0,
+            "minimum": -180.0,
+            "title": "Longitude",
+            "type": "number"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "published": {
+            "default": false,
+            "title": "Published",
+            "type": "boolean"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "time_zone": {
+            "title": "Time Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "slug",
+          "time_zone",
+          "latitude",
+          "longitude"
+        ],
+        "title": "SubdivisionCreate",
+        "type": "object"
+      },
+      "SubdivisionDetail": {
+        "properties": {
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "latitude": {
+            "title": "Latitude",
+            "type": "number"
+          },
+          "longitude": {
+            "title": "Longitude",
+            "type": "number"
+          },
+          "lots": {
+            "items": {
+              "$ref": "#/components/schemas/LotSummary"
+            },
+            "title": "Lots",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phases": {
+            "items": {
+              "$ref": "#/components/schemas/PhaseOut"
+            },
+            "title": "Phases",
+            "type": "array"
+          },
+          "published": {
+            "title": "Published",
+            "type": "boolean"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "time_zone": {
+            "title": "Time Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "time_zone",
+          "latitude",
+          "longitude",
+          "description",
+          "published",
+          "phases",
+          "lots"
+        ],
+        "title": "SubdivisionDetail",
+        "type": "object"
+      },
+      "SubdivisionSummary": {
+        "properties": {
+          "available_count": {
+            "title": "Available Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_count": {
+            "title": "Lot Count",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "published": {
+            "title": "Published",
+            "type": "boolean"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "time_zone": {
+            "title": "Time Zone",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "time_zone",
+          "published",
+          "lot_count",
+          "available_count"
+        ],
+        "title": "SubdivisionSummary",
+        "type": "object"
+      },
+      "SubdivisionUpdate": {
+        "description": "Only the fields sent are changed.",
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "published": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Published"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          },
+          "time_zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Zone"
+          }
+        },
+        "title": "SubdivisionUpdate",
         "type": "object"
       },
       "Tenant": {
@@ -649,6 +1520,903 @@
         "summary": "Tenant",
         "tags": [
           "accounts"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/lots/{lot_id}": {
+      "delete": {
+        "description": "Refused (409) while the lot has inquiries or hold requests; the database enforces it.",
+        "operationId": "delete_lot_v1_tenants__tenant_id__lots__lot_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Duplicate, or still in use"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Lot",
+        "tags": [
+          "listings"
+        ]
+      },
+      "get": {
+        "operationId": "get_lot_v1_tenants__tenant_id__lots__lot_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LotDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Lot",
+        "tags": [
+          "listings"
+        ]
+      },
+      "patch": {
+        "operationId": "update_lot_v1_tenants__tenant_id__lots__lot_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LotUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LotDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Duplicate, or still in use"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Lot",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/phases/{phase_id}": {
+      "delete": {
+        "operationId": "delete_phase_v1_tenants__tenant_id__phases__phase_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "phase_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Phase Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Duplicate, or still in use"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Phase",
+        "tags": [
+          "listings"
+        ]
+      },
+      "patch": {
+        "operationId": "update_phase_v1_tenants__tenant_id__phases__phase_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "phase_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Phase Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhaseUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhaseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Phase",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/subdivisions": {
+      "get": {
+        "operationId": "list_subdivisions_v1_tenants__tenant_id__subdivisions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SubdivisionSummary"
+                  },
+                  "title": "Response List Subdivisions V1 Tenants  Tenant Id  Subdivisions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Subdivisions",
+        "tags": [
+          "listings"
+        ]
+      },
+      "post": {
+        "operationId": "create_subdivision_v1_tenants__tenant_id__subdivisions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubdivisionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubdivisionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Duplicate, or still in use"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Subdivision",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}": {
+      "delete": {
+        "operationId": "delete_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Duplicate, or still in use"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Subdivision",
+        "tags": [
+          "listings"
+        ]
+      },
+      "get": {
+        "operationId": "get_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubdivisionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Subdivision",
+        "tags": [
+          "listings"
+        ]
+      },
+      "patch": {
+        "operationId": "update_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubdivisionUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubdivisionDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Duplicate, or still in use"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Subdivision",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/lots": {
+      "post": {
+        "operationId": "create_lot_v1_tenants__tenant_id__subdivisions__subdivision_id__lots_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LotCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LotDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Duplicate, or still in use"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Lot",
+        "tags": [
+          "listings"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/phases": {
+      "post": {
+        "operationId": "create_phase_v1_tenants__tenant_id__subdivisions__subdivision_id__phases_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PhaseCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PhaseOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Phase",
+        "tags": [
+          "listings"
         ]
       }
     }

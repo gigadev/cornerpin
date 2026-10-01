@@ -19,7 +19,14 @@ from cornerpin.seed import DEMO_TENANT_ID, seed
 E2E_DATABASE = "cornerpin_e2e"
 # Keep in sync with apps/web/e2e/fixtures.ts.
 OTHER_TENANT_ID = uuid5(NAMESPACE_URL, "https://cornerpin.app/tenants/e2e-other")
-PROJECT_OWNERS = ("owner+mobile@demo.cornerpin.test", "owner+desktop@demo.cornerpin.test")
+# Owners of the demo tenant: one per Playwright project for the sign-in tests, and one per
+# project for the portal tests' saved session, so parallel tests never share an inbox.
+PROJECT_OWNERS = (
+    "owner+mobile@demo.cornerpin.test",
+    "owner+desktop@demo.cornerpin.test",
+    "portal+mobile@demo.cornerpin.test",
+    "portal+desktop@demo.cornerpin.test",
+)
 
 
 def seed_e2e(conn: Connection) -> None:

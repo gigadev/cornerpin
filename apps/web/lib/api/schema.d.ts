@@ -160,6 +160,117 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/lots/{lot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lot */
+        get: operations["get_lot_v1_tenants__tenant_id__lots__lot_id__get"];
+        put?: never;
+        post?: never;
+        /**
+         * Delete Lot
+         * @description Refused (409) while the lot has inquiries or hold requests; the database enforces it.
+         */
+        delete: operations["delete_lot_v1_tenants__tenant_id__lots__lot_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Lot */
+        patch: operations["update_lot_v1_tenants__tenant_id__lots__lot_id__patch"];
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/phases/{phase_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Phase */
+        delete: operations["delete_phase_v1_tenants__tenant_id__phases__phase_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Phase */
+        patch: operations["update_phase_v1_tenants__tenant_id__phases__phase_id__patch"];
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/subdivisions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Subdivisions */
+        get: operations["list_subdivisions_v1_tenants__tenant_id__subdivisions_get"];
+        put?: never;
+        /** Create Subdivision */
+        post: operations["create_subdivision_v1_tenants__tenant_id__subdivisions_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Subdivision */
+        get: operations["get_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__get"];
+        put?: never;
+        post?: never;
+        /** Delete Subdivision */
+        delete: operations["delete_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__delete"];
+        options?: never;
+        head?: never;
+        /** Update Subdivision */
+        patch: operations["update_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__patch"];
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Lot */
+        post: operations["create_lot_v1_tenants__tenant_id__subdivisions__subdivision_id__lots_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/phases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Phase */
+        post: operations["create_phase_v1_tenants__tenant_id__subdivisions__subdivision_id__phases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -181,6 +292,140 @@ export interface components {
             /** Status */
             status: string;
         };
+        /**
+         * Home
+         * @description The house on a lot + home listing. All optional while a home is being finished.
+         */
+        Home: {
+            /** Bathrooms */
+            bathrooms?: number | null;
+            /** Bedrooms */
+            bedrooms?: number | null;
+            /** Description */
+            description?: string | null;
+            /** Square Feet */
+            square_feet?: number | null;
+        };
+        /**
+         * ListingType
+         * @enum {string}
+         */
+        ListingType: "land_only" | "lot_and_home";
+        /** LotCreate */
+        LotCreate: {
+            /** Acreage */
+            acreage?: number | null;
+            home?: components["schemas"]["Home"] | null;
+            /** @default land_only */
+            listing_type?: components["schemas"]["ListingType"];
+            /** Number */
+            number: string;
+            /**
+             * Phase Id
+             * Format: uuid
+             */
+            phase_id: string;
+            /** Price */
+            price?: number | null;
+            /**
+             * Published
+             * @default false
+             */
+            published?: boolean;
+            /** @default available */
+            status?: components["schemas"]["LotStatus"];
+        };
+        /** LotDetail */
+        LotDetail: {
+            /** Acreage */
+            acreage: number | null;
+            home: components["schemas"]["Home"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            listing_type: components["schemas"]["ListingType"];
+            /** Number */
+            number: string;
+            /**
+             * Phase Id
+             * Format: uuid
+             */
+            phase_id: string;
+            /** Price */
+            price: number | null;
+            /** Price History */
+            price_history: components["schemas"]["PriceChange"][];
+            /** Published */
+            published: boolean;
+            status: components["schemas"]["LotStatus"];
+            /** Status History */
+            status_history: components["schemas"]["StatusChange"][];
+            /**
+             * Subdivision Id
+             * Format: uuid
+             */
+            subdivision_id: string;
+            /** Subdivision Name */
+            subdivision_name: string;
+            /** Time Zone */
+            time_zone: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * LotStatus
+         * @enum {string}
+         */
+        LotStatus: "available" | "on_hold" | "sold";
+        /** LotSummary */
+        LotSummary: {
+            /** Acreage */
+            acreage: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            listing_type: components["schemas"]["ListingType"];
+            /** Number */
+            number: string;
+            /**
+             * Phase Id
+             * Format: uuid
+             */
+            phase_id: string;
+            /** Phase Name */
+            phase_name: string;
+            /** Price */
+            price: number | null;
+            /** Published */
+            published: boolean;
+            status: components["schemas"]["LotStatus"];
+        };
+        /**
+         * LotUpdate
+         * @description Only the fields sent are changed; send null to clear acreage, price or home.
+         */
+        LotUpdate: {
+            /** Acreage */
+            acreage?: number | null;
+            home?: components["schemas"]["Home"] | null;
+            listing_type?: components["schemas"]["ListingType"] | null;
+            /** Number */
+            number?: string | null;
+            /** Phase Id */
+            phase_id?: string | null;
+            /** Price */
+            price?: number | null;
+            /** Published */
+            published?: boolean | null;
+            status?: components["schemas"]["LotStatus"] | null;
+        };
         /** MagicLinkRequest */
         MagicLinkRequest: {
             /**
@@ -199,7 +444,7 @@ export interface components {
              * Status
              * @default sent
              */
-            status: string;
+            status?: string;
         };
         /** MagicLinkVerify */
         MagicLinkVerify: {
@@ -235,10 +480,165 @@ export interface components {
             /** Tenant Name */
             tenant_name: string;
         };
+        /** PhaseCreate */
+        PhaseCreate: {
+            /** Name */
+            name: string;
+            /** @default upcoming */
+            release_status?: components["schemas"]["ReleaseStatus"];
+            /**
+             * Sort Order
+             * @default 0
+             */
+            sort_order?: number;
+        };
+        /** PhaseOut */
+        PhaseOut: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lot Count */
+            lot_count: number;
+            /** Name */
+            name: string;
+            release_status: components["schemas"]["ReleaseStatus"];
+            /** Sort Order */
+            sort_order: number;
+        };
+        /** PhaseUpdate */
+        PhaseUpdate: {
+            /** Name */
+            name?: string | null;
+            release_status?: components["schemas"]["ReleaseStatus"] | null;
+            /** Sort Order */
+            sort_order?: number | null;
+        };
+        /** PriceChange */
+        PriceChange: {
+            /**
+             * Changed At
+             * Format: date-time
+             */
+            changed_at: string;
+            /** Changed By Email */
+            changed_by_email: string | null;
+            /** From Price */
+            from_price: number | null;
+            /** To Price */
+            to_price: number | null;
+        };
+        /**
+         * ReleaseStatus
+         * @enum {string}
+         */
+        ReleaseStatus: "upcoming" | "released";
         /** SignInResult */
         SignInResult: {
             /** Next */
             next: string;
+        };
+        /** StatusChange */
+        StatusChange: {
+            /**
+             * Changed At
+             * Format: date-time
+             */
+            changed_at: string;
+            /** Changed By Email */
+            changed_by_email: string | null;
+            from_status: components["schemas"]["LotStatus"] | null;
+            to_status: components["schemas"]["LotStatus"];
+        };
+        /** SubdivisionCreate */
+        SubdivisionCreate: {
+            /**
+             * Description
+             * @default
+             */
+            description?: string;
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
+            /** Name */
+            name: string;
+            /**
+             * Published
+             * @default false
+             */
+            published?: boolean;
+            /** Slug */
+            slug: string;
+            /** Time Zone */
+            time_zone: string;
+        };
+        /** SubdivisionDetail */
+        SubdivisionDetail: {
+            /** Description */
+            description: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Latitude */
+            latitude: number;
+            /** Longitude */
+            longitude: number;
+            /** Lots */
+            lots: components["schemas"]["LotSummary"][];
+            /** Name */
+            name: string;
+            /** Phases */
+            phases: components["schemas"]["PhaseOut"][];
+            /** Published */
+            published: boolean;
+            /** Slug */
+            slug: string;
+            /** Time Zone */
+            time_zone: string;
+        };
+        /** SubdivisionSummary */
+        SubdivisionSummary: {
+            /** Available Count */
+            available_count: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lot Count */
+            lot_count: number;
+            /** Name */
+            name: string;
+            /** Published */
+            published: boolean;
+            /** Slug */
+            slug: string;
+            /** Time Zone */
+            time_zone: string;
+        };
+        /**
+         * SubdivisionUpdate
+         * @description Only the fields sent are changed.
+         */
+        SubdivisionUpdate: {
+            /** Description */
+            description?: string | null;
+            /** Latitude */
+            latitude?: number | null;
+            /** Longitude */
+            longitude?: number | null;
+            /** Name */
+            name?: string | null;
+            /** Published */
+            published?: boolean | null;
+            /** Slug */
+            slug?: string | null;
+            /** Time Zone */
+            time_zone?: string | null;
         };
         /** Tenant */
         Tenant: {
@@ -534,6 +934,563 @@ export interface operations {
                 };
             };
             /** @description Not a member of this tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lot_v1_tenants__tenant_id__lots__lot_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_lot_v1_tenants__tenant_id__lots__lot_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate, or still in use */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lot_v1_tenants__tenant_id__lots__lot_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate, or still in use */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_phase_v1_tenants__tenant_id__phases__phase_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                phase_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate, or still in use */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_phase_v1_tenants__tenant_id__phases__phase_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                phase_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhaseUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhaseOut"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_subdivisions_v1_tenants__tenant_id__subdivisions_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubdivisionSummary"][];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_subdivision_v1_tenants__tenant_id__subdivisions_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubdivisionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubdivisionDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate, or still in use */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubdivisionDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate, or still in use */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubdivisionUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubdivisionDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate, or still in use */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_lot_v1_tenants__tenant_id__subdivisions__subdivision_id__lots_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LotCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LotDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Duplicate, or still in use */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_phase_v1_tenants__tenant_id__subdivisions__subdivision_id__phases_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PhaseCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PhaseOut"];
+                };
+            };
+            /** @description Not found, or not your tenant */
             404: {
                 headers: {
                     [name: string]: unknown;

@@ -13,7 +13,7 @@ export default function HomePage() {
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           Subdivision lots, on the map
         </h1>
-        <p className="mt-3 max-w-prose text-muted">
+        <p className="mt-3 max-w-prose text-muted-foreground">
           Browse lots by status and price, see where they are, and look through photos and
           documents.
         </p>

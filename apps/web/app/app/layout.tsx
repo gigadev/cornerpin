@@ -15,7 +15,7 @@ export default async function PortalLayout({ children }: { children: ReactNode }
   return (
     <>
       <SiteHeader>
-        <span className="hidden text-muted sm:inline">{me.email}</span>
+        <span className="hidden text-muted-foreground sm:inline">{me.email}</span>
         <SignOutButton />
       </SiteHeader>
       <main className="mx-auto max-w-5xl px-4 py-8">{children}</main>

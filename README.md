@@ -3,8 +3,9 @@
 A multi-tenant PWA where land owners and developers list subdivision lots and buyers browse
 them on a map. Named for the survey pins that mark a lot's corners.
 
-> **Status: Phase 1 in progress.** The scaffold (task P1-01) is in place: an API that answers
-> a health check and an empty web shell. Unless a section says otherwise, everything below
+> **Status: Phase 1 in progress.** Done so far: the scaffold (P1-01), the schema with row-level
+> security (P1-02), passwordless sign-in (P1-03) and the owner portal for subdivisions, phases and
+> lots (P1-04). Unless a section says otherwise, everything below
 > describes what is being built, not what exists.
 
 ## What it does

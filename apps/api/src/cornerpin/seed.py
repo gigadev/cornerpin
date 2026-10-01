@@ -74,6 +74,9 @@ def land_price(number: int) -> int:
 
 
 def seed(conn: Connection) -> UUID:
+    # Buyer records block deleting their lot (migration 0004), so clear them first.
+    for table in ("inquiries", "hold_requests"):
+        conn.execute(text(f"DELETE FROM {table} WHERE tenant_id = :id"), {"id": DEMO_TENANT_ID})  # noqa: S608
     conn.execute(text("DELETE FROM tenants WHERE id = :id"), {"id": DEMO_TENANT_ID})
     conn.execute(
         text("INSERT INTO tenants (id, name, is_demo) VALUES (:id, 'Demo Land Co.', true)"),
