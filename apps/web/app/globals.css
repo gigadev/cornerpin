@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+/* Neutral palette until there is a brand (CLAUDE.md). */
+@theme {
+  --color-surface: #fafaf9;
+  --color-ink: #1c1917;
+  --color-muted: #57534e;
+  --color-line: #e7e5e4;
+}
+
+body {
+  background-color: var(--color-surface);
+  color: var(--color-ink);
+}

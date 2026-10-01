@@ -1,0 +1,29 @@
+# Local services only (ADR-009). Production uses Neon and Resend.
+# Postgres is published on 5434 because a native Postgres service often holds 5432 (and 5433) on Windows.
+name: cornerpin
+
+services:
+  db:
+    image: postgis/postgis:17-3.5
+    environment:
+      POSTGRES_DB: cornerpin
+      POSTGRES_USER: cornerpin
+      POSTGRES_PASSWORD: cornerpin
+    ports:
+      - "5434:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cornerpin -d cornerpin"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025" # SMTP
+      - "8025:8025" # web UI and API
+
+volumes:
+  db-data:

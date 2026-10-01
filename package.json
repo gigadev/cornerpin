@@ -1,0 +1,14 @@
+{
+  "name": "cornerpin",
+  "private": true,
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "lint": "pnpm -r --if-present lint",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "e2e": "pnpm -r --if-present e2e"
+  }
+}

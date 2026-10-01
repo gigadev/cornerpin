@@ -1,0 +1,54 @@
+# Architecture decision records
+
+Each file here records one decision that shapes Cornerpin: the context, what was decided, and
+what follows from it. They are the canonical source for how the system is built. If the
+[implementation plan](../IMPLEMENTATION_PLAN.md) disagrees with an ADR, the ADR wins.
+
+"Applies from" says when a decision starts to show in the code. An accepted ADR whose phase has
+not started yet is still binding: it describes how that part will be built.
+
+## Index
+
+| ADR | Decision | Applies from | Status |
+| --- | --- | --- | --- |
+| [001](001-name-and-domain.md) | Name Cornerpin, domain cornerpin.app | day zero | Accepted |
+| [002](002-fastapi-and-postgis.md) | FastAPI is the API; Postgres + PostGIS is the system of record | P1-01 | Accepted |
+| [003](003-tenancy-and-rls.md) | Tenancy = organizations, isolated by row-level security | P1-02 | Accepted |
+| [004](004-nextjs-web-app.md) | Next.js (App Router, TypeScript) for the web app | P1-01 | Accepted |
+| [005](005-pwa-for-on-site-use.md) | The web app is a PWA built for use on site | P1-01, P1-10 | Accepted |
+| [006](006-path-based-urls.md) | Path-based public URLs on one origin | P1-07, P1-11 | Accepted |
+| [007](007-rest-writes-graphql-reads.md) | REST for writes, GraphQL for public reads | P1-04, P1-07 | Accepted |
+| [008](008-passwordless-auth.md) | Passwordless auth owned by the API | P1-03 | Accepted |
+| [009](009-cloud-run-neon-local-first.md) | Cloud Run + Neon + Cloud Storage, built locally first | P1-01, P1-12 | Accepted |
+| [010](010-outbox-and-cloud-tasks.md) | Transactional outbox and Cloud Tasks for background work | P1-09 | Accepted |
+| [011](011-modular-monolith.md) | Modular monolith with service boundaries drawn now | P1-01 | Accepted |
+| [012](012-optional-integrations.md) | Integrations are per-tenant, optional and dormant without credentials | Phases 2–4 | Accepted |
+| [013](013-advisory-risk-decisioning.md) | Risk decisioning is advisory, logged and explainable | Phase 3 | Accepted |
+| [014](014-consent-first-outreach-agent.md) | The outreach agent is consent-first, tool-bound and evaluated | Phase 2 | Accepted |
+| [015](015-inquiries-and-holds-only.md) | Inquiries and hold requests only in v1 | P1-08 | Accepted |
+| [016](016-free-tiers-first.md) | Free tiers first; cost is announced before it is incurred | throughout | Accepted |
+| [017](017-tooling-defaults.md) | Tooling defaults | P1-01 | Accepted |
+| [018](018-map-tiles.md) | Map tiles: OpenFreeMap now, satellite behind config | P1-06, P1-07 | Accepted |
+| [019](019-scaffold-specifics.md) | Scaffold specifics (P1-01) | P1-01 | Accepted |
+| [020](020-adrs-in-docs-folder.md) | ADRs live in docs/adr, one file per decision | now | Accepted |
+
+## Adding a decision
+
+Write an ADR when a task makes a call the plan did not, or when a choice would be expensive to
+reverse.
+
+1. Copy [template.md](template.md) to `NNN-short-slug.md`, using the next free number.
+2. Fill in Context, Decision and Consequences. Keep it short; one screen is plenty.
+3. Add a row to the index above.
+4. Mention the new ADR in the task summary, so it is reviewed with the code.
+
+## Changing a decision
+
+ADRs are not rewritten once accepted. To change one:
+
+1. Write a new ADR that states the new decision and names the one it replaces.
+2. In the old ADR, change only the status line to `Superseded by ADR-NNN`.
+3. Update both rows in the index.
+
+Code and docs refer to ADRs by number (for example `ADR-005` in a code comment), so numbers are
+never reused.

@@ -3,9 +3,9 @@
 A multi-tenant PWA where land owners and developers list subdivision lots and buyers browse
 them on a map. Named for the survey pins that mark a lot's corners.
 
-> **Status: planning.** There is no application code yet. This repo holds the plan and the
-> architecture decisions; the scaffold lands with task P1-01. Unless a section says otherwise,
-> everything below describes what is being built, not what exists.
+> **Status: Phase 1 in progress.** The scaffold (task P1-01) is in place: an API that answers
+> a health check and an empty web shell. Unless a section says otherwise, everything below
+> describes what is being built, not what exists.
 
 ## What it does
 
@@ -69,7 +69,7 @@ flowchart LR
 - **Typed end to end.** Pydantic to OpenAPI to generated TypeScript types, plus GraphQL
   codegen.
 
-The reasoning behind each of these is in [DECISIONS.md](DECISIONS.md).
+The reasoning behind each of these is in the [architecture decision records](docs/adr/README.md).
 
 ## Stack
 
@@ -109,7 +109,7 @@ Task-level detail is in [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.m
 
 ## Repository layout
 
-Only `docs/` and the root documents exist today. The rest arrives with the tasks that build it.
+`apps/api` and `apps/web` exist today. The rest arrives with the tasks that build it.
 
 ```
 apps/api    FastAPI: REST /v1, GraphQL /graphql, webhooks, /internal task handlers
@@ -122,13 +122,16 @@ docs/       plan and supporting docs
 
 ## Local development
 
-These commands become true with task P1-01. Everything runs on the dev machine first:
-Postgres + PostGIS and Mailpit in Docker, the API via uvicorn, the web app via `next dev`.
+Everything runs on the dev machine first: Postgres + PostGIS and Mailpit in Docker, the API
+via uvicorn, the web app via `next dev`.
 
-Prerequisites: Docker Desktop, Node, pnpm, Python and uv.
+Prerequisites: Docker Desktop, Node 24, pnpm, Python 3.13 and uv.
 
 ```bash
-docker compose up -d            # Postgres + PostGIS, Mailpit
+cp .env.example .env            # local settings; never committed
+uv sync                         # Python dependencies
+pnpm install                    # web dependencies
+docker compose up -d            # Postgres + PostGIS on port 5434, Mailpit on 1025/8025
 uv run alembic upgrade head     # apply migrations
 uv run pytest                   # API and RLS tests
 uv run ruff check
@@ -136,8 +139,17 @@ uv run pyright
 pnpm lint
 pnpm test
 pnpm build
-pnpm e2e
+pnpm e2e                        # Playwright; first run: pnpm --filter web exec playwright install chromium
 ```
+
+To run the apps:
+
+```bash
+uv run uvicorn cornerpin.main:app --reload    # API at http://localhost:8000
+pnpm --filter web dev                         # web at http://localhost:3000
+```
+
+Mailpit's inbox is at http://localhost:8025.
 
 Locally, Mailpit receives the magic-link emails and Turnstile uses Cloudflare's always-pass
 test keys. Integrations that need a third-party account sit behind config and stay dormant
@@ -150,5 +162,5 @@ of Phase 1. It is not live yet.
 
 - [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md): phases, tasks, data model, PWA
   behaviour and expected running costs.
-- [DECISIONS.md](DECISIONS.md): architecture decision records.
+- [docs/adr/](docs/adr/README.md): architecture decision records, one file per decision.
 - [CLAUDE.md](CLAUDE.md): working rules for Claude Code in this repo.
