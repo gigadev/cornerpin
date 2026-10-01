@@ -133,6 +133,7 @@ uv sync                         # Python dependencies
 pnpm install                    # web dependencies
 docker compose up -d            # Postgres + PostGIS on port 5434, Mailpit on 1025/8025
 uv run alembic upgrade head     # apply migrations
+uv run python -m cornerpin.seed # demo tenant with a synthetic subdivision
 uv run pytest                   # API and RLS tests
 uv run ruff check
 uv run pyright

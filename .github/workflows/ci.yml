@@ -29,6 +29,7 @@ jobs:
           --health-interval 2s --health-timeout 3s --health-retries 30
     env:
       DATABASE_URL: postgresql+psycopg://cornerpin:cornerpin@localhost:5434/cornerpin
+      API_DATABASE_URL: postgresql+psycopg://cornerpin_api:cornerpin_api@localhost:5434/cornerpin
     steps:
       - uses: actions/checkout@v5
       - uses: astral-sh/setup-uv@v6
@@ -39,6 +40,7 @@ jobs:
       - run: uv run ruff format --check
       - run: uv run pyright
       - run: uv run alembic upgrade head
+      - run: uv run python -m cornerpin.seed
       - run: uv run pytest
 
   web:

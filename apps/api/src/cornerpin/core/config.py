@@ -17,7 +17,13 @@ class Settings(BaseSettings):
     )
 
     environment: str = "local"
+    # Owner role: migrations and seeding only.
     database_url: str = "postgresql+psycopg://cornerpin:cornerpin@localhost:5434/cornerpin"
+    # Non-owner login role the API uses (ADR-021). Locally, the migration sets its password from
+    # this URL; elsewhere the role's password is provisioned with the infrastructure.
+    api_database_url: str = (
+        "postgresql+psycopg://cornerpin_api:cornerpin_api@localhost:5434/cornerpin"
+    )
     smtp_host: str = "localhost"
     smtp_port: int = 1025
 
