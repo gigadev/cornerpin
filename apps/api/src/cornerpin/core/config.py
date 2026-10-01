@@ -33,7 +33,7 @@ class Settings(BaseSettings):
     )
 
     # The origin people use; links in emails and the Origin check on writes use it.
-    web_origin: str = "http://localhost:3000"
+    web_origin: str = "http://localhost:3300"
     # Signs short-lived OAuth state. Must be set outside local.
     secret_key: str = LOCAL_SECRET_KEY
 

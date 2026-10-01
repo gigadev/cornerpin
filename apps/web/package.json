@@ -3,9 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port 3300",
     "build": "next build",
-    "start": "next start",
+    "start": "next start --port 3300",
     "lint": "eslint . --max-warnings 0 && tsc --noEmit && tsc -p tsconfig.sw.json",
     "test": "vitest run",
     "e2e": "playwright test"

@@ -5,14 +5,14 @@ describe("forwardRequestHeaders", () => {
   it("passes the session cookie, origin and body type, and nothing else", () => {
     const incoming = new Headers({
       cookie: "cp_session=abc",
-      origin: "http://localhost:3000",
+      origin: "http://localhost:3300",
       "content-type": "application/json",
-      host: "localhost:3000",
+      host: "localhost:3300",
       authorization: "Bearer should-not-pass",
     });
     const forwarded = forwardRequestHeaders(incoming, null);
     expect(forwarded.get("cookie")).toBe("cp_session=abc");
-    expect(forwarded.get("origin")).toBe("http://localhost:3000");
+    expect(forwarded.get("origin")).toBe("http://localhost:3300");
     expect(forwarded.get("content-type")).toBe("application/json");
     expect(forwarded.has("host")).toBe(false);
     expect(forwarded.has("authorization")).toBe(false);

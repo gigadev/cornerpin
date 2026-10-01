@@ -37,7 +37,7 @@ export default defineConfig({
       timeout: 120_000,
     },
     {
-      command: `pnpm build && pnpm start --port ${webPort}`,
+      command: `pnpm build && pnpm exec next start --port ${webPort}`,
       url: baseURL,
       env: { API_BASE_URL: `http://localhost:${apiPort}` },
       reuseExistingServer: !process.env.CI,

@@ -148,10 +148,10 @@ To run the apps:
 
 ```bash
 uv run uvicorn cornerpin.main:app --reload    # API at http://localhost:8000
-pnpm --filter web dev                         # web at http://localhost:3000
+pnpm --filter web dev                         # web at http://localhost:3300
 ```
 
-Mailpit's inbox is at http://localhost:8025. To sign in locally, open http://localhost:3000/signin
+Mailpit's inbox is at http://localhost:8025. To sign in locally, open http://localhost:3300/signin
 and use `owner@demo.cornerpin.test` (the seeded demo owner); the link arrives in Mailpit.
 
 Locally, Mailpit receives the magic-link emails and Turnstile uses Cloudflare's always-pass
