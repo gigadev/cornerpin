@@ -112,9 +112,11 @@ lot page from a sign or a shared link, not here.
 
 ![Juniper Bench: map coloured by status](../apps/web/public/walkthrough/02-subdivision.png)
 
-`/juniper-bench`. The map shows every published lot coloured by status: green available,
-orange on hold, grey sold. Clicking a lot opens its page. Lots in phase 2 aren't published, so
-they don't appear at all, here or anywhere public.
+`/juniper-bench`. The demo is laid out like a real plat: three blocks of homesites on curving
+streets, numbered block-lot (`3-9` is lot 9 in block 3), with wedge-shaped corner lots. The map
+shows every published lot coloured by status: green available, orange on hold, grey sold.
+Clicking a lot opens its page. Lots in phase 2 aren't published, so they don't appear at all,
+here or anywhere public. Everything in it (place, layout, prices, homes) is invented.
 
 Below the map is the list of lots and a filter form (status, land only or lot + home, maximum
 price, minimum acres). The filters are a plain form, so a filtered list has its own address
@@ -133,9 +135,9 @@ The whole page, map to list:
 
 ### A lot
 
-![Lot 8](../apps/web/public/walkthrough/05-lot.png)
+![Lot 2-6](../apps/web/public/walkthrough/05-lot.png)
 
-`/juniper-bench/lots/8`. Price, status, size, listing type and home details at the top, with
+`/juniper-bench/lots/2-6`. Price, status, size, listing type and home details at the top, with
 the two things a buyer does next: **Contact the owner** and **Save this lot**. Below come the
 photos, a map that outlines this lot among its neighbours with a **Directions** button (it
 opens Google Maps to a point inside the lot), the documents (plat, survey, covenants and so
@@ -169,7 +171,7 @@ Everything is built for a phone first: most visitors will be standing on a lot, 
 
 ### Link previews
 
-![Preview card for lot 8](../apps/web/public/walkthrough/08-link-preview.png)
+![Preview card for lot 2-6](../apps/web/public/walkthrough/08-link-preview.png)
 
 When someone texts or posts a lot's link, the preview shows this card: the lot, its status,
 price and size. Each subdivision has one too.
@@ -271,7 +273,7 @@ ticked. Acreage is calculated from the lot's shape once it has one.
 ### A lot
 
 <details open>
-<summary>Lot 8 in the portal</summary>
+<summary>Lot 2-6 in the portal</summary>
 
 ![Lot in the portal](../apps/web/public/walkthrough/24-portal-lot.png)
 
@@ -320,7 +322,7 @@ Sent to every owner and staff member of the organization. Replying goes straight
 ![Saved-lot alert](../apps/web/public/walkthrough/31-email-saved-lot.png)
 
 When an owner changes a published lot's status or price (or approves a hold on it), each buyer
-who saved it and kept alerts on gets exactly one email. Here the owner dropped lot 8's price.
+who saved it and kept alerts on gets exactly one email. Here the owner dropped lot 2-6's price.
 
 ---
 
@@ -379,16 +381,16 @@ choose **Offline**. The steps are in [TEST_ACCOUNTS.md](TEST_ACCOUNTS.md#offline
 
 A route through the whole app in about twenty minutes, all local:
 
-1. Open http://localhost:3300/juniper-bench, filter to available lots with homes, open lot 7.
+1. Open http://localhost:3300/juniper-bench, filter to available lots with homes, open lot 2-5.
 2. Send a question without signing in. Find it in Mailpit (as the owner's email).
 3. Click **Save this lot** and sign in with a made-up address such as `you@example.test`.
-   Save the lot, ask a question allowing email, and ask to hold lot 12.
+   Save the lot, ask a question allowing email, and ask to hold lot 3-8.
 4. Open `/account` and look at saved lots and "Who may contact you".
 5. In a private window, sign in as `owner@demo.cornerpin.test`. Open **Inquiries and holds**,
-   approve the hold, and check that lot 12 is now on hold on the public page.
-6. Still as the owner, change lot 7's price. Mailpit has the alert for your buyer address.
-7. Open lot 7 in the portal, upload a photo, and see it on the public page.
-8. Print a sign for lot 7, open its `/q/…` link, then change Juniper Bench's web address in the
+   approve the hold, and check that lot 3-8 is now on hold on the public page.
+6. Still as the owner, change lot 2-5's price. Mailpit has the alert for your buyer address.
+7. Open lot 2-5 in the portal, upload a photo, and see it on the public page.
+8. Print a sign for lot 2-5, open its `/q/…` link, then change Juniper Bench's web address in the
    portal and open the same link again. (Change the address back afterwards, or re-seed.)
 9. Open the map editor and redraw a lot's corner; the acreage updates.
 10. When you're done: `uv run python -m cornerpin.seed` puts the demo back as it was.

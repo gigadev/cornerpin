@@ -15,7 +15,7 @@ stays switched off until a Google client id exists.
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
 | Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
-| Public page for a lot | http://localhost:3300/juniper-bench/lots/7 |
+| Public page for a lot | http://localhost:3300/juniper-bench/lots/2-5 |
 | Owner map editor | Owner portal → Juniper Bench → Map and lot shapes |
 | Printable lot sign with QR code | Owner portal → a lot → **Print a sign** |
 | Where a sign's code lands | http://localhost:3300/q/{code} (the code is under the QR on the sign) |
@@ -70,9 +70,9 @@ Use `'staff'` instead of `'owner'` for a staff member. Right now both have the s
 | When | Who gets it | Subject |
 | --- | --- | --- |
 | Someone asks for a sign-in link | That address | Your Cornerpin sign-in link |
-| Someone sends a question from a lot page | Every owner and staff member of the lot's organization | New question about Lot 7 at Juniper Bench |
-| A signed-in buyer asks to hold a lot | Every owner and staff member | Hold request for Lot 7 at Juniper Bench |
-| An owner changes a published lot's status or price (or approves a hold) | Each buyer who saved the lot and kept email alerts on | Lot 7 at Juniper Bench is now on hold |
+| Someone sends a question from a lot page | Every owner and staff member of the lot's organization | New question about Lot 2-5 at Juniper Bench |
+| A signed-in buyer asks to hold a lot | Every owner and staff member | Hold request for Lot 2-5 at Juniper Bench |
+| An owner changes a published lot's status or price (or approves a hold) | Each buyer who saved the lot and kept email alerts on | Lot 2-5 at Juniper Bench is now on hold |
 
 To try the last one: sign in as a new buyer, save a lot, then sign in as the owner (another
 browser or a private window) and change that lot's status. Owner emails go to
@@ -94,10 +94,10 @@ The service worker doesn't run under `next dev`. To try offline behaviour and in
 
 1. `pnpm --filter web build`, then `pnpm --filter web exec next start --port 3300` (stop the dev
    server first; the API stays on 8000).
-2. Open http://localhost:3300/juniper-bench/lots/7 in Chrome and wait a few seconds.
-3. In DevTools → Network, choose **Offline**. Lot 7 and the Juniper Bench page still open; a lot
+2. Open http://localhost:3300/juniper-bench/lots/2-5 in Chrome and wait a few seconds.
+3. In DevTools → Network, choose **Offline**. Lot 2-5 and the Juniper Bench page still open; a lot
    you haven't opened shows "You're offline" with links to the pages this browser has kept.
-4. Still offline, send a question from lot 7. Switch back to **No throttling**: a banner sends
+4. Still offline, send a question from lot 2-5. Switch back to **No throttling**: a banner sends
    it, and it shows up in the owner portal.
 5. Chrome's address bar offers to install "Juniper Bench · Cornerpin" on that subdivision's
    pages, and "Cornerpin owner portal" under `/app`.
@@ -116,8 +116,8 @@ Printing uses the browser's print dialog (letter paper).
 uv run python -m cornerpin.seed
 ```
 
-This rebuilds Demo Land Co. and Juniper Bench from scratch: 25 lots, phase 1 published and
-phase 2 not. Accounts you created stay, but everything attached to Demo Land Co. is removed:
+This rebuilds Demo Land Co. and Juniper Bench from scratch: 48 lots in three blocks, the 32 in
+phase 1 published and the 16 in phase 2 not. Accounts you created stay, but everything attached to Demo Land Co. is removed:
 lots and subdivisions you added, and owners you added with the SQL above (run it again).
 
 ## Accounts used only by automated tests

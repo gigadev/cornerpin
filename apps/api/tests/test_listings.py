@@ -104,17 +104,20 @@ def test_subdivision_detail_lists_phases_and_lots_in_number_order(
     alpha, _ = tenants
     subdivision = new_subdivision(alpha_owner, alpha)
     phase = new_phase(alpha_owner, alpha, subdivision["id"], "Phase 1")
-    for number in ("10", "2", "B-1", "1"):
+    for number in ("10", "2-10", "2", "B-1", "3-1", "1", "2-9"):
         new_lot(alpha_owner, alpha, subdivision["id"], number=number, phase_id=phase["id"])
 
     detail = alpha_owner.get(f"{base(alpha)}/subdivisions/{subdivision['id']}").json()
-    assert [lot["number"] for lot in detail["lots"]] == ["1", "2", "10", "B-1"]
-    assert detail["phases"][0]["lot_count"] == 4
+    # Block-lot numbers in reading order too (ADR-034).
+    assert [lot["number"] for lot in detail["lots"]] == [
+        "1", "2", "2-9", "2-10", "3-1", "10", "B-1"
+    ]  # fmt: skip
+    assert detail["phases"][0]["lot_count"] == 7
     assert (detail["latitude"], detail["longitude"]) == pytest.approx((43.6, -116.2))
 
     listed = alpha_owner.get(f"{base(alpha)}/subdivisions").json()
     mine = next(s for s in listed if s["id"] == subdivision["id"])
-    assert (mine["lot_count"], mine["available_count"]) == (4, 4)
+    assert (mine["lot_count"], mine["available_count"]) == (7, 7)
 
 
 def test_update_subdivision(

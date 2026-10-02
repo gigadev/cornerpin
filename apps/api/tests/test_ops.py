@@ -31,8 +31,12 @@ def neon_like(db: Databases) -> Iterator[URL]:
         if not exists:
             conn.execute(text(f"CREATE ROLE {OPS_OWNER} LOGIN CREATEROLE PASSWORD '{OPS_OWNER}'"))
         # The app's roles already exist in this cluster (other test databases made them); on a
-        # fresh managed database the owner would create them and so administer them.
-        conn.execute(text(f"GRANT {APP_ROLES} TO {OPS_OWNER} WITH ADMIN OPTION"))
+        # fresh managed database the owner would create them, and so administer them without
+        # being able to act as them (Postgres 16+). Grant exactly that; granting again updates
+        # the options of an earlier run's grant.
+        conn.execute(
+            text(f"GRANT {APP_ROLES} TO {OPS_OWNER} WITH ADMIN TRUE, INHERIT FALSE, SET FALSE")
+        )
         conn.execute(text(f"CREATE DATABASE {OPS_DATABASE} OWNER {OPS_OWNER}"))
     admin.dispose()
     superuser = create_engine(TEST_OWNER_URL.set(database=OPS_DATABASE))
@@ -79,7 +83,7 @@ def test_migrate_seed_and_create_a_tenant_as_a_plain_owner(
     ops.check()
     report = capsys.readouterr().out
     assert "owner bypasses RLS: False" in report
-    assert "migration: 0009" in report
+    assert "migration: 0010" in report
 
     ops.seed_demo("demo-owner@example.test")
     tenant_id = ops.create_tenant("Ricky's Land Co.", "ricky@example.test", "Ricky")

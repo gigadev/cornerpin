@@ -32,11 +32,15 @@ def upgrade() -> None:
         CREATE FUNCTION app_lot_is_public(lot uuid) RETURNS boolean
           LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp
           AS $$ SELECT EXISTS (SELECT 1 FROM lots WHERE id = lot) $$;
-        -- A function's new owner needs CREATE on its schema; a superuser skips that check, a
-        -- managed database's owner (Neon) doesn't. Granted only for the hand-over.
+        -- Handing a function to another role means being able to SET ROLE to it, and the new
+        -- owner needs CREATE on its schema. A superuser skips both checks; a managed
+        -- database's owner (Neon) administers the roles it created but can't act as them
+        -- (Postgres 16+). Both are granted only for the hand-over.
+        GRANT cornerpin_public TO CURRENT_USER WITH INHERIT FALSE, SET TRUE;
         GRANT CREATE ON SCHEMA public TO cornerpin_public;
         ALTER FUNCTION app_lot_is_public(uuid) OWNER TO cornerpin_public;
         REVOKE CREATE ON SCHEMA public FROM cornerpin_public;
+        REVOKE cornerpin_public FROM CURRENT_USER;
         REVOKE ALL ON FUNCTION app_lot_is_public(uuid) FROM PUBLIC;
         GRANT EXECUTE ON FUNCTION app_lot_is_public(uuid) TO cornerpin_user, cornerpin_public;
 

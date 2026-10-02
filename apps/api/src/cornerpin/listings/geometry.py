@@ -119,7 +119,7 @@ def overlapping_lots(session: Session, lot_id: UUID | None, subdivision_id: UUID
             " WHERE me.id = :lot AND me.subdivision_id = :subdivision"
             " AND other.boundary IS NOT NULL AND me.boundary IS NOT NULL"
             " AND ST_Relate(me.boundary, other.boundary, '2********')"
-            " ORDER BY other.number"
+            " ORDER BY other.number COLLATE lot_number"
         ),
         {"lot": lot_id, "subdivision": subdivision_id},
     ).scalars()

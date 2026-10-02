@@ -81,7 +81,7 @@ test("the guide is a click away from sign-in and from every page's header", asyn
     .poll(() => first.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
     .toBeGreaterThan(0);
 
-  await page.goto("/juniper-bench/lots/7");
+  await page.goto("/juniper-bench/lots/2-5");
   await page.getByRole("banner").getByRole("link", { name: "Help" }).click();
   await expect(page).toHaveURL(/\/help$/);
   await page.getByRole("link", { name: "For owners" }).click();

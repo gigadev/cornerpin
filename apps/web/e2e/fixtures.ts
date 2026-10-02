@@ -3,6 +3,23 @@ import type { APIRequestContext, TestInfo } from "@playwright/test";
 // Seeded by apps/api/src/cornerpin/e2e_server.py; keep in sync.
 export const DEMO_TENANT_ID = "957ccd5e-b6d1-531f-a102-ddef309c396e";
 export const OTHER_TENANT_ID = "1aca3c52-936f-5fd9-8a5b-aa1b6e00ae2e";
+// Lots in the demo seed (apps/api/src/cornerpin/seed.py and e2e_server.py); keep in sync.
+// Published lots are numbered block-lot; phase 2 is unpublished.
+export const DEMO_LOTS = {
+  published: 32,
+  sold: 12,
+  availableHomes: 3,
+  home: "2-5", // lot + home with photos and a plat; $549,000, 4 bed, 3 bath, 2,650 sq ft
+  otherHome: "2-6", // lot + home; $489,000
+  unopened: "3-9", // published, never opened by the offline test
+  unpublished: "2-13", // phase 2, with a photo
+} as const;
+
+/** A lot's link in a list: its name starts "Lot <number>", and "2-1" doesn't match "2-10". */
+export function lotRow(number: string): RegExp {
+  return new RegExp(`^Lot ${number}(?![0-9])`);
+}
+
 // The API the e2e run starts (playwright.config.ts).
 export const API_URL = "http://localhost:8100";
 

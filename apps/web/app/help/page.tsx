@@ -151,7 +151,7 @@ export default function HelpPage() {
             <P>Sharing a lot&apos;s link by text or social media shows a preview card like this:</P>
             <Shot
               name="08-link-preview"
-              alt="A link preview card for lot 8: available, $489,000, 1.075 acres"
+              alt="A link preview card for lot 2-6: available, $489,000, 0.174 acres"
             />
           </Section>
 
