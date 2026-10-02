@@ -40,6 +40,7 @@ not started yet is still binding: it describes how that part will be built.
 | [027](027-public-pages.md) | Public pages: rendering, filters, files and link previews | P1-07 | Accepted |
 | [028](028-buyer-activity.md) | Buyer activity: who may do what, consent capture and hold approval | P1-08 | Accepted |
 | [029](029-notifications-and-task-runner.md) | Notifications, the task runner and web push | P1-09 | Accepted |
+| [030](030-pwa-caching-and-offline.md) | PWA caching, offline questions and updates | P1-10 | Accepted |
 
 ## Adding a decision
 

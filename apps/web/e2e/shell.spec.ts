@@ -50,19 +50,20 @@ test("service worker registers at the root scope", async ({ page }) => {
   expect(scope).toBe("/");
 });
 
-test("service worker caches nothing yet", async ({ page }) => {
+test("service worker precaches the offline page but not the home page", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload();
 
-  // Serwist opens an empty precache bucket on install; what matters is that nothing is in it.
-  const cachedUrls = await page.evaluate(async () => {
-    const urls: string[] = [];
+  // The home page reads the session (signed in or not), so it is never kept (ADR-030).
+  const cachedPaths = await page.evaluate(async () => {
+    const paths: string[] = [];
     for (const name of await caches.keys()) {
       const cache = await caches.open(name);
-      urls.push(...(await cache.keys()).map((request) => request.url));
+      paths.push(...(await cache.keys()).map((request) => new URL(request.url).pathname));
     }
-    return urls;
+    return paths;
   });
-  expect(cachedUrls).toEqual([]);
+  expect(cachedPaths).toContain("/offline");
+  expect(cachedPaths).not.toContain("/");
 });

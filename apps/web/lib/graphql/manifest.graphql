@@ -1,0 +1,6 @@
+query SubdivisionManifest($slug: String!) {
+  subdivision(slug: $slug) {
+    slug
+    name
+  }
+}

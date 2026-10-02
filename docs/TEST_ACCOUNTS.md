@@ -85,6 +85,20 @@ Push is off until it has keys, and the service worker only runs in a production 
 3. Sign in as a buyer, open `/account` and click **Also alert me on this device**.
 4. Save a lot and change its status as the owner; Chrome shows the alert.
 
+### Offline and installing (production build only)
+
+The service worker doesn't run under `next dev`. To try offline behaviour and installing:
+
+1. `pnpm --filter web build`, then `pnpm --filter web exec next start --port 3300` (stop the dev
+   server first; the API stays on 8000).
+2. Open http://localhost:3300/juniper-bench/lots/7 in Chrome and wait a few seconds.
+3. In DevTools → Network, choose **Offline**. Lot 7 and the Juniper Bench page still open; a lot
+   you haven't opened shows "You're offline" with links to the pages this browser has kept.
+4. Still offline, send a question from lot 7. Switch back to **No throttling**: a banner sends
+   it, and it shows up in the owner portal.
+5. Chrome's address bar offers to install "Juniper Bench · Cornerpin" on that subdivision's
+   pages, and "Cornerpin owner portal" under `/app`.
+
 ### Resetting the demo data
 
 ```bash

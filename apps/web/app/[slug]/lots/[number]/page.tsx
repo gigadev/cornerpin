@@ -60,6 +60,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title: `${title} · Cornerpin`,
     description,
     alternates: { canonical: url },
+    manifest: `/${subdivision.slug}/manifest.webmanifest`,
     openGraph: { type: "website", title, description, url, siteName: "Cornerpin" },
     twitter: { card: "summary_large_image", title, description },
   };
@@ -236,7 +237,11 @@ export default async function LotPage({ params }: { params: Params }) {
           <noscript>
             <p className="text-sm text-muted-foreground">The contact form needs JavaScript.</p>
           </noscript>
-          <ContactOwner subdivisionName={subdivision.name} available={status === "available"} />
+          <ContactOwner
+            lotLabel={`Lot ${lot.number}, ${subdivision.name}`}
+            subdivisionName={subdivision.name}
+            available={status === "available"}
+          />
         </section>
 
         <p>

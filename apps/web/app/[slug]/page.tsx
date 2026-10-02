@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     title: `${subdivision.name} · Cornerpin`,
     description,
     alternates: { canonical: `/${subdivision.slug}` },
+    manifest: `/${subdivision.slug}/manifest.webmanifest`,
     openGraph: {
       type: "website",
       title: subdivision.name,

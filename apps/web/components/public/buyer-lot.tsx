@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { Button } from "@/components/ui/button";
 import { browserApi } from "@/lib/api/browser";
 import type { components } from "@/lib/api/schema";
+import { isNetworkFailure } from "@/lib/inquiry-queue";
 
 // The visitor's own activity on a lot page (P1-08). The page itself is the same for everyone
 // and never reads the session; this asks the API from the browser instead, so the page can be
@@ -35,13 +36,20 @@ export function useBuyerLot(): Context {
 }
 
 async function fetchBuyerLot(lotId: string): Promise<BuyerLot> {
-  const { data, response } = await browserApi.GET("/v1/me/lots/{lot_id}", {
-    params: { path: { lot_id: lotId } },
-  });
-  if (data) return { kind: "signed-in", state: data };
-  if (response.status !== 401) return { kind: "error" };
-  const providers = await browserApi.GET("/v1/auth/providers");
-  return { kind: "signed-out", turnstileSiteKey: providers.data?.turnstile_site_key ?? null };
+  try {
+    const { data, response } = await browserApi.GET("/v1/me/lots/{lot_id}", {
+      params: { path: { lot_id: lotId } },
+    });
+    if (data) return { kind: "signed-in", state: data };
+    if (response.status !== 401) return { kind: "error" };
+    const providers = await browserApi.GET("/v1/auth/providers");
+    return { kind: "signed-out", turnstileSiteKey: providers.data?.turnstile_site_key ?? null };
+  } catch (failure) {
+    // Offline (a page served from the cache): who's signed in can't be known, so the form
+    // asks for an email and keeps the question until the connection returns (ADR-030).
+    if (isNetworkFailure(failure)) return { kind: "signed-out", turnstileSiteKey: null };
+    throw failure;
+  }
 }
 
 export function BuyerLotProvider({

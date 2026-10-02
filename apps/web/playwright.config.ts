@@ -11,7 +11,9 @@ const desktop = { ...devices["Desktop Chrome"], viewport: { width: 1280, height:
 // they will when deployed. The API runs on its own throwaway database (cornerpin_e2e) and sends
 // email to Mailpit, so `docker compose up -d` must be running.
 //
-// Portal and buyer tests reuse sessions saved by portal.setup.ts, one per viewport.
+// Portal and buyer tests reuse sessions saved by portal.setup.ts, one per viewport. The
+// portal is online-only, so its tests run without the service worker (pwa.spec.ts checks the
+// portal with it).
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
@@ -24,30 +26,38 @@ export default defineConfig({
   },
   projects: [
     { name: "setup", testMatch: /portal\.setup\.ts/ },
-    { name: "mobile", use: mobile, testIgnore: /(portal|buyer)\./ },
-    { name: "desktop", use: desktop, testIgnore: /(portal|buyer)\./ },
+    { name: "mobile", use: mobile, testIgnore: /(portal|buyer|pwa)\./ },
+    { name: "desktop", use: desktop, testIgnore: /(portal|buyer|pwa)\./ },
     {
       name: "mobile-portal",
-      use: { ...mobile, storageState: "playwright/.auth/portal-mobile.json" },
+      use: {
+        ...mobile,
+        storageState: "playwright/.auth/portal-mobile.json",
+        serviceWorkers: "block",
+      },
       testMatch: /portal\.spec\.ts/,
       dependencies: ["setup"],
     },
     {
       name: "desktop-portal",
-      use: { ...desktop, storageState: "playwright/.auth/portal-desktop.json" },
+      use: {
+        ...desktop,
+        storageState: "playwright/.auth/portal-desktop.json",
+        serviceWorkers: "block",
+      },
       testMatch: /portal\.spec\.ts/,
       dependencies: ["setup"],
     },
     {
       name: "mobile-buyer",
       use: { ...mobile, storageState: "playwright/.auth/buyer-mobile.json" },
-      testMatch: /buyer\.spec\.ts/,
+      testMatch: /(buyer|pwa)\.spec\.ts/,
       dependencies: ["setup"],
     },
     {
       name: "desktop-buyer",
       use: { ...desktop, storageState: "playwright/.auth/buyer-desktop.json" },
-      testMatch: /buyer\.spec\.ts/,
+      testMatch: /(buyer|pwa)\.spec\.ts/,
       dependencies: ["setup"],
     },
   ],
