@@ -22,7 +22,7 @@ export function LotFilterForm({
       method="get"
       action={action}
       aria-label="Filter lots"
-      className="grid grid-cols-2 gap-3 rounded-lg border border-border p-3 sm:grid-cols-3 lg:grid-cols-6 lg:items-end"
+      className="grid grid-cols-2 gap-3 rounded-xl border border-border bg-card p-4 sm:grid-cols-3 lg:grid-cols-6 lg:items-end"
     >
       <label className="grid gap-1 text-sm">
         <span className="font-medium">Status</span>

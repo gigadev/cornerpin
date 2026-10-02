@@ -25,28 +25,30 @@ export default async function SignInPage({
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-md px-4 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-        <p className="mt-2 text-muted-foreground">
-          We&apos;ll email you a link. No password needed; a new address gets a new account.
-        </p>
-        {error === "google" ? (
-          <p role="alert" className="mt-4 rounded border border-border bg-card p-3 text-sm">
-            Google sign-in didn&apos;t complete. Try again, or use an email link.
+      <main className="contours min-h-[calc(100dvh-4rem)] px-4 py-10 sm:py-16">
+        <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          <h1 className="text-3xl font-semibold tracking-tight">Sign in</h1>
+          <p className="mt-2 text-muted-foreground">
+            We&apos;ll email you a link. No password needed; a new address gets a new account.
           </p>
-        ) : null}
-        <SignInForm
-          nextPath={nextPath}
-          turnstileSiteKey={providers.turnstile_site_key}
-          googleEnabled={providers.google}
-        />
-        <p className="mt-8 text-sm text-muted-foreground">
-          New here?{" "}
-          <Link href="/help" className="underline">
-            See how Cornerpin works
-          </Link>
-          .
-        </p>
+          {error === "google" ? (
+            <p role="alert" className="mt-4 rounded-lg border border-border bg-muted p-3 text-sm">
+              Google sign-in didn&apos;t complete. Try again, or use an email link.
+            </p>
+          ) : null}
+          <SignInForm
+            nextPath={nextPath}
+            turnstileSiteKey={providers.turnstile_site_key}
+            googleEnabled={providers.google}
+          />
+          <p className="mt-8 text-sm text-muted-foreground">
+            New here?{" "}
+            <Link href="/help" className="underline">
+              See how Cornerpin works
+            </Link>
+            .
+          </p>
+        </div>
       </main>
     </>
   );

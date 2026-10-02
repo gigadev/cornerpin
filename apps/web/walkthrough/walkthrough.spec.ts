@@ -224,9 +224,10 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   const buyer = await buyerContext.newPage();
   await buyer.goto("/juniper-bench/lots/8");
   await buyer.getByRole("link", { name: "Save this lot" }).click();
-  await buyer.getByLabel("Email").fill(BUYER);
+  // Enabled means hydrated with a Turnstile token; typing before hydration would be lost.
   const send = buyer.getByRole("button", { name: "Email me a sign-in link" });
   await expect(send).toBeEnabled({ timeout: 20_000 });
+  await buyer.getByLabel("Email").fill(BUYER);
   await buyer.addStyleTag({ content: HIDE_TEST_TURNSTILE });
   await shot(buyer, "12-sign-in");
   await send.click();

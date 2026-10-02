@@ -16,15 +16,17 @@ export default async function VerifyPage({
   return (
     <>
       <SiteHeader />
-      <main className="mx-auto max-w-md px-4 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in to Cornerpin</h1>
-        {token ? (
-          <VerifyForm token={token} />
-        ) : (
-          <p className="mt-4">
-            This link is incomplete. <Link href="/signin" className="underline">Request a new one</Link>.
-          </p>
-        )}
+      <main className="contours min-h-[calc(100dvh-4rem)] px-4 py-10 sm:py-16">
+        <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm sm:p-8">
+          <h1 className="text-3xl font-semibold tracking-tight">Sign in to Cornerpin</h1>
+          {token ? (
+            <VerifyForm token={token} />
+          ) : (
+            <p className="mt-4">
+              This link is incomplete. <Link href="/signin" className="underline">Request a new one</Link>.
+            </p>
+          )}
+        </div>
       </main>
     </>
   );

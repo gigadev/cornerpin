@@ -16,7 +16,7 @@ export function SignOutButton() {
   }
 
   return (
-    <button type="button" onClick={signOut} className="underline">
+    <button type="button" onClick={signOut} className="cursor-pointer">
       Sign out
     </button>
   );

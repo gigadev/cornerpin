@@ -77,5 +77,6 @@ and the code disagree, ask; do not silently pick one. Do not add features not in
 - Auth is passwordless (magic link + Google) with Cloudflare Turnstile on public forms; never
   add a password field. Locally, Mailpit receives magic links and Turnstile uses Cloudflare's
   always-pass test keys.
-- No brand yet: plain text wordmark, neutral palette, until Scott supplies one.
+- Theme: "survey and land" (ADR-033), sage on sand, Fraunces + Inter, a working identity until
+  Scott supplies a real brand. Use the colour tokens, never raw colours.
 - Idaho spans the Mountain and Pacific time zones; each subdivision stores its time zone.

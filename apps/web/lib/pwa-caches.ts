@@ -7,4 +7,5 @@ export const CACHES = {
   photos: "photos",
   mapStyle: "map-style",
   mapTiles: "map-tiles",
+  fonts: "fonts",
 } as const;

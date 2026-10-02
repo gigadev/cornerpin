@@ -105,7 +105,7 @@ export function SaveLotButton() {
 
   if (buyer.kind === "signed-out") {
     return (
-      <Button asChild variant="outline">
+      <Button asChild variant="outline" size="lg" className="h-10 px-4">
         <Link href={signInHref}>Save this lot</Link>
       </Button>
     );
@@ -124,7 +124,14 @@ export function SaveLotButton() {
   }
 
   return (
-    <Button variant="outline" aria-pressed={saved} disabled={busy} onClick={toggle}>
+    <Button
+      variant="outline"
+      size="lg"
+      className="h-10 px-4"
+      aria-pressed={saved}
+      disabled={busy}
+      onClick={toggle}
+    >
       {saved ? "Saved" : "Save this lot"}
     </Button>
   );

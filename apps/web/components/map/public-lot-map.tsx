@@ -66,7 +66,7 @@ export function PublicLotMap({
             type: "line",
             source: LOTS_SOURCE,
             filter: ["==", ["get", "id"], focusLotId],
-            paint: { "line-color": "#1c1917", "line-width": 4 },
+            paint: { "line-color": "#1f2a33", "line-width": 4 },
           });
         }
       });
@@ -110,7 +110,7 @@ export function PublicLotMap({
         role="region"
         aria-label="Map of lots"
         data-rendered-lots={rendered}
-        className={`${size === "tall" ? "h-[55vh] min-h-80" : "h-72"} relative w-full overflow-hidden rounded-lg border border-border bg-muted`}
+        className={`${size === "tall" ? "h-[55vh] min-h-80" : "h-72"} relative w-full overflow-hidden rounded-xl border border-border bg-muted shadow-sm`}
       >
         <noscript>
           <p className="p-4 text-sm text-muted-foreground">

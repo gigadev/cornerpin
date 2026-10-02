@@ -34,20 +34,18 @@ export default async function AccountPage() {
     <>
       <SiteHeader>
         {me.memberships.length > 0 ? (
-          <Link href="/app" className="underline">
-            Owner portal
-          </Link>
+          <Link href="/app">Owner portal</Link>
         ) : null}
         <SignOutButton />
       </SiteHeader>
       <main className="mx-auto grid max-w-3xl gap-8 px-4 py-8">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Your account</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Your account</h1>
           <p className="mt-1 text-muted-foreground">Signed in as {me.email}</p>
         </div>
 
         <section aria-labelledby="saved-heading" className="grid gap-3">
-          <h2 id="saved-heading" className="text-lg font-semibold">
+          <h2 id="saved-heading" className="text-xl font-semibold tracking-tight">
             Saved lots
           </h2>
           {saved.data.length === 0 ? (
@@ -55,7 +53,7 @@ export default async function AccountPage() {
               Nothing saved yet. Use &ldquo;Save this lot&rdquo; on a lot page to follow it here.
             </p>
           ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border">
+            <ul className="divide-y divide-border rounded-xl border border-border bg-card">
               {saved.data.map((lot) => (
                 <li key={lot.lot_id} className="flex flex-wrap items-center gap-3 px-4 py-3">
                   <Link
@@ -78,14 +76,14 @@ export default async function AccountPage() {
         </section>
 
         <section aria-labelledby="alerts-heading" className="grid gap-3">
-          <h2 id="alerts-heading" className="text-lg font-semibold">
+          <h2 id="alerts-heading" className="text-xl font-semibold tracking-tight">
             Alerts
           </h2>
           <AlertsForm prefs={prefs.data} />
         </section>
 
         <section aria-labelledby="contact-heading" className="grid gap-3">
-          <h2 id="contact-heading" className="text-lg font-semibold">
+          <h2 id="contact-heading" className="text-xl font-semibold tracking-tight">
             Who may contact you
           </h2>
           {consents.data.length === 0 ? (
@@ -102,7 +100,7 @@ export default async function AccountPage() {
         </section>
 
         <section aria-labelledby="details-heading" className="grid gap-3">
-          <h2 id="details-heading" className="text-lg font-semibold">
+          <h2 id="details-heading" className="text-xl font-semibold tracking-tight">
             Your details
           </h2>
           <ProfileForm me={me} />

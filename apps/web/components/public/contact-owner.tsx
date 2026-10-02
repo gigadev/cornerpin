@@ -122,7 +122,7 @@ function ContactForm({
   if (sent) {
     return (
       <div className="grid gap-3">
-        <p role="status" className="rounded-lg border border-border bg-card p-4">
+        <p role="status" className="rounded-xl border border-border bg-card p-5">
           {sent}
         </p>
         <Button
@@ -138,7 +138,7 @@ function ContactForm({
   }
 
   return (
-    <form onSubmit={submit} className="grid gap-4 rounded-lg border border-border p-4">
+    <form onSubmit={submit} className="grid gap-4 rounded-xl border border-border bg-card p-5">
       {canHold ? (
         <fieldset className="grid gap-2">
           <legend className="mb-1 text-sm font-medium">I&apos;d like to</legend>

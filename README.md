@@ -145,11 +145,13 @@ pnpm e2e                        # Playwright; needs docker compose up; first run
 pnpm gen:api                    # regenerate TypeScript types after changing the API
 ```
 
-To run the apps:
+To run the apps, from the repo root ([docs/RUNNING.md](docs/RUNNING.md) has more):
 
 ```bash
-uv run uvicorn cornerpin.main:app --reload    # API at http://localhost:8000
-pnpm --filter web dev                         # web at http://localhost:3300
+pnpm db      # Postgres + PostGIS in Docker, port 5434
+pnpm mail    # Mailpit in Docker, http://localhost:8025
+pnpm api     # API at http://localhost:8000 (own terminal)
+pnpm web     # web at http://localhost:3300 (own terminal)
 ```
 
 Mailpit's inbox is at http://localhost:8025. To sign in locally, open http://localhost:3300/signin
@@ -165,6 +167,7 @@ of Phase 1. It is not live yet.
 
 ## Documentation
 
+- [docs/RUNNING.md](docs/RUNNING.md): the four commands that start it locally.
 - [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md): a screenshot tour of the whole site, and how to
   run it locally.
 - [docs/DEPLOY.md](docs/DEPLOY.md): setting up and deploying production.

@@ -4,11 +4,18 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* shadcn/ui's neutral palette and the system font stack until there is a brand (CLAUDE.md). */
+/* The "survey and land" theme (ADR-033): sage on warm sand, slate text, Fraunces headings and
+   Inter body text. The fonts are self-hosted by next/font (app/layout.tsx). */
 @theme inline {
-  --font-heading: var(--font-sans);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
+  --font-heading: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --color-status-available: var(--status-available);
+  --color-status-available-soft: var(--status-available-soft);
+  --color-status-hold: var(--status-hold);
+  --color-status-hold-soft: var(--status-hold-soft);
+  --color-status-sold: var(--status-sold);
+  --color-status-sold-soft: var(--status-sold-soft);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -49,73 +56,90 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Text on background, card and muted is at least 4.5:1 (WCAG AA). */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #f7f4ee;
+  --foreground: #1f2a33;
+  --card: #fdfcf9;
+  --card-foreground: #1f2a33;
+  --popover: #fdfcf9;
+  --popover-foreground: #1f2a33;
+  --primary: #4f6b4a;
+  --primary-foreground: #fbfaf6;
+  --secondary: #ece6da;
+  --secondary-foreground: #1f2a33;
+  --muted: #efeae1;
+  --muted-foreground: #5a636b;
+  --accent: #e3eadf;
+  --accent-foreground: #2f4530;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  --border: #e0d9cb;
+  --input: #d6cebe;
+  --ring: #6f8c69;
+  --chart-1: #4f6b4a;
+  --chart-2: #8aa37f;
+  --chart-3: #b98b5e;
+  --chart-4: #5a636b;
+  --chart-5: #c9bfa9;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #f2eee6;
+  --sidebar-foreground: #1f2a33;
+  --sidebar-primary: #4f6b4a;
+  --sidebar-primary-foreground: #fbfaf6;
+  --sidebar-accent: #e3eadf;
+  --sidebar-accent-foreground: #2f4530;
+  --sidebar-border: #e0d9cb;
+  --sidebar-ring: #6f8c69;
+  /* Lot status, the same hues as the map (lib/map/lots.ts, ADR-026). */
+  --status-available: #166534;
+  --status-available-soft: #dcefdc;
+  --status-hold: #92400e;
+  --status-hold-soft: #f8e6c8;
+  --status-sold: #52525b;
+  --status-sold-soft: #e7e5e0;
+  /* The contour lines behind page heroes. */
+  --contour: #4f6b4a;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #151b1f;
+  --foreground: #ece8df;
+  --card: #1d252a;
+  --card-foreground: #ece8df;
+  --popover: #1d252a;
+  --popover-foreground: #ece8df;
+  --primary: #a3bd9b;
+  --primary-foreground: #15201a;
+  --secondary: #263037;
+  --secondary-foreground: #ece8df;
+  --muted: #232c32;
+  --muted-foreground: #a6aeb5;
+  --accent: #2b3a2d;
+  --accent-foreground: #d7e4d2;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: rgb(255 255 255 / 10%);
+  --input: rgb(255 255 255 / 15%);
+  --ring: #7f9b78;
+  --chart-1: #a3bd9b;
+  --chart-2: #6f8c69;
+  --chart-3: #d0a77c;
+  --chart-4: #a6aeb5;
+  --chart-5: #4a5560;
+  --sidebar: #1d252a;
+  --sidebar-foreground: #ece8df;
+  --sidebar-primary: #a3bd9b;
+  --sidebar-primary-foreground: #15201a;
+  --sidebar-accent: #263037;
+  --sidebar-accent-foreground: #ece8df;
+  --sidebar-border: rgb(255 255 255 / 10%);
+  --sidebar-ring: #7f9b78;
+  --status-available: #86efac;
+  --status-available-soft: rgb(22 163 74 / 20%);
+  --status-hold: #fcd34d;
+  --status-hold-soft: rgb(217 119 6 / 22%);
+  --status-sold: #d4d4d8;
+  --status-sold-soft: rgb(113 113 122 / 25%);
+  --contour: #a3bd9b;
 }
 
 @layer base {
@@ -127,6 +151,34 @@
   }
   html {
     @apply font-sans;
+  }
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+    font-optical-sizing: auto;
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+}
+
+/* Faint survey contours behind a page's opening section. */
+@utility contours {
+  position: relative;
+  isolation: isolate;
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-color: var(--contour);
+    opacity: 0.16;
+    mask-image: url("/contours.svg");
+    mask-size: 900px auto;
+    mask-position: right -120px center;
+    mask-repeat: no-repeat;
+    pointer-events: none;
   }
 }
 /* Printing (P1-11): a lot sign fills one letter page. */

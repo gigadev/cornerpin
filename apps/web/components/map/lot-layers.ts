@@ -38,7 +38,7 @@ export function addLotLayers(map: MapLibreMap, lots: LotCollection): void {
       "text-size": 12,
       "text-allow-overlap": false,
     },
-    paint: { "text-color": "#1c1917", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
+    paint: { "text-color": "#1f2a33", "text-halo-color": "#ffffff", "text-halo-width": 1.5 },
   });
 }
 

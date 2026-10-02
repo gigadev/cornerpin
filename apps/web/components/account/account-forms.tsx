@@ -215,7 +215,7 @@ export function ConsentList({ consents, timeZone }: { consents: Consent[]; timeZ
 
   return (
     <div className="grid gap-2">
-      <ul className="divide-y divide-border rounded-lg border border-border">
+      <ul className="divide-y divide-border rounded-xl border border-border bg-card">
         {consents.map((consent) => {
           const id = `consent-${consent.tenant_id}-${consent.channel}`;
           return (

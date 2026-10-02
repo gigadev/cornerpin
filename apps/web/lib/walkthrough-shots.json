@@ -9,7 +9,7 @@
   },
   "03-subdivision-full": {
     "width": 1280,
-    "height": 1607
+    "height": 1880
   },
   "04-filters": {
     "width": 1280,
@@ -21,7 +21,7 @@
   },
   "06-lot-full": {
     "width": 1280,
-    "height": 2352
+    "height": 2513
   },
   "07-contact-signed-out": {
     "width": 1280,
@@ -85,7 +85,7 @@
   },
   "22-portal-subdivision": {
     "width": 1280,
-    "height": 2123
+    "height": 2169
   },
   "23-portal-new-lot": {
     "width": 1280,
@@ -93,7 +93,7 @@
   },
   "24-portal-lot": {
     "width": 1280,
-    "height": 1881
+    "height": 1877
   },
   "25-portal-map-editor": {
     "width": 1280,
@@ -101,7 +101,7 @@
   },
   "26-portal-inquiries": {
     "width": 1280,
-    "height": 846
+    "height": 842
   },
   "27-portal-sign": {
     "width": 1280,

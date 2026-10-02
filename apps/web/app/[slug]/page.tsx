@@ -63,6 +63,7 @@ export default async function SubdivisionPage({
     listingType: listingTypeFromGraphql(lot.listingType),
   }));
   const shown = applyFilters(lots, filters);
+  const available = lots.filter((lot) => lot.status === "available").length;
   const phases = [...new Set(lots.map((lot) => lot.phaseName))];
   const mapLots: MapLotInput[] = shown.map(({ id, number, status, boundary }) => ({
     id,
@@ -76,63 +77,70 @@ export default async function SubdivisionPage({
   return (
     <>
       <SiteHeader>
-        <Link href="/account" className="underline">
-          Account
-        </Link>
+        <Link href="/account">Account</Link>
       </SiteHeader>
-      <main className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{subdivision.name}</h1>
-          {subdivision.description ? (
-            <p className="mt-2 max-w-prose text-muted-foreground">{subdivision.description}</p>
-          ) : null}
-        </div>
-
-        <PublicLotMap
-          center={[lng, lat]}
-          lots={mapLots}
-          linkBase={lotPath}
-          satelliteKey={process.env.MAPTILER_KEY ?? null}
-        />
-
-        <section aria-labelledby="lots-heading" className="grid gap-3">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 id="lots-heading" className="text-lg font-semibold">
-              Lots
-            </h2>
-            <p role="status" className="text-sm text-muted-foreground">
-              {hasFilters(filters)
-                ? `Showing ${shown.length} of ${lots.length} lots`
-                : `${lots.length} lots`}
+      <main>
+        <section className="contours border-b border-border">
+          <div className="mx-auto grid max-w-5xl gap-3 px-4 py-10 sm:py-14">
+            <p className="text-sm font-medium tracking-wide text-primary uppercase">
+              {available} of {lots.length} lots available
             </p>
+            <h1 className="text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+              {subdivision.name}
+            </h1>
+            {subdivision.description ? (
+              <p className="max-w-prose text-lg text-muted-foreground">{subdivision.description}</p>
+            ) : null}
           </div>
-          <LotFilterForm action={`/${subdivision.slug}`} filters={filters} phases={phases} />
-          {shown.length === 0 ? (
-            <p className="text-muted-foreground">No lots match. Try fewer filters.</p>
-          ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border">
-              {shown.map((lot) => (
-                <li key={lot.id}>
-                  <Link
-                    href={`${lotPath}${encodeURIComponent(lot.number)}`}
-                    className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3 hover:bg-muted"
-                  >
-                    <span className="font-medium">Lot {lot.number}</span>
-                    <StatusBadge status={lot.status} />
-                    <span className="text-sm text-muted-foreground">
-                      {listingLabel(lot.listingType)}
-                      {phases.length > 1 ? ` · ${lot.phaseName}` : ""}
-                    </span>
-                    <span className="ml-auto tabular-nums">{formatPrice(lot.price)}</span>
-                    <span className="w-20 text-right text-sm text-muted-foreground tabular-nums">
-                      {formatAcres(lot.acreage)}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
         </section>
+
+        <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8">
+          <PublicLotMap
+            center={[lng, lat]}
+            lots={mapLots}
+            linkBase={lotPath}
+            satelliteKey={process.env.MAPTILER_KEY ?? null}
+          />
+
+          <section aria-labelledby="lots-heading" className="grid gap-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <h2 id="lots-heading" className="text-2xl font-semibold tracking-tight">
+                Lots
+              </h2>
+              <p role="status" className="text-sm text-muted-foreground">
+                {hasFilters(filters)
+                  ? `Showing ${shown.length} of ${lots.length} lots`
+                  : `${lots.length} lots`}
+              </p>
+            </div>
+            <LotFilterForm action={`/${subdivision.slug}`} filters={filters} phases={phases} />
+            {shown.length === 0 ? (
+              <p className="text-muted-foreground">No lots match. Try fewer filters.</p>
+            ) : (
+              <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card">
+                {shown.map((lot) => (
+                  <li key={lot.id}>
+                    <Link
+                      href={`${lotPath}${encodeURIComponent(lot.number)}`}
+                      className="flex flex-wrap items-center gap-x-3 gap-y-1 px-4 py-3.5 transition-colors hover:bg-accent"
+                    >
+                      <span className="font-heading text-lg font-semibold">Lot {lot.number}</span>
+                      <StatusBadge status={lot.status} />
+                      <span className="text-sm text-muted-foreground">
+                        {listingLabel(lot.listingType)}
+                        {phases.length > 1 ? ` · ${lot.phaseName}` : ""}
+                      </span>
+                      <span className="ml-auto font-medium tabular-nums">{formatPrice(lot.price)}</span>
+                      <span className="w-20 text-right text-sm text-muted-foreground tabular-nums">
+                        {formatAcres(lot.acreage)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       </main>
     </>
   );

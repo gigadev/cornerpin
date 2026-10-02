@@ -1,9 +1,15 @@
 import { SerwistProvider } from "@serwist/turbopack/react";
 import type { Metadata, Viewport } from "next";
+import { Fraunces, Inter } from "next/font/google";
 import type { ReactNode } from "react";
 import "./globals.css";
 import { PwaClient } from "@/components/pwa/pwa-client";
 import { siteUrl } from "@/lib/site";
+
+// Self-hosted at build time, so pages make no request to Google and the fonts work offline
+// (ADR-033).
+const fraunces = Fraunces({ subsets: ["latin"], variable: "--font-fraunces", axes: ["opsz"] });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   // Makes link-preview image URLs absolute (P1-07).
@@ -18,14 +24,14 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#1c1917",
+  themeColor: "#4f6b4a",
   width: "device-width",
   initialScale: 1,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="min-h-dvh antialiased">
         {/*
           One service worker at the root scope (ADR-005, ADR-030). Serwist's cacheOnNavigation

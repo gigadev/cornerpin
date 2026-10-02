@@ -303,7 +303,7 @@ export function LotMapEditor({
     if (!map || !corners) return;
     void loadMapLibre().then(({ Marker }) => {
       markersRef.current = corners.map((corner, index) => {
-        const marker = new Marker({ draggable: true, color: "#1c1917" })
+        const marker = new Marker({ draggable: true, color: "#1f2a33" })
           .setLngLat(corner)
           .addTo(map);
         marker.getElement().setAttribute("aria-label", `Plat corner ${index + 1}`);

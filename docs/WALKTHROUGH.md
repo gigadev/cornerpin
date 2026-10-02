@@ -30,10 +30,10 @@ page's header and from the sign-in page), which is this tour without the develop
 
 | Piece | Where | Started by |
 | --- | --- | --- |
-| Postgres + PostGIS (the database) | Docker, port 5434 | `docker compose up -d` |
-| Mailpit (catches every email) | Docker, http://localhost:8025 | `docker compose up -d` |
-| API (FastAPI) | http://localhost:8000 | `uv run uvicorn …` |
-| Web app (Next.js) | http://localhost:3300 | `pnpm --filter web dev` |
+| Postgres + PostGIS (the database) | Docker, port 5434 | `pnpm db` |
+| Mailpit (catches every email) | Docker, http://localhost:8025 | `pnpm mail` |
+| API (FastAPI) | http://localhost:8000 | `pnpm api` |
+| Web app (Next.js) | http://localhost:3300 | `pnpm web` |
 
 Nothing leaves your machine except map tiles (OpenFreeMap) and the Turnstile test widget
 (Cloudflare). No email is ever really sent: Mailpit catches it.
@@ -71,20 +71,9 @@ The last two create the tables and the demo data: Demo Land Co., which owns Juni
 
 ### Every day
 
-Start the database and Mailpit (if Docker isn't already running them), then the API and the
-web app in two terminals:
-
-```bash
-docker compose up -d
-```
-
-```bash
-uv run uvicorn cornerpin.main:app --reload
-```
-
-```bash
-pnpm --filter web dev
-```
+Four commands from the repo root: `pnpm db` and `pnpm mail` start the database and Mailpit in
+Docker, then `pnpm api` and `pnpm web` each run in their own terminal. [RUNNING.md](RUNNING.md)
+has the details, stopping, and what to check when something is off.
 
 Open http://localhost:3300/juniper-bench. Sign in as the demo owner with
 `owner@demo.cornerpin.test`; the link arrives in Mailpit at http://localhost:8025. Any other
@@ -101,7 +90,7 @@ accounts and URLs are listed in [TEST_ACCOUNTS.md](TEST_ACCOUNTS.md).
 | Run the browser tests (they use their own database) | `pnpm e2e` |
 | Try offline and installing (needs a production build) | see [section 8](#8-offline-and-installing) |
 | Retake these screenshots | `pnpm --filter web walkthrough` |
-| Stop the database and Mailpit | `docker compose down` (your data is kept) |
+| Stop the database and Mailpit | `pnpm stop` (your data is kept) |
 
 ---
 
@@ -114,9 +103,10 @@ map needs it), which matters on a weak signal.
 
 ![Home page](../apps/web/public/walkthrough/01-home.png)
 
-A placeholder home page for now: the plain text wordmark and a sentence. There's no brand yet;
-the neutral look is deliberate until there is one. Visitors normally arrive at a subdivision
-or lot page from a sign or a shared link, not here.
+The home page introduces the site and links to the demo subdivision and the guide. The look is
+the "survey and land" theme (sage on sand, Fraunces headings), a working identity until there's
+a real brand ([ADR-033](adr/033-visual-theme.md)). Visitors normally arrive at a subdivision or
+lot page from a sign or a shared link, not here.
 
 ### A subdivision
 
@@ -380,7 +370,7 @@ pnpm --filter web build
 pnpm --filter web exec next start --port 3300
 ```
 
-(Stop `pnpm --filter web dev` first.) Then in Chrome, open a lot, and in DevTools → Network
+(Stop `pnpm web` first.) Then in Chrome, open a lot, and in DevTools → Network
 choose **Offline**. The steps are in [TEST_ACCOUNTS.md](TEST_ACCOUNTS.md#offline-and-installing-production-build-only).
 
 ---

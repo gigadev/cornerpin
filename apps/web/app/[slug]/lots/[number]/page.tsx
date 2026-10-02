@@ -9,6 +9,7 @@ import { ContactOwner } from "@/components/public/contact-owner";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { SiteHeader } from "@/components/site-header";
 import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { directionsUrl } from "@/lib/directions";
 import {
   documentLabel,
@@ -87,168 +88,171 @@ export default async function LotPage({ params }: { params: Params }) {
   return (
     <BuyerLotProvider lotId={lot.id} lotPath={lotPath}>
       <SiteHeader>
-        <Link href="/account" className="underline">
-          Account
-        </Link>
+        <Link href="/account">Account</Link>
       </SiteHeader>
-      <main className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
-        <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
-          <Link href={`/${subdivision.slug}`} className="underline-offset-4 hover:underline">
-            {subdivision.name}
-          </Link>
-        </nav>
-
-        <div className="grid gap-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Lot {lot.number}</h1>
-            <StatusBadge status={status} />
-          </div>
-          <p className="text-2xl tabular-nums">{formatPrice(lot.price)}</p>
-          <div className="flex flex-wrap gap-3">
-            <a href="#contact" className={buttonVariants()}>
-              Contact the owner
-            </a>
-            <SaveLotButton />
-          </div>
-        </div>
-
-        <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-lg border border-border p-4 sm:grid-cols-4">
-          <div>
-            <dt className="text-sm text-muted-foreground">Size</dt>
-            <dd>{formatAcres(lot.acreage)}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted-foreground">Listing</dt>
-            <dd>{listingLabel(listing)}</dd>
-          </div>
-          <div>
-            <dt className="text-sm text-muted-foreground">Phase</dt>
-            <dd>{lot.phaseName}</dd>
-          </div>
-          {lot.home ? (
-            <div>
-              <dt className="text-sm text-muted-foreground">Home</dt>
-              <dd>{homeSummary(lot.home) || "Details to come"}</dd>
+      <main>
+        <section className="contours border-b border-border">
+          <div className="mx-auto grid max-w-5xl gap-3 px-4 py-8 sm:py-12">
+            <nav aria-label="Breadcrumb" className="text-sm font-medium text-primary">
+              <Link href={`/${subdivision.slug}`} className="underline-offset-4 hover:underline">
+                {subdivision.name}
+              </Link>
+            </nav>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Lot {lot.number}</h1>
+              <StatusBadge status={status} />
             </div>
-          ) : null}
-        </dl>
-        {lot.home?.description ? <p className="max-w-prose">{lot.home.description}</p> : null}
+            <p className="font-heading text-3xl font-medium tabular-nums">
+              {formatPrice(lot.price)}
+            </p>
+            <div className="flex flex-wrap gap-3 pt-1">
+              <a href="#contact" className={cn(buttonVariants({ size: "lg" }), "h-10 px-4")}>
+                Contact the owner
+              </a>
+              <SaveLotButton />
+            </div>
+          </div>
+        </section>
 
-        {cover ? (
-          <section aria-labelledby="photos-heading" className="grid gap-3">
-            <h2 id="photos-heading" className="text-lg font-semibold">
-              Photos
-            </h2>
-            <figure className="grid gap-1">
-              <Image
-                src={cover.url}
-                alt={cover.caption || `Lot ${lot.number}`}
-                width={cover.width ?? 1600}
-                height={cover.height ?? 1200}
-                sizes="(min-width: 1024px) 1000px, 100vw"
-                priority
-                className="max-h-[70vh] w-full rounded-lg bg-muted object-cover"
-              />
-              {cover.caption ? (
-                <figcaption className="text-sm text-muted-foreground">{cover.caption}</figcaption>
+        <div className="mx-auto grid max-w-5xl gap-8 px-4 py-8">
+          <dl className="grid grid-cols-2 gap-x-6 gap-y-4 rounded-xl border border-border bg-card p-5 sm:grid-cols-4">
+            <div>
+              <dt className="text-sm text-muted-foreground">Size</dt>
+              <dd className="font-medium">{formatAcres(lot.acreage)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">Listing</dt>
+              <dd className="font-medium">{listingLabel(listing)}</dd>
+            </div>
+            <div>
+              <dt className="text-sm text-muted-foreground">Phase</dt>
+              <dd className="font-medium">{lot.phaseName}</dd>
+            </div>
+            {lot.home ? (
+              <div>
+                <dt className="text-sm text-muted-foreground">Home</dt>
+                <dd className="font-medium">{homeSummary(lot.home) || "Details to come"}</dd>
+              </div>
+            ) : null}
+          </dl>
+          {lot.home?.description ? <p className="max-w-prose">{lot.home.description}</p> : null}
+
+          {cover ? (
+            <section aria-labelledby="photos-heading" className="grid gap-3">
+              <h2 id="photos-heading" className="text-2xl font-semibold tracking-tight">
+                Photos
+              </h2>
+              <figure className="grid gap-1">
+                <Image
+                  src={cover.url}
+                  alt={cover.caption || `Lot ${lot.number}`}
+                  width={cover.width ?? 1600}
+                  height={cover.height ?? 1200}
+                  sizes="(min-width: 1024px) 1000px, 100vw"
+                  priority
+                  className="max-h-[70vh] w-full rounded-xl bg-muted object-cover shadow-sm"
+                />
+                {cover.caption ? (
+                  <figcaption className="text-sm text-muted-foreground">{cover.caption}</figcaption>
+                ) : null}
+              </figure>
+              {gallery.length > 0 ? (
+                <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {gallery.map((photo) => (
+                    <li key={photo.id}>
+                      <figure className="grid gap-1">
+                        <Image
+                          src={photo.url}
+                          alt={photo.caption || `Lot ${lot.number}`}
+                          width={photo.width ?? 800}
+                          height={photo.height ?? 600}
+                          sizes="(min-width: 640px) 33vw, 50vw"
+                          className="aspect-[4/3] w-full rounded-md bg-muted object-cover"
+                        />
+                        {photo.caption ? (
+                          <figcaption className="text-sm text-muted-foreground">
+                            {photo.caption}
+                          </figcaption>
+                        ) : null}
+                      </figure>
+                    </li>
+                  ))}
+                </ul>
               ) : null}
-            </figure>
-            {gallery.length > 0 ? (
-              <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                {gallery.map((photo) => (
-                  <li key={photo.id}>
-                    <figure className="grid gap-1">
-                      <Image
-                        src={photo.url}
-                        alt={photo.caption || `Lot ${lot.number}`}
-                        width={photo.width ?? 800}
-                        height={photo.height ?? 600}
-                        sizes="(min-width: 640px) 33vw, 50vw"
-                        className="aspect-[4/3] w-full rounded-md bg-muted object-cover"
-                      />
-                      {photo.caption ? (
-                        <figcaption className="text-sm text-muted-foreground">
-                          {photo.caption}
-                        </figcaption>
-                      ) : null}
-                    </figure>
+            </section>
+          ) : null}
+
+          <section aria-labelledby="where-heading" className="grid gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="where-heading" className="text-2xl font-semibold tracking-tight">
+                Where it is
+              </h2>
+              <a
+                href={directionsUrl(lng, lat)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonVariants({ size: "lg" })}
+              >
+                Directions
+              </a>
+            </div>
+            <PublicLotMap
+              center={[centerLng, centerLat]}
+              lots={mapLots}
+              focusLotId={lot.id}
+              linkBase={`/${subdivision.slug}/lots/`}
+              size="short"
+              satelliteKey={process.env.MAPTILER_KEY ?? null}
+            />
+          </section>
+
+          {lot.documents.length > 0 ? (
+            <section aria-labelledby="documents-heading" className="grid gap-2">
+              <h2 id="documents-heading" className="text-2xl font-semibold tracking-tight">
+                Documents
+              </h2>
+              <ul className="divide-y divide-border rounded-xl border border-border bg-card">
+                {lot.documents.map((document) => (
+                  <li key={document.id} className="flex flex-wrap items-center gap-3 px-4 py-2">
+                    <span className="w-24 text-sm text-muted-foreground">
+                      {documentLabel(documentKindFromGraphql(document.kind))}
+                    </span>
+                    <a href={document.url} download className="font-medium underline">
+                      {document.title}
+                    </a>
+                    <span className="ml-auto text-sm text-muted-foreground">
+                      {formatBytes(document.sizeBytes)}
+                    </span>
                   </li>
                 ))}
               </ul>
-            ) : null}
-          </section>
-        ) : null}
+            </section>
+          ) : null}
 
-        <section aria-labelledby="where-heading" className="grid gap-3">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 id="where-heading" className="text-lg font-semibold">
-              Where it is
+          <section
+            id="contact"
+            aria-labelledby="contact-heading"
+            className="grid scroll-mt-4 gap-3"
+          >
+            <h2 id="contact-heading" className="text-2xl font-semibold tracking-tight">
+              Contact the owner
             </h2>
-            <a
-              href={directionsUrl(lng, lat)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonVariants({ size: "lg" })}
-            >
-              Directions
-            </a>
-          </div>
-          <PublicLotMap
-            center={[centerLng, centerLat]}
-            lots={mapLots}
-            focusLotId={lot.id}
-            linkBase={`/${subdivision.slug}/lots/`}
-            size="short"
-            satelliteKey={process.env.MAPTILER_KEY ?? null}
-          />
-        </section>
-
-        {lot.documents.length > 0 ? (
-          <section aria-labelledby="documents-heading" className="grid gap-2">
-            <h2 id="documents-heading" className="text-lg font-semibold">
-              Documents
-            </h2>
-            <ul className="divide-y divide-border rounded-lg border border-border">
-              {lot.documents.map((document) => (
-                <li key={document.id} className="flex flex-wrap items-center gap-3 px-4 py-2">
-                  <span className="w-24 text-sm text-muted-foreground">
-                    {documentLabel(documentKindFromGraphql(document.kind))}
-                  </span>
-                  <a href={document.url} download className="font-medium underline">
-                    {document.title}
-                  </a>
-                  <span className="ml-auto text-sm text-muted-foreground">
-                    {formatBytes(document.sizeBytes)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <noscript>
+              <p className="text-sm text-muted-foreground">The contact form needs JavaScript.</p>
+            </noscript>
+            <ContactOwner
+              lotLabel={`Lot ${lot.number}, ${subdivision.name}`}
+              subdivisionName={subdivision.name}
+              available={status === "available"}
+            />
           </section>
-        ) : null}
 
-        <section
-          id="contact"
-          aria-labelledby="contact-heading"
-          className="grid scroll-mt-4 gap-3"
-        >
-          <h2 id="contact-heading" className="text-lg font-semibold">
-            Contact the owner
-          </h2>
-          <noscript>
-            <p className="text-sm text-muted-foreground">The contact form needs JavaScript.</p>
-          </noscript>
-          <ContactOwner
-            lotLabel={`Lot ${lot.number}, ${subdivision.name}`}
-            subdivisionName={subdivision.name}
-            available={status === "available"}
-          />
-        </section>
-
-        <p>
-          <Link href={`/${subdivision.slug}`} className="underline">
-            All lots in {subdivision.name}
-          </Link>
-        </p>
+          <p>
+            <Link href={`/${subdivision.slug}`} className="underline">
+              All lots in {subdivision.name}
+            </Link>
+          </p>
+        </div>
       </main>
     </BuyerLotProvider>
   );

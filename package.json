@@ -6,6 +6,11 @@
     "node": ">=24"
   },
   "scripts": {
+    "db": "docker compose up -d --wait db",
+    "mail": "docker compose up -d mailpit",
+    "api": "uv run uvicorn cornerpin.main:app --reload",
+    "web": "pnpm --filter web dev",
+    "stop": "docker compose stop",
     "lint": "pnpm -r --if-present lint",
     "test": "pnpm -r --if-present test",
     "build": "pnpm -r --if-present build",

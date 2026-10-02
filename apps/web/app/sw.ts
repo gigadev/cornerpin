@@ -91,6 +91,15 @@ const serwist = new Serwist({
       }),
     },
     {
+      // The site's fonts (ADR-033). Their names carry a hash, so a stored copy never goes stale.
+      matcher: ({ url, sameOrigin }) =>
+        sameOrigin && url.pathname.startsWith("/_next/static/media/") && url.pathname.endsWith(".woff2"),
+      handler: new CacheFirst({
+        cacheName: CACHES.fonts,
+        plugins: [ok(), new ExpirationPlugin({ maxEntries: 20, maxAgeSeconds: 365 * DAY })],
+      }),
+    },
+    {
       // The style and the tile index change when OpenFreeMap updates; tiles, fonts and sprites
       // under a versioned path don't.
       matcher: ({ url }) =>

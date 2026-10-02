@@ -31,7 +31,7 @@ export function SignInForm({
 
   if (state === "sent") {
     return (
-      <p role="status" className="mt-6 rounded border border-border bg-card p-4">
+      <p role="status" className="mt-6 rounded-lg border border-border bg-accent p-4 text-accent-foreground">
         Check your email. We sent a sign-in link to <strong>{email}</strong>. It works once and
         expires in 15 minutes.
       </p>
@@ -50,7 +50,7 @@ export function SignInForm({
             autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            className="mt-1 block w-full rounded border border-border bg-card px-3 py-2"
+            className="mt-1 block w-full rounded-lg border border-input bg-background px-3 py-2 focus-visible:outline-2 focus-visible:outline-ring"
           />
         </label>
         <Turnstile siteKey={turnstileSiteKey} onToken={setToken} />
@@ -62,7 +62,7 @@ export function SignInForm({
         <button
           type="submit"
           disabled={!token || state === "sending"}
-          className="w-full rounded bg-primary px-4 py-2 font-medium text-primary-foreground disabled:opacity-50"
+          className="w-full cursor-pointer rounded-lg bg-primary px-4 py-2.5 font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-default disabled:opacity-50"
         >
           {state === "sending" ? "Sending…" : "Email me a sign-in link"}
         </button>
@@ -70,7 +70,7 @@ export function SignInForm({
       {googleEnabled ? (
         <a
           href={`/v1/auth/google/start?next=${encodeURIComponent(nextPath)}`}
-          className="block w-full rounded border border-border bg-card px-4 py-2 text-center font-medium"
+          className="block w-full rounded-lg border border-input bg-background px-4 py-2.5 text-center font-medium transition-colors hover:bg-muted"
         >
           Continue with Google
         </a>

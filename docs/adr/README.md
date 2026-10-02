@@ -43,6 +43,7 @@ not started yet is still binding: it describes how that part will be built.
 | [030](030-pwa-caching-and-offline.md) | PWA caching, offline questions and updates | P1-10 | Accepted |
 | [031](031-qr-codes-and-signs.md) | QR codes and lot signs | P1-11 | Accepted |
 | [032](032-production-deployment.md) | Production deployment on Google Cloud and Neon | P1-12 | Accepted |
+| [033](033-visual-theme.md) | The "survey and land" visual theme | P1-12 | Accepted |
 
 ## Adding a decision
 
