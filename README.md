@@ -165,6 +165,9 @@ of Phase 1. It is not live yet.
 
 ## Documentation
 
+- [docs/WALKTHROUGH.md](docs/WALKTHROUGH.md): a screenshot tour of the whole site, and how to
+  run it locally.
+- [docs/DEPLOY.md](docs/DEPLOY.md): setting up and deploying production.
 - [docs/IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md): phases, tasks, data model, PWA
   behaviour and expected running costs.
 - [docs/adr/](docs/adr/README.md): architecture decision records, one file per decision.

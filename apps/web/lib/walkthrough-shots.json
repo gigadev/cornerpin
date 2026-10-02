@@ -1,0 +1,122 @@
+{
+  "01-home": {
+    "width": 1280,
+    "height": 800
+  },
+  "02-subdivision": {
+    "width": 1280,
+    "height": 800
+  },
+  "03-subdivision-full": {
+    "width": 1280,
+    "height": 1607
+  },
+  "04-filters": {
+    "width": 1280,
+    "height": 800
+  },
+  "05-lot": {
+    "width": 1280,
+    "height": 800
+  },
+  "06-lot-full": {
+    "width": 1280,
+    "height": 2352
+  },
+  "07-contact-signed-out": {
+    "width": 1280,
+    "height": 800
+  },
+  "08-link-preview": {
+    "width": 1200,
+    "height": 630
+  },
+  "09-qr-not-listed": {
+    "width": 1280,
+    "height": 800
+  },
+  "10-mobile-subdivision": {
+    "width": 390,
+    "height": 844
+  },
+  "11-mobile-lot": {
+    "width": 390,
+    "height": 844
+  },
+  "12-sign-in": {
+    "width": 1280,
+    "height": 800
+  },
+  "13-check-email": {
+    "width": 1280,
+    "height": 800
+  },
+  "14-sign-in-email": {
+    "width": 1280,
+    "height": 800
+  },
+  "15-verify": {
+    "width": 1280,
+    "height": 800
+  },
+  "16-contact-signed-in": {
+    "width": 1280,
+    "height": 800
+  },
+  "17-hold-request": {
+    "width": 1280,
+    "height": 800
+  },
+  "18-account": {
+    "width": 1280,
+    "height": 800
+  },
+  "19-offline": {
+    "width": 1280,
+    "height": 800
+  },
+  "20-portal-organizations": {
+    "width": 1280,
+    "height": 800
+  },
+  "21-portal-tenant": {
+    "width": 1280,
+    "height": 800
+  },
+  "22-portal-subdivision": {
+    "width": 1280,
+    "height": 2123
+  },
+  "23-portal-new-lot": {
+    "width": 1280,
+    "height": 800
+  },
+  "24-portal-lot": {
+    "width": 1280,
+    "height": 1881
+  },
+  "25-portal-map-editor": {
+    "width": 1280,
+    "height": 800
+  },
+  "26-portal-inquiries": {
+    "width": 1280,
+    "height": 846
+  },
+  "27-portal-sign": {
+    "width": 1280,
+    "height": 800
+  },
+  "28-printed-sign": {
+    "width": 992,
+    "height": 748
+  },
+  "30-email-owner-question": {
+    "width": 1280,
+    "height": 800
+  },
+  "31-email-saved-lot": {
+    "width": 1280,
+    "height": 800
+  }
+}

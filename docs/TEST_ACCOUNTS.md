@@ -10,6 +10,7 @@ stays switched off until a Google client id exists.
 | --- | --- |
 | Web app | http://localhost:3300 |
 | Sign in | http://localhost:3300/signin |
+| Help: a tour of the site for buyers and owners | http://localhost:3300/help |
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
 | Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |

@@ -67,3 +67,23 @@ test("service worker precaches the offline page but not the home page", async ({
   expect(cachedPaths).toContain("/offline");
   expect(cachedPaths).not.toContain("/");
 });
+
+test("the guide is a click away from sign-in and from every page's header", async ({ page }) => {
+  await page.goto("/signin");
+  await page.getByRole("link", { name: "See how Cornerpin works" }).click();
+  await expect(page).toHaveURL(/\/help$/);
+  await expect(page.getByRole("heading", { level: 1, name: "How Cornerpin works" })).toBeVisible();
+
+  // Screenshots load (through the image optimiser) as they scroll into view.
+  const first = page.getByRole("img", { name: /subdivision page with its map/ });
+  await first.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() => first.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
+    .toBeGreaterThan(0);
+
+  await page.goto("/juniper-bench/lots/7");
+  await page.getByRole("banner").getByRole("link", { name: "Help" }).click();
+  await expect(page).toHaveURL(/\/help$/);
+  await page.getByRole("link", { name: "For owners" }).click();
+  await expect(page.getByRole("heading", { name: "For owners" })).toBeInViewport();
+});

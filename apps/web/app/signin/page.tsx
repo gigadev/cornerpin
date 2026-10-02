@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { getMe, serverApi } from "@/lib/api/server";
@@ -39,6 +40,13 @@ export default async function SignInPage({
           turnstileSiteKey={providers.turnstile_site_key}
           googleEnabled={providers.google}
         />
+        <p className="mt-8 text-sm text-muted-foreground">
+          New here?{" "}
+          <Link href="/help" className="underline">
+            See how Cornerpin works
+          </Link>
+          .
+        </p>
       </main>
     </>
   );

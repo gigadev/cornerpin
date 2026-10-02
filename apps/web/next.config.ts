@@ -15,7 +15,8 @@ const nextConfig: NextConfig = {
   images: {
     // The image optimiser may fetch public photos only. Owner-portal photos need the session
     // cookie, which the optimiser does not send, so they are shown unoptimised (ADR-027).
-    localPatterns: [{ pathname: "/v1/public/photos/**" }],
+    // The guide's screenshots (/help) are resized the same way.
+    localPatterns: [{ pathname: "/v1/public/photos/**" }, { pathname: "/walkthrough/**" }],
   },
 };
 

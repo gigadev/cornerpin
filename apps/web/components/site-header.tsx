@@ -8,7 +8,12 @@ export function SiteHeader({ children }: { children?: ReactNode }) {
         <Link href="/" className="text-lg font-semibold tracking-tight">
           Cornerpin
         </Link>
-        {children ? <div className="flex items-center gap-3 text-sm">{children}</div> : null}
+        <div className="flex items-center gap-3 text-sm">
+          <Link href="/help" className="underline">
+            Help
+          </Link>
+          {children}
+        </div>
       </div>
     </header>
   );

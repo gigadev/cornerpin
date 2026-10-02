@@ -8,7 +8,8 @@
     "start": "next start --port 3300",
     "lint": "eslint . --max-warnings 0 && tsc --noEmit && tsc -p tsconfig.sw.json",
     "test": "vitest run",
-    "e2e": "playwright test"
+    "e2e": "playwright test",
+    "walkthrough": "playwright test -c playwright.walkthrough.config.ts"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

@@ -8,4 +8,6 @@ export const { dynamic, dynamicParams, revalidate, generateStaticParams, GET } =
   swSrc: "app/sw.ts",
   useNativeEsbuild: true,
   additionalPrecacheEntries: [{ url: "/offline", revision: randomUUID() }],
+  // The help page's screenshots load only on /help; every visitor shouldn't download them.
+  globIgnores: ["**/node_modules/**/*", "public/walkthrough/**/*"],
 });

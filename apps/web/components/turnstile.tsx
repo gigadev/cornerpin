@@ -76,5 +76,5 @@ export function Turnstile({
     };
   }, [siteKey]);
 
-  return <div ref={container} className="min-h-[65px]" />;
+  return <div ref={container} data-slot="turnstile" className="min-h-[65px]" />;
 }
