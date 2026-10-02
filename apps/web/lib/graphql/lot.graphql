@@ -1,0 +1,44 @@
+query PublicLotPage($slug: String!, $number: String!) {
+  subdivision(slug: $slug) {
+    slug
+    name
+    timeZone
+    center
+    lots {
+      id
+      number
+      status
+      boundary
+    }
+  }
+  lot(subdivisionSlug: $slug, number: $number) {
+    id
+    number
+    status
+    listingType
+    price
+    acreage
+    phaseName
+    location
+    home {
+      bedrooms
+      bathrooms
+      squareFeet
+      description
+    }
+    photos {
+      id
+      url
+      caption
+      width
+      height
+    }
+    documents {
+      id
+      kind
+      title
+      sizeBytes
+      url
+    }
+  }
+}

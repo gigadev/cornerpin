@@ -3,6 +3,8 @@ import type { APIRequestContext, TestInfo } from "@playwright/test";
 // Seeded by apps/api/src/cornerpin/e2e_server.py; keep in sync.
 export const DEMO_TENANT_ID = "957ccd5e-b6d1-531f-a102-ddef309c396e";
 export const OTHER_TENANT_ID = "1aca3c52-936f-5fd9-8a5b-aa1b6e00ae2e";
+// The API the e2e run starts (playwright.config.ts).
+export const API_URL = "http://localhost:8100";
 
 /** An owner of the demo tenant, one per project so parallel runs never share an inbox. */
 export function projectOwner(testInfo: TestInfo): string {

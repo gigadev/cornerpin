@@ -2,8 +2,11 @@ import { SerwistProvider } from "@serwist/turbopack/react";
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
+  // Makes link-preview image URLs absolute (P1-07).
+  metadataBase: siteUrl(),
   title: "Cornerpin",
   description: "Subdivision lots: status, price, maps, photos and documents.",
   applicationName: "Cornerpin",

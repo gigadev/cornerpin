@@ -4,22 +4,26 @@ and the in-process outbox runner sending to Mailpit. Started by apps/web/playwri
     uv run python -m cornerpin.e2e_server 8100
 """
 
+import io
 import os
 import shutil
 import sys
-from uuid import NAMESPACE_URL, uuid5
+from uuid import NAMESPACE_URL, uuid4, uuid5
 
 import uvicorn
+from PIL import Image
 from sqlalchemy import Connection, create_engine, text
 from sqlalchemy.engine import make_url
 
 from cornerpin.core.config import REPO_ROOT, get_settings
+from cornerpin.core.storage import LocalStorage
 from cornerpin.devtools import recreate_database
-from cornerpin.seed import DEMO_TENANT_ID, seed
+from cornerpin.seed import DEMO_SLUG, DEMO_TENANT_ID, seed
 
 E2E_DATABASE = "cornerpin_e2e"
 # Uploads from Playwright runs, kept apart from the developer's var/storage and emptied each run.
 E2E_STORAGE = REPO_ROOT / "var" / "e2e-storage"
+PLAT_PDF = b"%PDF-1.4\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n"
 # Keep in sync with apps/web/e2e/fixtures.ts.
 OTHER_TENANT_ID = uuid5(NAMESPACE_URL, "https://cornerpin.app/tenants/e2e-other")
 # Owners of the demo tenant: one per Playwright project for the sign-in tests, and one per
@@ -56,22 +60,62 @@ def seed_e2e(conn: Connection) -> None:
         )
 
 
+def seed_media(conn: Connection) -> None:
+    """Photos and a plat for Juniper Bench lot 7 (published), and a photo for lot 16 (phase 2,
+    unpublished), so the public-page tests can check both sides."""
+    storage = LocalStorage(E2E_STORAGE)
+    lots = {
+        number: lot_id
+        for number, lot_id in conn.execute(
+            text(
+                "SELECT l.number, l.id FROM lots l JOIN subdivisions s ON s.id = l.subdivision_id"
+                " WHERE s.slug = :slug AND l.number IN ('7', '16')"
+            ),
+            {"slug": DEMO_SLUG},
+        )
+    }
+    photos = (("7", "Front of the house", 0), ("7", "Back porch", 1), ("16", "Not yet public", 0))
+    for number, caption, order in photos:
+        lot_id = lots[number]
+        key = f"tenants/{DEMO_TENANT_ID}/lots/{lot_id}/photos/{uuid4()}.png"
+        out = io.BytesIO()
+        Image.new("RGB", (640, 480), (120, 150, 100)).save(out, "PNG")
+        storage.put(key, out.getvalue(), "image/png")
+        conn.execute(
+            text(
+                "INSERT INTO lot_media (tenant_id, lot_id, storage_key, content_type, caption,"
+                " sort_order, width, height) VALUES (:t, :l, :k, 'image/png', :c, :o, 640, 480)"
+            ),
+            {"t": DEMO_TENANT_ID, "l": lot_id, "k": key, "c": caption, "o": order},
+        )
+    key = f"tenants/{DEMO_TENANT_ID}/lots/{lots['7']}/documents/{uuid4()}.pdf"
+    storage.put(key, PLAT_PDF, "application/pdf")
+    conn.execute(
+        text(
+            "INSERT INTO lot_documents (tenant_id, lot_id, kind, title, storage_key, content_type,"
+            " size_bytes) VALUES (:t, :l, 'plat', 'Recorded plat', :k, 'application/pdf', :n)"
+        ),
+        {"t": DEMO_TENANT_ID, "l": lots["7"], "k": key, "n": len(PLAT_PDF)},
+    )
+
+
 def main() -> None:
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8100
     dev = get_settings()
     owner_url = make_url(dev.database_url).set(database=E2E_DATABASE)
     api_url = make_url(dev.api_database_url).set(database=E2E_DATABASE)
 
+    shutil.rmtree(E2E_STORAGE, ignore_errors=True)
     recreate_database(owner_url)
     engine = create_engine(owner_url)
     with engine.begin() as conn:
         seed_e2e(conn)
+        seed_media(conn)
     engine.dispose()
 
     os.environ["DATABASE_URL"] = owner_url.render_as_string(hide_password=False)
     os.environ["API_DATABASE_URL"] = api_url.render_as_string(hide_password=False)
     os.environ.setdefault("WEB_ORIGIN", "http://localhost:3100")
-    shutil.rmtree(E2E_STORAGE, ignore_errors=True)
     os.environ["STORAGE_DIR"] = str(E2E_STORAGE)
     os.environ["OUTBOX_RUNNER"] = "inprocess"
     os.environ["MAGIC_LINKS_PER_15_MINUTES"] = "1000"

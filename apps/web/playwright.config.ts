@@ -51,7 +51,7 @@ export default defineConfig({
     {
       command: `pnpm build && pnpm exec next start --port ${webPort}`,
       url: baseURL,
-      env: { API_BASE_URL: `http://localhost:${apiPort}` },
+      env: { API_BASE_URL: `http://localhost:${apiPort}`, SITE_URL: baseURL },
       reuseExistingServer: !process.env.CI,
       timeout: 240_000,
     },

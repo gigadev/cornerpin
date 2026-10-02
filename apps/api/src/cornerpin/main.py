@@ -9,7 +9,7 @@ from cornerpin.core import accounts, storage
 from cornerpin.core.auth import routes as auth_routes
 from cornerpin.core.config import get_settings
 from cornerpin.core.outbox import InProcessRunner
-from cornerpin.listings import geometry_routes, media_routes
+from cornerpin.listings import geometry_routes, media_routes, public_files
 from cornerpin.listings import routes as listings_routes
 from cornerpin.listings.public_graphql import graphql_router
 from cornerpin.notifications import handlers as notification_handlers
@@ -63,6 +63,7 @@ def create_app() -> FastAPI:
     v1.include_router(listings_routes.router)
     v1.include_router(media_routes.router)
     v1.include_router(geometry_routes.router)
+    v1.include_router(public_files.router)
     app.include_router(v1)
     app.include_router(graphql_router(), prefix="/graphql", include_in_schema=False)
     return app

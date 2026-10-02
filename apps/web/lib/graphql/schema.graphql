@@ -1,3 +1,11 @@
+enum DocumentKind {
+  PLAT
+  SURVEY
+  COVENANTS
+  UTILITIES
+  OTHER
+}
+
 """
 A GeoJSON geometry in longitude/latitude (WGS 84); lots are MultiPolygons.
 """
@@ -14,6 +22,25 @@ enum LotStatus {
   SOLD
 }
 
+"""A document attached to a published lot."""
+type PublicDocument {
+  id: ID!
+  kind: DocumentKind!
+  title: String!
+  sizeBytes: Int!
+
+  """Same-origin path; downloads under the title"""
+  url: String!
+}
+
+"""The house on a lot + home listing."""
+type PublicHome {
+  bedrooms: Int
+  bathrooms: Float
+  squareFeet: Int
+  description: String
+}
+
 """A published lot."""
 type PublicLot {
   id: ID!
@@ -24,7 +51,31 @@ type PublicLot {
   """Whole dollars; null when not priced yet."""
   price: Int
   acreage: Float
+  phaseName: String!
   boundary: GeoJSON
+
+  """
+  [longitude, latitude] for directions: inside the lot's shape, or the subdivision's location when the lot has no shape yet.
+  """
+  location: [Float!]!
+  home: PublicHome
+
+  """Photos in the owner's order."""
+  photos: [PublicPhoto!]!
+
+  """Plat, survey, covenants, utilities and other documents."""
+  documents: [PublicDocument!]!
+}
+
+"""A photo of a published lot, in its display order."""
+type PublicPhoto {
+  id: ID!
+
+  """Same-origin path to the image"""
+  url: String!
+  caption: String!
+  width: Int
+  height: Int
 }
 
 """A published subdivision."""
@@ -42,4 +93,7 @@ type PublicSubdivision {
 type Query {
   """A published subdivision by its web address, or null."""
   subdivision(slug: String!): PublicSubdivision
+
+  """A published lot by subdivision web address and lot number."""
+  lot(subdivisionSlug: String!, number: String!): PublicLot
 }

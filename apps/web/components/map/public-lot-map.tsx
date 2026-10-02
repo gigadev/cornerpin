@@ -1,23 +1,41 @@
 "use client";
 
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { Map as MapLibreMap } from "maplibre-gl";
-import { loadMapLibre } from "@/lib/map/load-maplibre";
+import type { MapLayerMouseEvent, Map as MapLibreMap } from "maplibre-gl";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { STATUS_COLORS, STREET_STYLE, lotFeatures, satelliteStyle, type MapLotInput } from "@/lib/map/lots";
-import { statusLabel, LOT_STATUSES } from "@/lib/format";
-import { addLotLayers, fitToLots, renderedLotNumbers } from "./lot-layers";
+import { LOT_STATUSES, statusLabel } from "@/lib/format";
+import { loadMapLibre } from "@/lib/map/load-maplibre";
+import {
+  STATUS_COLORS,
+  STREET_STYLE,
+  lotFeatures,
+  satelliteStyle,
+  type MapLotInput,
+} from "@/lib/map/lots";
+import { LOTS_FILL, LOTS_SOURCE, addLotLayers, fitToLots, renderedLotNumbers } from "./lot-layers";
 
-/** The public subdivision map: published lots coloured by status (P1-06, P1-07). */
+const FOCUS_LAYER = "lot-focus";
+
+/** The public map: published lots coloured by status (P1-06, P1-07). With `linkBase`, clicking
+ * a lot opens its page; with `focusLotId`, the map frames that lot and outlines it. The page
+ * around it lists the same lots, so nothing here is needed without JavaScript. */
 export function PublicLotMap({
   center,
   lots,
   satelliteKey,
+  linkBase,
+  focusLotId,
+  size = "tall",
 }: {
   center: [number, number];
   lots: MapLotInput[];
   satelliteKey: string | null;
+  linkBase?: string;
+  focusLotId?: string;
+  size?: "tall" | "short";
 }) {
+  const router = useRouter();
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [rendered, setRendered] = useState("");
@@ -28,7 +46,7 @@ export function PublicLotMap({
   useEffect(() => {
     let cancelled = false;
     let map: MapLibreMap | null = null;
-    // Imported here: MapLibre needs a browser, and this keeps it out of the server render.
+    // Loaded on demand: MapLibre needs a browser, so it stays out of the server render.
     void loadMapLibre().then(({ Map }) => {
       if (cancelled || !container.current) return;
       map = new Map({
@@ -40,16 +58,43 @@ export function PublicLotMap({
       });
       mapRef.current = map;
       const current = map;
-      current.on("style.load", () => addLotLayers(current, collection));
-      current.once("load", () => fitToLots(current, collection));
+      current.on("style.load", () => {
+        addLotLayers(current, collection);
+        if (focusLotId && !current.getLayer(FOCUS_LAYER)) {
+          current.addLayer({
+            id: FOCUS_LAYER,
+            type: "line",
+            source: LOTS_SOURCE,
+            filter: ["==", ["get", "id"], focusLotId],
+            paint: { "line-color": "#1c1917", "line-width": 4 },
+          });
+        }
+      });
+      current.once("load", () => {
+        const focus = focusLotId
+          ? { ...collection, features: collection.features.filter((f) => f.id === focusLotId) }
+          : collection;
+        // A single lot is framed a little wider, so its neighbours show too.
+        fitToLots(current, focus.features.length > 0 ? focus : collection, {
+          maxZoom: focusLotId ? 17 : 18,
+        });
+      });
       current.on("idle", () => setRendered(renderedLotNumbers(current)));
+      if (linkBase) {
+        current.on("click", LOTS_FILL, (event: MapLayerMouseEvent) => {
+          const number: unknown = event.features?.[0]?.properties["number"];
+          if (typeof number === "string") router.push(`${linkBase}${encodeURIComponent(number)}`);
+        });
+        current.on("mouseenter", LOTS_FILL, () => (current.getCanvas().style.cursor = "pointer"));
+        current.on("mouseleave", LOTS_FILL, () => (current.getCanvas().style.cursor = ""));
+      }
     });
     return () => {
       cancelled = true;
       map?.remove();
       mapRef.current = null;
     };
-  }, [collection, lng, lat]);
+  }, [collection, lng, lat, focusLotId, linkBase, router]);
 
   function toggleSatellite() {
     if (!satelliteKey || !mapRef.current) return;
@@ -65,8 +110,14 @@ export function PublicLotMap({
         role="region"
         aria-label="Map of lots"
         data-rendered-lots={rendered}
-        className="h-[60vh] min-h-80 w-full overflow-hidden rounded-lg border border-border"
-      />
+        className={`${size === "tall" ? "h-[55vh] min-h-80" : "h-72"} relative w-full overflow-hidden rounded-lg border border-border bg-muted`}
+      >
+        <noscript>
+          <p className="p-4 text-sm text-muted-foreground">
+            The map needs JavaScript. Every lot is listed on this page.
+          </p>
+        </noscript>
+      </div>
       <div className="flex flex-wrap items-center gap-4 text-sm">
         {LOT_STATUSES.map((status) => (
           <span key={status} className="flex items-center gap-1.5">

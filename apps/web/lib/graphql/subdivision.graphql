@@ -12,6 +12,7 @@ query PublicSubdivisionMap($slug: String!) {
       listingType
       price
       acreage
+      phaseName
       boundary
     }
   }

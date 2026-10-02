@@ -56,7 +56,11 @@ export function hideLot(map: MapLibreMap, lotId: string | null): void {
   }
 }
 
-export function fitToLots(map: MapLibreMap, lots: LotCollection, animate = false): void {
+export function fitToLots(
+  map: MapLibreMap,
+  lots: LotCollection,
+  { animate = false, maxZoom = 18 }: { animate?: boolean; maxZoom?: number } = {},
+): void {
   const bounds = boundsOf(lots);
   if (!bounds) return;
   map.fitBounds(
@@ -64,7 +68,7 @@ export function fitToLots(map: MapLibreMap, lots: LotCollection, animate = false
       [bounds[0], bounds[1]],
       [bounds[2], bounds[3]],
     ],
-    { padding: 40, maxZoom: 18, animate },
+    { padding: 40, maxZoom, animate },
   );
 }
 

@@ -37,6 +37,7 @@ not started yet is still binding: it describes how that part will be built.
 | [024](024-owner-portal-rules.md) | Owner portal rules for editing, deleting and history | P1-04 | Accepted |
 | [025](025-photo-and-document-storage.md) | Photo and document storage | P1-05 | Accepted |
 | [026](026-lot-geometry-and-public-map.md) | Lot geometry, the plat overlay and the first public map | P1-06 | Accepted |
+| [027](027-public-pages.md) | Public pages: rendering, filters, files and link previews | P1-07 | Accepted |
 
 ## Adding a decision
 

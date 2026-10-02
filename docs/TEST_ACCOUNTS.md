@@ -12,6 +12,7 @@ stays switched off until a Google client id exists.
 | Sign in | http://localhost:3300/signin |
 | Owner portal | http://localhost:3300/app |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
+| Public page for a lot | http://localhost:3300/juniper-bench/lots/7 |
 | Owner map editor | Owner portal → Juniper Bench → Map and lot shapes |
 | Mailpit (all local email) | http://localhost:8025 |
 | API | http://localhost:8000 |

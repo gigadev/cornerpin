@@ -2201,6 +2201,90 @@
         ]
       }
     },
+    "/v1/public/documents/{document_id}/file": {
+      "get": {
+        "operationId": "public_document_v1_public_documents__document_id__file_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "document_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Document Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not published"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Public Document",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/v1/public/photos/{photo_id}/file": {
+      "get": {
+        "operationId": "public_photo_v1_public_photos__photo_id__file_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "photo_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Photo Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/*": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not published"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Public Photo",
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/v1/tenants/{tenant_id}": {
       "get": {
         "operationId": "tenant_v1_tenants__tenant_id__get",

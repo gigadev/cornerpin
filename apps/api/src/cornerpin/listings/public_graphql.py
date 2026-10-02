@@ -2,13 +2,15 @@
 public_session, so row-level security alone decides what is visible: published subdivisions and
 their published lots, nothing else. No mutations.
 
-P1-06 serves the map (shapes and statuses); P1-07 adds the rest of the public pages."""
+Photos and documents are resolved per lot only when asked for, so the subdivision page does not
+load every lot's media. Their files are served by the REST routes in public_files.py."""
 
-from typing import NewType
+from typing import Any, NewType
 from uuid import UUID
 
 import strawberry
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session
 from strawberry.extensions import MaxTokensLimiter, QueryDepthLimiter
 from strawberry.fastapi import GraphQLRouter
 
@@ -16,9 +18,13 @@ from cornerpin.core.config import get_settings
 from cornerpin.core.db import public_session
 from cornerpin.listings.geometry import as_geojson, from_postgis
 from cornerpin.listings.models import (
+    DocumentKind,
     ListingType,
     Lot,
+    LotDocument,
+    LotPhoto,
     LotStatus,
+    Phase,
     Subdivision,
     lot_number_order,
 )
@@ -32,17 +38,89 @@ GEOJSON_SCALAR = strawberry.scalar(
 
 PublicLotStatus = strawberry.enum(LotStatus, name="LotStatus")
 PublicListingType = strawberry.enum(ListingType, name="ListingType")
+PublicDocumentKind = strawberry.enum(DocumentKind, name="DocumentKind")
+
+
+@strawberry.type(description="A photo of a published lot, in its display order.")
+class PublicPhoto:
+    id: strawberry.ID
+    url: str = strawberry.field(description="Same-origin path to the image")
+    caption: str
+    width: int | None
+    height: int | None
+
+
+@strawberry.type(description="A document attached to a published lot.")
+class PublicDocument:
+    id: strawberry.ID
+    kind: PublicDocumentKind  # pyright: ignore[reportInvalidTypeForm]
+    title: str
+    size_bytes: int
+    url: str = strawberry.field(description="Same-origin path; downloads under the title")
+
+
+@strawberry.type(description="The house on a lot + home listing.")
+class PublicHome:
+    bedrooms: int | None
+    bathrooms: float | None
+    square_feet: int | None
+    description: str | None
 
 
 @strawberry.type(description="A published lot.")
 class PublicLot:
+    lot_id: strawberry.Private[UUID]
     id: strawberry.ID
     number: str
     status: PublicLotStatus  # pyright: ignore[reportInvalidTypeForm]
     listing_type: PublicListingType  # pyright: ignore[reportInvalidTypeForm]
     price: int | None = strawberry.field(description="Whole dollars; null when not priced yet.")
     acreage: float | None
+    phase_name: str
     boundary: GeoJSONValue | None
+    location: list[float] = strawberry.field(
+        description="[longitude, latitude] for directions: inside the lot's shape, or the"
+        " subdivision's location when the lot has no shape yet."
+    )
+    home: PublicHome | None
+
+    @strawberry.field(description="Photos in the owner's order.")
+    def photos(self) -> list[PublicPhoto]:
+        with public_session() as session:
+            photos = session.scalars(
+                select(LotPhoto)
+                .where(LotPhoto.lot_id == self.lot_id)
+                .order_by(LotPhoto.sort_order, LotPhoto.created_at)
+            ).all()
+            return [
+                PublicPhoto(
+                    id=strawberry.ID(str(photo.id)),
+                    url=f"/v1/public/photos/{photo.id}/file",
+                    caption=photo.caption,
+                    width=photo.width,
+                    height=photo.height,
+                )
+                for photo in photos
+            ]
+
+    @strawberry.field(description="Plat, survey, covenants, utilities and other documents.")
+    def documents(self) -> list[PublicDocument]:
+        with public_session() as session:
+            documents = session.scalars(
+                select(LotDocument)
+                .where(LotDocument.lot_id == self.lot_id)
+                .order_by(LotDocument.kind, LotDocument.title)
+            ).all()
+            return [
+                PublicDocument(
+                    id=strawberry.ID(str(document.id)),
+                    kind=document.kind,
+                    title=document.title,
+                    size_bytes=document.size_bytes,
+                    url=f"/v1/public/documents/{document.id}/file",
+                )
+                for document in documents
+            ]
 
 
 @strawberry.type(description="A published subdivision.")
@@ -60,25 +138,52 @@ def _geojson(text: str | None) -> GeoJSONValue | None:
     return None if shape is None else GeoJSONValue(shape.model_dump())
 
 
-def _lots(subdivision_id: UUID) -> list[PublicLot]:
-    with public_session() as session:
-        rows = session.execute(
-            select(Lot, as_geojson(Lot.boundary))
-            .where(Lot.subdivision_id == subdivision_id)
-            .order_by(*lot_number_order())
-        ).all()
-        return [
+def _lot_rows(session: Session, subdivision: Subdivision, *conditions: Any) -> list[PublicLot]:
+    inside = func.ST_PointOnSurface(Lot.boundary)
+    rows = session.execute(
+        select(
+            Lot,
+            Phase.name,
+            as_geojson(Lot.boundary),
+            func.ST_X(inside),
+            func.ST_Y(inside),
+        )
+        .join(Phase, Phase.id == Lot.phase_id)
+        .where(Lot.subdivision_id == subdivision.id, *conditions)
+        .order_by(*lot_number_order())
+    ).all()
+    lots: list[PublicLot] = []
+    for lot, phase_name, geojson, lng, lat in rows:
+        has_home = lot.listing_type == ListingType.LOT_AND_HOME
+        lots.append(
             PublicLot(
+                lot_id=lot.id,
                 id=strawberry.ID(str(lot.id)),
                 number=lot.number,
                 status=lot.status,
                 listing_type=lot.listing_type,
                 price=int(lot.price) if lot.price is not None else None,
                 acreage=float(lot.acreage) if lot.acreage is not None else None,
+                phase_name=phase_name,
                 boundary=_geojson(geojson),
+                location=[lng, lat]
+                if lng is not None and lat is not None
+                else [subdivision.longitude, subdivision.latitude],
+                home=PublicHome(
+                    bedrooms=lot.home_bedrooms,
+                    bathrooms=float(lot.home_bathrooms) if lot.home_bathrooms is not None else None,
+                    square_feet=lot.home_square_feet,
+                    description=lot.home_description,
+                )
+                if has_home
+                else None,
             )
-            for lot, geojson in rows
-        ]
+        )
+    return lots
+
+
+def _subdivision(session: Session, slug: str) -> Subdivision | None:
+    return session.scalar(select(Subdivision).where(Subdivision.slug == slug))
 
 
 @strawberry.type
@@ -86,20 +191,26 @@ class Query:
     @strawberry.field(description="A published subdivision by its web address, or null.")
     def subdivision(self, slug: str) -> PublicSubdivision | None:
         with public_session() as session:
-            found = session.scalar(select(Subdivision).where(Subdivision.slug == slug))
+            found = _subdivision(session, slug)
             if found is None:
                 return None
-            subdivision_id = found.id
-            result = PublicSubdivision(
+            return PublicSubdivision(
                 slug=found.slug,
                 name=found.name,
                 description=found.description,
                 time_zone=found.time_zone,
                 center=[found.longitude, found.latitude],
-                lots=[],
+                lots=_lot_rows(session, found),
             )
-        result.lots = _lots(subdivision_id)
-        return result
+
+    @strawberry.field(description="A published lot by subdivision web address and lot number.")
+    def lot(self, subdivision_slug: str, number: str) -> PublicLot | None:
+        with public_session() as session:
+            found = _subdivision(session, subdivision_slug)
+            if found is None:
+                return None
+            lots = _lot_rows(session, found, Lot.number == number)
+            return lots[0] if lots else None
 
 
 schema = strawberry.Schema(
