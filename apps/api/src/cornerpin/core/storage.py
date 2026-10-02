@@ -110,5 +110,5 @@ def remove_later(session: Session, key: str) -> None:
 
 
 @handler(StoredObjectRemoved)
-def _remove_object(event: StoredObjectRemoved) -> None:
+def _remove_object(event: StoredObjectRemoved, _session: Session) -> None:
     get_storage().delete(event.key)

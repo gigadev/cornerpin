@@ -145,3 +145,18 @@ def _start_session(session: Session, user_id: UUID, user_agent: str | None) -> s
         },
     )
     return raw
+
+
+def purge_expired(*, engine: Engine | None = None) -> tuple[int, int]:
+    """Delete sign-in tokens and sessions that expired more than a day ago. Returns the counts
+    (tokens, sessions)."""
+    with auth_session(engine=engine) as session:
+        tokens = session.execute(
+            text(
+                "DELETE FROM login_tokens WHERE expires_at < now() - interval '1 day' RETURNING id"
+            )
+        ).all()
+        sessions = session.execute(
+            text("DELETE FROM sessions WHERE expires_at < now() - interval '1 day' RETURNING id")
+        ).all()
+        return len(tokens), len(sessions)

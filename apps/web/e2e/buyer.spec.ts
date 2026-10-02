@@ -1,14 +1,26 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { DEMO_TENANT_ID } from "./fixtures";
+import { DEMO_TENANT_ID, mailTo, type Mail } from "./fixtures";
 
 // P1-08 acceptance: an inquiry reaches the owner; consent is recorded with its channel and
-// time. Runs signed in as buyer+<viewport>@buyers.cornerpin.test; the owner's side uses the
-// portal session saved by portal.setup.ts.
+// time. P1-09 acceptance: a status change produces exactly one email per saver, in Mailpit.
+// Runs signed in as buyer+<viewport>@buyers.cornerpin.test; the owner's side uses the portal
+// session saved by portal.setup.ts.
 
 const viewport = (name: string) => name.replace("-buyer", "");
 // Each project holds its own available, land-only lot, so parallel runs never collide and the
 // public page's filter counts (which look at lots with homes) are unaffected.
 const HOLD_LOTS: Record<string, string> = { mobile: "12", desktop: "13" };
+// Likewise for the lot whose status change is emailed to its savers.
+const ALERT_LOTS: Record<string, string> = { mobile: "10", desktop: "15" };
+
+/** Wait for `count` matching emails, then make sure no more arrive. */
+async function expectMail(read: () => Promise<Mail[]>, count: number): Promise<Mail[]> {
+  await expect.poll(async () => (await read()).length, { timeout: 15_000 }).toBe(count);
+  await new Promise((resolve) => setTimeout(resolve, 2_500));
+  const mail = await read();
+  expect(mail).toHaveLength(count);
+  return mail;
+}
 
 async function ownerPage(browser: Browser, view: string): Promise<Page> {
   const context = await browser.newContext({
@@ -52,6 +64,14 @@ test("a visitor asks about a lot without signing in, and the owner sees it", asy
   await expect(inquiry).toContainText("+12085550142");
   await expect(inquiry).toContainText("Email not verified");
   await expect(inquiry).toContainText("Reply only");
+
+  // P1-09: each owner gets the question by email, with the visitor as the reply address.
+  const ownerEmail = `portal+${view}@demo.cornerpin.test`;
+  const [mail] = await expectMail(async () => {
+    const all = await mailTo(owner.request, ownerEmail, "New question about Lot 7");
+    return all.filter((m) => m.text.includes(question));
+  }, 1);
+  expect(mail?.text).toContain(`Walk-in Visitor (walkin+${view}@example.test, +12085550142)`);
 });
 
 test("a buyer saves a lot and finds it on their account page", async ({ page }) => {
@@ -69,7 +89,8 @@ test("a buyer saves a lot and finds it on their account page", async ({ page }) 
   await expect(saved.getByRole("link", { name: "Lot 8, Juniper Bench" })).toBeVisible();
 
   await saved.getByRole("button", { name: "Remove lot 8" }).click();
-  await expect(saved.getByText("Nothing saved yet.")).toBeVisible();
+  // Other tests in this project save lots with the same buyer, so look for this one only.
+  await expect(saved.getByRole("link", { name: "Lot 8, Juniper Bench" })).toHaveCount(0);
 });
 
 test("a buyer asks for a hold with email permission, and the owner's approval puts the lot on hold", async ({
@@ -110,4 +131,28 @@ test("a buyer asks for a hold with email permission, and the owner's approval pu
   await page.goto(`/juniper-bench/lots/${number}`);
   await expect(page.getByRole("heading", { level: 1, name: `Lot ${number}` })).toBeVisible();
   await expect(page.getByText("On hold", { exact: true }).first()).toBeVisible();
+});
+
+test("a status change emails each saver exactly once", async ({ page, browser }, testInfo) => {
+  const view = viewport(testInfo.project.name);
+  const number = ALERT_LOTS[view] ?? "10";
+  const buyer = `buyer+${view}@buyers.cornerpin.test`;
+  const subject = `Lot ${number} at Juniper Bench is now on hold`;
+
+  await page.goto(`/juniper-bench/lots/${number}`);
+  await page.getByRole("button", { name: "Save this lot" }).click();
+  await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
+
+  const owner = await ownerPage(browser, view);
+  await owner.goto(`/app/${DEMO_TENANT_ID}`);
+  await owner.getByRole("link", { name: "Juniper Bench" }).click();
+  await owner.getByRole("link", { name: `Lot ${number}`, exact: true }).click();
+  await owner.getByLabel("Status", { exact: true }).click();
+  await owner.getByRole("option", { name: "On hold", exact: true }).click();
+  await owner.getByRole("button", { name: "Save lot" }).click();
+  await expect(owner.getByText("Available → On hold")).toBeVisible();
+
+  const [mail] = await expectMail(() => mailTo(page.request, buyer, subject), 1);
+  expect(mail?.text).toContain("Status: available → on hold");
+  expect(mail?.text).toContain(`/juniper-bench/lots/${number}`);
 });

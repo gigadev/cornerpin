@@ -1988,6 +1988,46 @@
         "title": "PriceChange",
         "type": "object"
       },
+      "PushConfig": {
+        "properties": {
+          "public_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "VAPID public key; null while push is off",
+            "title": "Public Key"
+          }
+        },
+        "required": [
+          "public_key"
+        ],
+        "title": "PushConfig",
+        "type": "object"
+      },
+      "PushSubscriptionIn": {
+        "description": "The browser's PushSubscription, as `subscription.toJSON()` gives it.",
+        "properties": {
+          "endpoint": {
+            "maxLength": 2048,
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/SubscriptionKeys"
+          }
+        },
+        "required": [
+          "endpoint",
+          "keys"
+        ],
+        "title": "PushSubscriptionIn",
+        "type": "object"
+      },
       "ReleaseStatus": {
         "enum": [
           "upcoming",
@@ -2397,6 +2437,30 @@
           }
         },
         "title": "SubdivisionUpdate",
+        "type": "object"
+      },
+      "SubscriptionKeys": {
+        "properties": {
+          "auth": {
+            "maxLength": 256,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_=-]+$",
+            "title": "Auth",
+            "type": "string"
+          },
+          "p256dh": {
+            "maxLength": 256,
+            "minLength": 8,
+            "pattern": "^[A-Za-z0-9_=-]+$",
+            "title": "P256Dh",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p256dh",
+          "auth"
+        ],
+        "title": "SubscriptionKeys",
         "type": "object"
       },
       "Tenant": {
@@ -3293,6 +3357,108 @@
         ]
       }
     },
+    "/v1/me/push-subscriptions": {
+      "delete": {
+        "operationId": "remove_subscription_v1_me_push_subscriptions_delete",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "endpoint",
+            "required": true,
+            "schema": {
+              "title": "Endpoint",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Subscription",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "put": {
+        "description": "Register this device. An endpoint already registered to someone else stays theirs\n(signing out removes the device's subscription in the browser, which ends that).",
+        "operationId": "add_subscription_v1_me_push_subscriptions_put",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscriptionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Subscription",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
     "/v1/me/saved-lots": {
       "get": {
         "description": "Saved lots the public can still see, newest first. A lot that is unpublished drops out\nof the list but stays saved, and comes back if it is published again.",
@@ -3534,6 +3700,27 @@
         "summary": "Public Photo",
         "tags": [
           "public"
+        ]
+      }
+    },
+    "/v1/push/config": {
+      "get": {
+        "operationId": "push_config_v1_push_config_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PushConfig"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Push Config",
+        "tags": [
+          "notifications"
         ]
       }
     },

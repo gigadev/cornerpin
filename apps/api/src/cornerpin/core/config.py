@@ -60,13 +60,30 @@ class Settings(BaseSettings):
     storage_dir: Path = REPO_ROOT / "var" / "storage"
     storage_bucket: str | None = None
 
-    # "inprocess" runs the outbox in the API process (local, ADR-023); "off" leaves it to an
-    # external dispatcher (Cloud Tasks, P1-09).
-    outbox_runner: Literal["inprocess", "off"] = "inprocess"
+    # "inprocess" runs the outbox in the API process (local, ADR-023). "cloudtasks" creates a
+    # Cloud Task after each commit that queued events, calling /internal/outbox/drain (ADR-029);
+    # it needs the three settings below. "off" processes nothing (tests).
+    outbox_runner: Literal["inprocess", "cloudtasks", "off"] = "inprocess"
+    # projects/<project>/locations/<region>/queues/<queue>
+    cloud_tasks_queue: str | None = None
+    # The API's own public URL; tasks call it, and it is the audience of their OIDC tokens.
+    internal_base_url: str | None = None
+    # The service account Cloud Tasks and Cloud Scheduler sign their calls as.
+    tasks_service_account: str | None = None
+
+    # Web push (ADR-029) stays dormant until both keys exist. Generate a pair locally with
+    # `uv run python -m cornerpin.devtools vapid-keys`.
+    vapid_public_key: str | None = None
+    vapid_private_key: str | None = None
+    vapid_subject: str = "mailto:hello@cornerpin.app"
 
     @property
     def is_local(self) -> bool:
         return self.environment == "local"
+
+    @property
+    def push_enabled(self) -> bool:
+        return bool(self.vapid_public_key and self.vapid_private_key)
 
     @property
     def google_enabled(self) -> bool:
@@ -85,6 +102,13 @@ class Settings(BaseSettings):
             problems.append("STORAGE_BUCKET must be set for the gcs storage backend")
         if self.email_backend == "resend" and not self.resend_api_key:
             problems.append("RESEND_API_KEY must be set for the resend email backend")
+        if self.outbox_runner == "cloudtasks" and not (
+            self.cloud_tasks_queue and self.internal_base_url and self.tasks_service_account
+        ):
+            problems.append(
+                "CLOUD_TASKS_QUEUE, INTERNAL_BASE_URL and TASKS_SERVICE_ACCOUNT must be set"
+                " for the cloudtasks outbox runner"
+            )
         if problems:
             raise ValueError("; ".join(problems))
         return self

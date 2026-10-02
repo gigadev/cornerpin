@@ -4,6 +4,9 @@ A lot is found through public_session first, so a buyer can only act on a lot th
 see; the database checks the same thing again on insert (migration 0007). Anyone may send an
 inquiry. Everything else, including giving contact consent, needs a signed-in (so verified)
 email address.
+
+Each inquiry and hold request queues an event in the same transaction; the owners' emails go
+out from the outbox (P1-09).
 """
 
 from collections.abc import Generator
@@ -20,7 +23,9 @@ from sqlalchemy.orm import Session
 from cornerpin.core.auth.deps import CurrentUser, MaybeUser, SignedInUser
 from cornerpin.core.auth.turnstile import TurnstileVerifier, client_ip, get_turnstile
 from cornerpin.core.db import public_session, user_session
+from cornerpin.core.outbox import enqueue
 from cornerpin.leads import consent
+from cornerpin.leads.events import HoldRequested, InquiryReceived
 from cornerpin.leads.schemas import (
     BuyerLotState,
     ConsentChange,
@@ -251,12 +256,14 @@ def create_inquiry(
         # No RETURNING: the public role may insert an inquiry but never read one back.
         with public_session() as session, _lot_still_public():
             session.execute(insert, {**params, "u": None, "email": body.email})
+            enqueue(session, InquiryReceived(inquiry_id=inquiry_id))
         return Created(id=inquiry_id)
 
     with user_session(user.id) as session, _lot_still_public():
         profile = _fill_profile(session, user.id, body.name, body.phone)
         session.execute(insert, {**params, "u": user.id, "email": profile.email})
         _record_contact(session, lot, user, profile, body.contact, "inquiry")
+        enqueue(session, InquiryReceived(inquiry_id=inquiry_id))
     return Created(id=inquiry_id)
 
 
@@ -293,6 +300,7 @@ def create_hold_request(lot_id: UUID, body: HoldRequestCreate, user: SignedInUse
                 },
             )
             _record_contact(session, lot, user, profile, body.contact, "hold_request")
+            enqueue(session, HoldRequested(hold_request_id=hold_id))
     except IntegrityError as exc:
         if getattr(exc.orig, "sqlstate", None) == UNIQUE_VIOLATION:
             raise HTTPException(

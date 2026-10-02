@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Field, FormMessage } from "@/components/portal/field";
 import { TimeZoneSelect } from "@/components/portal/time-zone-select";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,12 @@ import { browserApi } from "@/lib/api/browser";
 import { errorMessage } from "@/lib/api/errors";
 import type { components } from "@/lib/api/schema";
 import { channelLabel, formatWhen } from "@/lib/format";
+import {
+  devicePush,
+  subscribeDevice,
+  unsubscribeDevice,
+  type DevicePush,
+} from "@/lib/push-client";
 
 // The buyer's account page (P1-08): their details, alerts and who may contact them.
 
@@ -78,35 +84,93 @@ export function ProfileForm({ me }: { me: Me }) {
 }
 
 export function AlertsForm({ prefs }: { prefs: Prefs }) {
-  const [email, setEmail] = useState(prefs.email_saved_lot_changes);
+  const [current, setCurrent] = useState(prefs);
   const [error, setError] = useState<string | null>(null);
 
-  async function change(next: boolean) {
-    setEmail(next);
-    const { error: failure } = await browserApi.PUT("/v1/me/notification-prefs", {
-      body: { ...prefs, email_saved_lot_changes: next },
-    });
-    if (failure) {
-      setEmail(!next);
-      setError(errorMessage(failure));
-    } else {
-      setError(null);
-    }
+  async function save(next: Prefs): Promise<boolean> {
+    const { error: failure } = await browserApi.PUT("/v1/me/notification-prefs", { body: next });
+    setError(failure ? errorMessage(failure) : null);
+    if (!failure) setCurrent(next);
+    return !failure;
   }
 
   return (
-    <div className="grid gap-2">
+    <div className="grid gap-3">
       <div className="flex items-center gap-2">
         <Checkbox
           id="alert-email"
-          checked={email}
-          onCheckedChange={(checked) => void change(checked === true)}
+          checked={current.email_saved_lot_changes}
+          onCheckedChange={(checked) =>
+            void save({ ...current, email_saved_lot_changes: checked === true })
+          }
         />
         <Label htmlFor="alert-email" className="font-normal">
           Email me when a saved lot&apos;s status or price changes
         </Label>
       </div>
+      <DeviceAlerts onEnabled={() => save({ ...current, push_saved_lot_changes: true })} />
       <FormMessage error={error} />
+    </div>
+  );
+}
+
+const DEVICE_NOTES = {
+  unsupported:
+    "This browser can't show alerts from Cornerpin. " +
+    "On an iPhone or iPad, add Cornerpin to your Home Screen first.",
+  blocked: "Notifications are blocked for this site. Allow them in your browser's settings.",
+  failed: "That didn't work. Try again.",
+} as const;
+
+/** Push alerts on this device (ADR-029). Hidden while push isn't set up on the server. */
+function DeviceAlerts({ onEnabled }: { onEnabled: () => Promise<boolean> }) {
+  const [device, setDevice] = useState<DevicePush | null>(null);
+  const [note, setNote] = useState<keyof typeof DEVICE_NOTES | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void devicePush().then((found) => {
+      if (!cancelled) setDevice(found);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (!device || device.state === "off-site") return null;
+  if (device.state === "unsupported" || device.state === "blocked") {
+    return <p className="text-sm text-muted-foreground">{DEVICE_NOTES[device.state]}</p>;
+  }
+
+  const on = device.state === "on";
+  async function toggle() {
+    if (!device || (device.state !== "on" && device.state !== "off")) return;
+    setBusy(true);
+    setNote(null);
+    if (on) {
+      await unsubscribeDevice();
+      setDevice({ ...device, state: "off" });
+    } else {
+      const result = await subscribeDevice(device.key, device.registration);
+      if (result === "on" && (await onEnabled())) setDevice({ ...device, state: "on" });
+      else if (result === "blocked") setDevice({ state: "blocked" });
+      else setNote("failed");
+    }
+    setBusy(false);
+  }
+
+  return (
+    <div className="grid gap-1">
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="button" variant="outline" size="sm" disabled={busy} onClick={toggle}>
+          {on ? "Stop alerts on this device" : "Also alert me on this device"}
+        </Button>
+        {on ? (
+          <span className="text-sm text-muted-foreground">This device gets saved-lot alerts.</span>
+        ) : null}
+      </div>
+      {note ? <FormMessage error={DEVICE_NOTES[note]} /> : null}
     </div>
   );
 }

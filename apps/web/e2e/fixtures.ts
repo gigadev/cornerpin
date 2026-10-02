@@ -13,9 +13,10 @@ export function projectOwner(testInfo: TestInfo): string {
 
 const MAILPIT = "http://localhost:8025/api/v1";
 
-type MessageSummary = { ID: string };
+type MessageSummary = { ID: string; Subject: string };
 type SearchResult = { messages: MessageSummary[] };
 type Message = { Text: string };
+export type Mail = { subject: string; text: string };
 
 export async function clearInbox(request: APIRequestContext, address: string): Promise<void> {
   await request.delete(`${MAILPIT}/search`, { params: { query: `to:"${address}"` } });
@@ -38,4 +39,23 @@ export async function signInLink(request: APIRequestContext, address: string): P
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   throw new Error(`no sign-in email for ${address}`);
+}
+
+/** Every email to `address` whose subject contains `subject`, newest first. */
+export async function mailTo(
+  request: APIRequestContext,
+  address: string,
+  subject: string,
+): Promise<Mail[]> {
+  const search = await request.get(`${MAILPIT}/search`, {
+    params: { query: `to:"${address}" subject:"${subject}"`, limit: "50" },
+  });
+  const { messages } = (await search.json()) as SearchResult;
+  return Promise.all(
+    messages.map(async (summary) => {
+      const response = await request.get(`${MAILPIT}/message/${summary.ID}`);
+      const message = (await response.json()) as Message;
+      return { subject: summary.Subject, text: message.Text };
+    }),
+  );
 }

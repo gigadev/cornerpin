@@ -9,7 +9,7 @@ from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError, ProgrammingError
 from sqlalchemy.orm import Session
 
-from cornerpin.core.db import public_session, user_session
+from cornerpin.core.db import public_session, user_session, worker_session
 
 from .conftest import Databases, TenantData
 
@@ -387,6 +387,39 @@ def test_public_may_file_only_anonymous_inquiries_on_public_lots(
             public_session(engine=db.api) as session,
         ):
             session.execute(sql, {"t": alpha.tenant_id, "l": lot, "u": user})
+
+
+def test_public_may_queue_only_the_inquiry_event(db: Databases) -> None:
+    sql = text("INSERT INTO outbox (event_type, payload) VALUES (:type, '{}')")
+    with pytest.raises(Rollback), public_session(engine=db.api) as session:
+        session.execute(sql, {"type": "leads.inquiry_received"})
+        raise Rollback
+    for event_type in ("auth.magic_link_requested", "notifications.saved_lot_email"):
+        with (
+            pytest.raises(ProgrammingError, match="row-level security"),
+            public_session(engine=db.api) as session,
+        ):
+            session.execute(sql, {"type": event_type})
+
+
+@pytest.mark.parametrize(
+    "sql",
+    [
+        "UPDATE lots SET price = 1",
+        "INSERT INTO saved_lots (user_id, lot_id, tenant_id) VALUES (:b, :l, :t)",
+        "UPDATE users SET email = 'x@example.test'",
+        "DELETE FROM inquiries",
+    ],
+)
+def test_worker_reads_but_does_not_change_listings_or_people(
+    db: Databases, tenants: tuple[TenantData, TenantData], sql: str
+) -> None:
+    alpha, _ = tenants
+    with (
+        pytest.raises(ProgrammingError, match="permission denied"),
+        worker_session(engine=db.api) as session,
+    ):
+        session.execute(text(sql), {"b": alpha.buyer_id, "l": alpha.lot_id, "t": alpha.tenant_id})
 
 
 # --- the login role itself -----------------------------------------------------------------

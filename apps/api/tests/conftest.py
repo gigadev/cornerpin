@@ -6,9 +6,10 @@ that uses the default engines (the API, the outbox) also runs against it."""
 
 import os
 import tempfile
-from collections.abc import Iterator
-from dataclasses import dataclass
-from uuid import UUID
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass, field
+from typing import Any
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -18,6 +19,7 @@ from sqlalchemy.exc import OperationalError
 
 from cornerpin.core.auth import service
 from cornerpin.core.auth.deps import SESSION_COOKIE
+from cornerpin.core.auth.turnstile import get_turnstile
 from cornerpin.core.config import get_settings
 from cornerpin.devtools import recreate_database
 from cornerpin.main import create_app
@@ -163,3 +165,94 @@ def alpha_owner(db: Databases, tenants: tuple[TenantData, TenantData]) -> Iterat
         signed_in = service.sign_in_verified_email("owner@alpha.test", None, "/app", "pytest")
         client.cookies.set(SESSION_COOKIE, signed_in.session_token)
         yield client
+
+
+# --- buyers (P1-08) and their lots ----------------------------------------------------------
+
+
+@dataclass
+class FakeTurnstile:
+    ok: bool = True
+    calls: list[str] = field(default_factory=lambda: [])
+
+    def verify(self, token: str, remote_ip: str | None) -> bool:
+        self.calls.append(token)
+        return self.ok
+
+
+@dataclass(frozen=True)
+class Listing:
+    tenant: TenantData
+    subdivision_id: str
+    available: str
+    sold: str
+    unpublished: str
+
+
+@pytest.fixture
+def turnstile() -> FakeTurnstile:
+    return FakeTurnstile()
+
+
+@pytest.fixture
+def client_for(
+    db: Databases, turnstile: FakeTurnstile
+) -> Iterator[Callable[[str | None], TestClient]]:
+    """Clients signed in as the given email (created on first use), or anonymous for None."""
+    clients: list[TestClient] = []
+
+    def make(email: str | None) -> TestClient:
+        app = create_app()
+        app.dependency_overrides[get_turnstile] = lambda: turnstile
+        client = TestClient(app)
+        client.__enter__()
+        clients.append(client)
+        if email:
+            signed_in = service.sign_in_verified_email(email, None, "/", "pytest")
+            client.cookies.set(SESSION_COOKIE, signed_in.session_token)
+        return client
+
+    yield make
+    for client in clients:
+        client.__exit__(None, None, None)
+
+
+@pytest.fixture
+def buyer(client_for: Callable[[str | None], TestClient]) -> TestClient:
+    return client_for(f"buyer-{uuid4().hex[:10]}@example.test")
+
+
+@pytest.fixture
+def anonymous(client_for: Callable[[str | None], TestClient]) -> TestClient:
+    return client_for(None)
+
+
+@pytest.fixture
+def listing(alpha_owner: TestClient, tenants: tuple[TenantData, TenantData]) -> Listing:
+    alpha, _ = tenants
+    base = f"/v1/tenants/{alpha.tenant_id}"
+    subdivision = alpha_owner.post(
+        f"{base}/subdivisions",
+        json={"name": "Buyers", "slug": f"buyers-{uuid4().hex[:8]}", "time_zone": "America/Boise",
+              "latitude": 43.6, "longitude": -116.2, "published": True},
+    ).json()  # fmt: skip
+    phase = alpha_owner.post(
+        f"{base}/subdivisions/{subdivision['id']}/phases", json={"name": "Phase 1"}
+    ).json()
+
+    def lot(number: str, **fields: Any) -> str:
+        created = alpha_owner.post(
+            f"{base}/subdivisions/{subdivision['id']}/lots",
+            json={"number": number, "phase_id": phase["id"], "price": 90000, **fields},
+        )
+        assert created.status_code == 201, created.text
+        lot_id: str = created.json()["id"]
+        return lot_id
+
+    return Listing(
+        tenant=alpha,
+        subdivision_id=subdivision["id"],
+        available=lot("1", published=True),
+        sold=lot("2", published=True, status="sold"),
+        unpublished=lot("3"),
+    )

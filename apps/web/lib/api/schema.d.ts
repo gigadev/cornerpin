@@ -238,6 +238,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me/push-subscriptions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Add Subscription
+         * @description Register this device. An endpoint already registered to someone else stays theirs
+         *     (signing out removes the device's subscription in the browser, which ends that).
+         */
+        put: operations["add_subscription_v1_me_push_subscriptions_put"];
+        post?: never;
+        /** Remove Subscription */
+        delete: operations["remove_subscription_v1_me_push_subscriptions_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me/saved-lots": {
         parameters: {
             query?: never;
@@ -306,6 +328,23 @@ export interface paths {
         };
         /** Public Photo */
         get: operations["public_photo_v1_public_photos__photo_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/push/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Push Config */
+        get: operations["push_config_v1_push_config_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1468,6 +1507,23 @@ export interface components {
             /** To Price */
             to_price: number | null;
         };
+        /** PushConfig */
+        PushConfig: {
+            /**
+             * Public Key
+             * @description VAPID public key; null while push is off
+             */
+            public_key: string | null;
+        };
+        /**
+         * PushSubscriptionIn
+         * @description The browser's PushSubscription, as `subscription.toJSON()` gives it.
+         */
+        PushSubscriptionIn: {
+            /** Endpoint */
+            endpoint: string;
+            keys: components["schemas"]["SubscriptionKeys"];
+        };
         /**
          * ReleaseStatus
          * @enum {string}
@@ -1615,6 +1671,13 @@ export interface components {
             slug?: string | null;
             /** Time Zone */
             time_zone?: string | null;
+        };
+        /** SubscriptionKeys */
+        SubscriptionKeys: {
+            /** Auth */
+            auth: string;
+            /** P256Dh */
+            p256dh: string;
         };
         /** Tenant */
         Tenant: {
@@ -2201,6 +2264,70 @@ export interface operations {
             };
         };
     };
+    add_subscription_v1_me_push_subscriptions_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PushSubscriptionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_subscription_v1_me_push_subscriptions_delete: {
+        parameters: {
+            query: {
+                endpoint: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     saved_lots_v1_me_saved_lots_get: {
         parameters: {
             query?: never;
@@ -2373,6 +2500,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    push_config_v1_push_config_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PushConfig"];
                 };
             };
         };

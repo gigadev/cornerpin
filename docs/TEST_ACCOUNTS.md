@@ -62,6 +62,29 @@ docker compose exec db psql -U cornerpin -d cornerpin -c "INSERT INTO membership
 Use `'staff'` instead of `'owner'` for a staff member. Right now both have the same rights
 (ADR-024).
 
+### Emails you should see in Mailpit
+
+| When | Who gets it | Subject |
+| --- | --- | --- |
+| Someone asks for a sign-in link | That address | Your Cornerpin sign-in link |
+| Someone sends a question from a lot page | Every owner and staff member of the lot's organization | New question about Lot 7 at Juniper Bench |
+| A signed-in buyer asks to hold a lot | Every owner and staff member | Hold request for Lot 7 at Juniper Bench |
+| An owner changes a published lot's status or price (or approves a hold) | Each buyer who saved the lot and kept email alerts on | Lot 7 at Juniper Bench is now on hold |
+
+To try the last one: sign in as a new buyer, save a lot, then sign in as the owner (another
+browser or a private window) and change that lot's status. Owner emails go to
+`owner@demo.cornerpin.test`; replying goes to the buyer.
+
+### Web push (optional)
+
+Push is off until it has keys, and the service worker only runs in a production build:
+
+1. `uv run python -m cornerpin.devtools vapid-keys` and paste the two lines into `.env`.
+2. Restart the API, then run the web app as a production build:
+   `pnpm --filter web build` and `pnpm --filter web exec next start --port 3300`.
+3. Sign in as a buyer, open `/account` and click **Also alert me on this device**.
+4. Save a lot and change its status as the owner; Chrome shows the alert.
+
 ### Resetting the demo data
 
 ```bash
@@ -84,7 +107,7 @@ with one on the dev site just creates a new buyer account with no portal.
 | `owner+mobile@demo.cornerpin.test`, `owner+desktop@demo.cornerpin.test` | Owners of Demo Land Co.; the sign-in tests use them |
 | `portal+mobile@demo.cornerpin.test`, `portal+desktop@demo.cornerpin.test` | Owners of Demo Land Co.; the portal tests use them |
 | `owner@other.cornerpin.test` | Owner of **Other Land Co.** (tenant `1aca3c52-936f-5fd9-8a5b-aa1b6e00ae2e`); used to prove one owner can't open another's portal |
-| `buyer+mobile@buyers.cornerpin.test`, `buyer+desktop@buyers.cornerpin.test` | Buyers; the buyer tests use them (they ask to hold lots 12 and 13, which the owner approves) |
+| `buyer+mobile@buyers.cornerpin.test`, `buyer+desktop@buyers.cornerpin.test` | Buyers; the buyer tests use them (they ask to hold lots 12 and 13, which the owner approves, and save lots 10 and 15, which the owner puts on hold) |
 | `walkin+mobile@example.test`, `walkin+desktop@example.test` | Not accounts: the email typed into a signed-out question |
 | `visitor+<project>-<time>@cornerpin.test` | Made up per run; a new buyer account |
 

@@ -17,6 +17,7 @@ class Email:
     to: str
     subject: str
     text: str
+    reply_to: str | None = None
 
 
 class EmailSender(Protocol):
@@ -34,6 +35,8 @@ class SmtpSender:
         message["From"] = self.sender
         message["To"] = email.to
         message["Subject"] = email.subject
+        if email.reply_to:
+            message["Reply-To"] = email.reply_to
         message.set_content(email.text)
         with smtplib.SMTP(self.host, self.port, timeout=10) as smtp:
             smtp.send_message(message)
@@ -53,6 +56,7 @@ class ResendSender:
                 "to": [email.to],
                 "subject": email.subject,
                 "text": email.text,
+                **({"reply_to": email.reply_to} if email.reply_to else {}),
             },
             timeout=10,
         )
