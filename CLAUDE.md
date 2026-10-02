@@ -12,7 +12,7 @@ showcase for a job application, which is why the integrations and the AI feature
 
 FastAPI (Python) is the API; Postgres + PostGIS with RLS is the system of record; Next.js
 (App Router, TypeScript) is the web app and PWA; REST for writes, GraphQL for public reads.
-The plan is docs/IMPLEMENTATION_PLAN.md. Decisions are DECISIONS.md at the repo root (ADRs).
+The plan is docs/IMPLEMENTATION_PLAN.md. Decisions are ADRs in docs/adr/, one file each, indexed in docs/adr/README.md.
 Do not re-litigate an ADR in code; propose a new ADR instead.
 
 ## Local first, then live (ADR-009)
@@ -59,7 +59,7 @@ pnpm lint · pnpm test · pnpm build · pnpm e2e
   clock, tell Scott the expected monthly cost and wait for a yes.
 - Git is Scott's. Never run git commit, push, branch, stash, reset or checkout. End each task
   with a proposed conventional-commit message in your summary.
-- One task at a time. Update DECISIONS.md when you make a call the plan did not.
+- One task at a time. Add an ADR in docs/adr/ when you make a call the plan did not.
 
 ## Working agreement
 Before a task: restate acceptance criteria. After: run lint/test/build, summarize what changed,
@@ -77,5 +77,6 @@ and the code disagree, ask; do not silently pick one. Do not add features not in
 - Auth is passwordless (magic link + Google) with Cloudflare Turnstile on public forms; never
   add a password field. Locally, Mailpit receives magic links and Turnstile uses Cloudflare's
   always-pass test keys.
-- No brand yet: plain text wordmark, neutral palette, until Scott supplies one.
+- Theme: "survey and land" (ADR-033), sage on sand, Fraunces + Inter, a working identity until
+  Scott supplies a real brand. Use the colour tokens, never raw colours.
 - Idaho spans the Mountain and Pacific time zones; each subdivision stores its time zone.

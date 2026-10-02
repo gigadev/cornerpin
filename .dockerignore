@@ -1,0 +1,20 @@
+# Build contexts are the repo root; send only what the images need.
+**/node_modules
+**/.next
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+.venv
+.git
+.github
+var
+infra
+docs
+evals
+apps/web/playwright
+apps/web/test-results
+apps/web/playwright-report
+apps/web/public/maplibre
+.env
+.env.*
+!.env.example

@@ -1,0 +1,33 @@
+# env files hold secrets; only the example is committed
+.env
+.env.*
+!.env.example
+
+# node
+node_modules/
+.pnpm-store/
+apps/web/.next/
+apps/web/next-env.d.ts
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/blob-report/
+apps/web/playwright/.cache/
+apps/web/playwright/.auth/
+apps/web/public/maplibre/
+*.tsbuildinfo
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+
+# local uploads (storage backend, P1-05)
+var/
+
+# editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

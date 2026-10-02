@@ -1,0 +1,110 @@
+enum DocumentKind {
+  PLAT
+  SURVEY
+  COVENANTS
+  UTILITIES
+  OTHER
+}
+
+"""
+A GeoJSON geometry in longitude/latitude (WGS 84); lots are MultiPolygons.
+"""
+scalar GeoJSON
+
+enum ListingType {
+  LAND_ONLY
+  LOT_AND_HOME
+}
+
+enum LotStatus {
+  AVAILABLE
+  ON_HOLD
+  SOLD
+}
+
+"""A document attached to a published lot."""
+type PublicDocument {
+  id: ID!
+  kind: DocumentKind!
+  title: String!
+  sizeBytes: Int!
+
+  """Same-origin path; downloads under the title"""
+  url: String!
+}
+
+"""The house on a lot + home listing."""
+type PublicHome {
+  bedrooms: Int
+  bathrooms: Float
+  squareFeet: Int
+  description: String
+}
+
+"""A published lot."""
+type PublicLot {
+  id: ID!
+  number: String!
+  status: LotStatus!
+  listingType: ListingType!
+
+  """Whole dollars; null when not priced yet."""
+  price: Int
+  acreage: Float
+  phaseName: String!
+  boundary: GeoJSON
+
+  """
+  [longitude, latitude] for directions: inside the lot's shape, or the subdivision's location when the lot has no shape yet.
+  """
+  location: [Float!]!
+  home: PublicHome
+
+  """Photos in the owner's order."""
+  photos: [PublicPhoto!]!
+
+  """Plat, survey, covenants, utilities and other documents."""
+  documents: [PublicDocument!]!
+}
+
+"""A photo of a published lot, in its display order."""
+type PublicPhoto {
+  id: ID!
+
+  """Same-origin path to the image"""
+  url: String!
+  caption: String!
+  width: Int
+  height: Int
+}
+
+"""A published subdivision."""
+type PublicSubdivision {
+  slug: String!
+  name: String!
+  description: String!
+  timeZone: String!
+
+  """[longitude, latitude]"""
+  center: [Float!]!
+  lots: [PublicLot!]!
+}
+
+"""Where a sign's QR code points right now."""
+type QrTarget {
+  subdivisionSlug: String!
+  lotNumber: String!
+}
+
+type Query {
+  """A published subdivision by its web address, or null."""
+  subdivision(slug: String!): PublicSubdivision
+
+  """A published lot by subdivision web address and lot number."""
+  lot(subdivisionSlug: String!, number: String!): PublicLot
+
+  """
+  The published lot a sign's QR code names, or null (ADR-031). Looked up when scanned, so a renamed subdivision still works.
+  """
+  qrTarget(code: String!): QrTarget
+}

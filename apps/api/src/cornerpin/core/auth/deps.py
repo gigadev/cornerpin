@@ -1,0 +1,59 @@
+from dataclasses import dataclass
+from typing import Annotated
+from uuid import UUID
+
+from fastapi import Cookie, Depends, HTTPException, Response, status
+
+from cornerpin.core.auth.service import resolve_session
+from cornerpin.core.config import get_settings
+
+# Firebase Hosting, in front of the web app in production, forwards only a cookie with exactly
+# this name to Cloud Run and strips every other (ADR-032).
+SESSION_COOKIE = "__session"
+
+SessionCookie = Annotated[str | None, Cookie(alias=SESSION_COOKIE)]
+
+
+@dataclass(frozen=True)
+class CurrentUser:
+    id: UUID
+
+
+def current_user(session_token: SessionCookie = None) -> CurrentUser:
+    """The signed-in user from the session cookie; 401 otherwise."""
+    user_id = resolve_session(session_token) if session_token else None
+    if user_id is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not signed in")
+    return CurrentUser(id=user_id)
+
+
+def optional_user(session_token: SessionCookie = None) -> CurrentUser | None:
+    """The signed-in user, or None for an anonymous visitor."""
+    user_id = resolve_session(session_token) if session_token else None
+    return CurrentUser(id=user_id) if user_id else None
+
+
+SignedInUser = Annotated[CurrentUser, Depends(current_user)]
+MaybeUser = Annotated[CurrentUser | None, Depends(optional_user)]
+
+
+def secure_cookies() -> bool:
+    return get_settings().web_origin.startswith("https://")
+
+
+def set_session_cookie(response: Response, token: str) -> None:
+    response.set_cookie(
+        SESSION_COOKIE,
+        token,
+        max_age=get_settings().session_days * 86_400,
+        httponly=True,
+        secure=secure_cookies(),
+        samesite="lax",
+        path="/",
+    )
+
+
+def clear_session_cookie(response: Response) -> None:
+    response.delete_cookie(
+        SESSION_COOKIE, httponly=True, secure=secure_cookies(), samesite="lax", path="/"
+    )

@@ -1,0 +1,49 @@
+# uv workspace root, so `uv run pytest`, `uv run ruff check`, `uv run pyright` and
+# `uv run alembic upgrade head` work from the repo root (CLAUDE.md commands).
+[project]
+name = "cornerpin-workspace"
+version = "0.0.0"
+requires-python = ">=3.13"
+dependencies = ["cornerpin-api"]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.13.1",
+    "pyright>=1.1.400",
+    "pytest>=8.4",
+    "ruff>=0.12",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["apps/api"]
+
+[tool.uv.sources]
+cornerpin-api = { workspace = true }
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+src = ["apps/api/src", "apps/api/tests"]
+extend-exclude = ["apps/web"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "ASYNC", "S"]
+ignore = []
+
+[tool.ruff.lint.per-file-ignores]
+"apps/api/tests/**" = ["S101"]
+
+[tool.pyright]
+include = ["apps/api/src", "apps/api/tests", "apps/api/migrations"]
+pythonVersion = "3.13"
+typeCheckingMode = "strict"
+extraPaths = ["apps/api/src"]
+venvPath = "."
+venv = ".venv"
+
+[tool.pytest.ini_options]
+testpaths = ["apps/api/tests"]
+addopts = "-ra"

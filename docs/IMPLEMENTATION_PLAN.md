@@ -4,7 +4,7 @@ Oct 1, 2026 · Scott Shepherd
 
 ## How to use this doc
 
-This is the working plan for Claude Code. `CLAUDE.md` and `DECISIONS.md` at the repo root are canonical; if this plan disagrees with them, they win.
+This is the working plan for Claude Code. `CLAUDE.md` at the repo root and the ADRs in [`docs/adr/`](adr/README.md) are canonical; if this plan disagrees with them, they win.
 
 **Ground rules**
 

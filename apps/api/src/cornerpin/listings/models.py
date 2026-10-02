@@ -1,0 +1,230 @@
+"""ORM models for the listings module. The migrations own the schema (tables, policies,
+triggers); these map it for typed queries, and tests/test_models.py checks they agree."""
+
+from datetime import datetime
+from decimal import Decimal
+from enum import StrEnum
+from typing import Any, ClassVar
+from uuid import UUID
+
+from geoalchemy2 import Geometry, WKBElement
+from sqlalchemy import (
+    BigInteger,
+    DateTime,
+    ForeignKeyConstraint,
+    Numeric,
+    SmallInteger,
+    Text,
+    case,
+    func,
+)
+from sqlalchemy.dialects.postgresql import CITEXT, ENUM, JSONB, REAL
+from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column
+from sqlalchemy.types import TypeEngine
+
+
+class Base(DeclarativeBase):
+    # Every timestamp in the schema is timestamptz.
+    type_annotation_map: ClassVar[dict[type, TypeEngine[Any]]] = {datetime: DateTime(timezone=True)}
+
+
+class LotStatus(StrEnum):
+    AVAILABLE = "available"
+    ON_HOLD = "on_hold"
+    SOLD = "sold"
+
+
+class ListingType(StrEnum):
+    LAND_ONLY = "land_only"
+    LOT_AND_HOME = "lot_and_home"
+
+
+class ReleaseStatus(StrEnum):
+    UPCOMING = "upcoming"
+    RELEASED = "released"
+
+
+class DocumentKind(StrEnum):
+    PLAT = "plat"
+    SURVEY = "survey"
+    COVENANTS = "covenants"
+    UTILITIES = "utilities"
+    OTHER = "other"
+
+
+def _values(enum: type[StrEnum]) -> list[str]:
+    return [member.value for member in enum]
+
+
+def _enum(enum: type[StrEnum], name: str) -> ENUM:
+    # Store the lowercase values the database enum uses, not the Python member names.
+    return ENUM(enum, name=name, create_type=False, values_callable=_values)
+
+
+class Subdivision(Base):
+    __tablename__ = "subdivisions"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    name: Mapped[str] = mapped_column(Text)
+    slug: Mapped[str] = mapped_column(Text, unique=True)
+    location: Mapped[WKBElement] = mapped_column(Geometry("POINT", srid=4326, spatial_index=False))
+    boundary: Mapped[WKBElement | None] = mapped_column(
+        Geometry("MULTIPOLYGON", srid=4326, spatial_index=False)
+    )
+    time_zone: Mapped[str] = mapped_column(Text)
+    description: Mapped[str] = mapped_column(Text, server_default="")
+    published: Mapped[bool] = mapped_column(server_default="false")
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+    latitude: Mapped[float] = column_property(func.ST_Y(location))
+    longitude: Mapped[float] = column_property(func.ST_X(location))
+
+
+class Phase(Base):
+    __tablename__ = "phases"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["subdivision_id", "tenant_id"], ["subdivisions.id", "subdivisions.tenant_id"]
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    subdivision_id: Mapped[UUID]
+    name: Mapped[str] = mapped_column(Text)
+    sort_order: Mapped[int] = mapped_column(server_default="0")
+    release_status: Mapped[ReleaseStatus] = mapped_column(
+        _enum(ReleaseStatus, "phase_release_status"), server_default="upcoming"
+    )
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class Lot(Base):
+    __tablename__ = "lots"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["subdivision_id", "tenant_id"], ["subdivisions.id", "subdivisions.tenant_id"]
+        ),
+        ForeignKeyConstraint(
+            ["phase_id", "subdivision_id"], ["phases.id", "phases.subdivision_id"]
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    subdivision_id: Mapped[UUID]
+    phase_id: Mapped[UUID]
+    number: Mapped[str] = mapped_column(Text)
+    boundary: Mapped[WKBElement | None] = mapped_column(
+        Geometry("MULTIPOLYGON", srid=4326, spatial_index=False)
+    )
+    acreage: Mapped[Decimal | None] = mapped_column(Numeric(9, 3))
+    price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    status: Mapped[LotStatus] = mapped_column(
+        _enum(LotStatus, "lot_status"), server_default="available"
+    )
+    listing_type: Mapped[ListingType] = mapped_column(
+        _enum(ListingType, "listing_type"), server_default="land_only"
+    )
+    home_bedrooms: Mapped[int | None] = mapped_column(SmallInteger)
+    home_bathrooms: Mapped[Decimal | None] = mapped_column(Numeric(3, 1))
+    home_square_feet: Mapped[int | None]
+    home_description: Mapped[str | None] = mapped_column(Text)
+    published: Mapped[bool] = mapped_column(server_default="false")
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class LotStatusChange(Base):
+    __tablename__ = "lot_status_history"
+    __table_args__ = (ForeignKeyConstraint(["lot_id", "tenant_id"], ["lots.id", "lots.tenant_id"]),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    lot_id: Mapped[UUID]
+    from_status: Mapped[LotStatus | None] = mapped_column(_enum(LotStatus, "lot_status"))
+    to_status: Mapped[LotStatus] = mapped_column(_enum(LotStatus, "lot_status"))
+    changed_by: Mapped[UUID | None]
+    changed_by_email: Mapped[str | None] = mapped_column(CITEXT)
+    changed_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class LotPriceChange(Base):
+    __tablename__ = "lot_price_history"
+    __table_args__ = (ForeignKeyConstraint(["lot_id", "tenant_id"], ["lots.id", "lots.tenant_id"]),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    lot_id: Mapped[UUID]
+    from_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    to_price: Mapped[Decimal | None] = mapped_column(Numeric(12, 2))
+    changed_by: Mapped[UUID | None]
+    changed_by_email: Mapped[str | None] = mapped_column(CITEXT)
+    changed_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class LotPhoto(Base):
+    __tablename__ = "lot_media"
+    __table_args__ = (ForeignKeyConstraint(["lot_id", "tenant_id"], ["lots.id", "lots.tenant_id"]),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    lot_id: Mapped[UUID]
+    storage_key: Mapped[str] = mapped_column(Text)
+    content_type: Mapped[str] = mapped_column(Text)
+    caption: Mapped[str] = mapped_column(Text, server_default="")
+    sort_order: Mapped[int] = mapped_column(server_default="0")
+    width: Mapped[int | None]
+    height: Mapped[int | None]
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class LotDocument(Base):
+    __tablename__ = "lot_documents"
+    __table_args__ = (ForeignKeyConstraint(["lot_id", "tenant_id"], ["lots.id", "lots.tenant_id"]),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    lot_id: Mapped[UUID]
+    kind: Mapped[DocumentKind] = mapped_column(_enum(DocumentKind, "lot_document_kind"))
+    title: Mapped[str] = mapped_column(Text)
+    storage_key: Mapped[str] = mapped_column(Text)
+    content_type: Mapped[str] = mapped_column(Text)
+    size_bytes: Mapped[int] = mapped_column(BigInteger)
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class SubdivisionOverlay(Base):
+    """A plat image lined up on the map for tracing (ADR-026). Owner-only."""
+
+    __tablename__ = "subdivision_overlays"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["subdivision_id", "tenant_id"], ["subdivisions.id", "subdivisions.tenant_id"]
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    subdivision_id: Mapped[UUID] = mapped_column(unique=True)
+    storage_key: Mapped[str] = mapped_column(Text)
+    content_type: Mapped[str] = mapped_column(Text)
+    width: Mapped[int]
+    height: Mapped[int]
+    corners: Mapped[list[list[float]]] = mapped_column(JSONB)
+    opacity: Mapped[float] = mapped_column(REAL, server_default="0.6")
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+def lot_number_order() -> tuple[Any, ...]:
+    """Lot ordering everywhere: numeric lot numbers first, as numbers ("2" before "10"), then
+    the rest by text ("B-1")."""
+    return (
+        case((Lot.number.regexp_match("^[0-9]+$"), 0), else_=1),
+        func.lpad(Lot.number, 16, "0"),
+        Lot.number,
+    )

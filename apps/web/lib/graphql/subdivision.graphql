@@ -1,0 +1,19 @@
+query PublicSubdivisionMap($slug: String!) {
+  subdivision(slug: $slug) {
+    slug
+    name
+    description
+    timeZone
+    center
+    lots {
+      id
+      number
+      status
+      listingType
+      price
+      acreage
+      phaseName
+      boundary
+    }
+  }
+}
