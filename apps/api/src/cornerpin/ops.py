@@ -24,7 +24,7 @@ from sqlalchemy.engine import make_url
 
 from cornerpin.core.config import REPO_ROOT, get_settings
 from cornerpin.core.fields import normalize_email
-from cornerpin.seed import seed
+from cornerpin.seed import DEMO_TENANT_ID, seed
 
 
 def owner_engine() -> Engine:
@@ -102,8 +102,8 @@ def migrate() -> None:
 def seed_demo(owner_email: str) -> None:
     """Rebuild the demo tenant (Juniper Bench) with `owner_email` as its owner."""
     with owner_engine().begin() as conn, owner_writes(conn):
-        tenant_id = seed(conn, owner_email=owner_email)
-    print(f"demo tenant {tenant_id}; owner {owner_email}")
+        subdivision_id = seed(conn, owner_email=owner_email)
+    print(f"demo tenant {DEMO_TENANT_ID}, subdivision {subdivision_id}; owner {owner_email}")
 
 
 def create_tenant(name: str, owner_email: str, owner_name: str | None) -> UUID:
