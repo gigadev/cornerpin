@@ -15,7 +15,6 @@ from sqlalchemy import (
     Numeric,
     SmallInteger,
     Text,
-    case,
     func,
 )
 from sqlalchemy.dialects.postgresql import CITEXT, ENUM, JSONB, REAL
@@ -221,10 +220,6 @@ class SubdivisionOverlay(Base):
 
 
 def lot_number_order() -> tuple[Any, ...]:
-    """Lot ordering everywhere: numeric lot numbers first, as numbers ("2" before "10"), then
-    the rest by text ("B-1")."""
-    return (
-        case((Lot.number.regexp_match("^[0-9]+$"), 0), else_=1),
-        func.lpad(Lot.number, 16, "0"),
-        Lot.number,
-    )
+    """Lot ordering everywhere, as people read lot numbers: "2" before "10", "2-9" before "2-10"
+    before "3-1", numbers before letters ("B-1"). The collation is migration 0010 (ADR-034)."""
+    return (Lot.number.collate("lot_number"),)

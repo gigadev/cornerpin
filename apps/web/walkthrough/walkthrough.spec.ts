@@ -119,7 +119,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   test.setTimeout(600_000);
   mkdirSync(OUT, { recursive: true });
 
-  // --- the owner adds photos and a plat to lot 8 ---------------------------------------
+  // --- the owner adds photos and a plat to lot 2-6 ---------------------------------------
   const ownerContext = await newContext(browser);
   const owner = await ownerContext.newPage();
   owner.on("dialog", (dialog) => void dialog.accept());
@@ -140,8 +140,8 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await shot(owner, "23-portal-new-lot");
 
   await owner.goto(subdivisionUrl);
-  await owner.getByRole("link", { name: "Lot 8", exact: true }).click();
-  await expect(owner.getByRole("heading", { name: "Lot 8" })).toBeVisible();
+  await owner.getByRole("link", { name: "Lot 2-6", exact: true }).click();
+  await expect(owner.getByRole("heading", { name: "Lot 2-6" })).toBeVisible();
   const lot8Url = owner.url();
   await owner.getByLabel("Add photos").setInputFiles([
     { name: "front.png", mimeType: "image/png", buffer: scene([118, 166, 214], [150, 160, 92], true) },
@@ -149,7 +149,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
     { name: "evening.png", mimeType: "image/png", buffer: scene([214, 150, 118], [128, 138, 82], true) },
   ]);
   await expect(owner.getByLabel("Caption for photo 3")).toBeVisible({ timeout: 20_000 });
-  for (const [index, caption] of ["Front of the house", "The back acre", "Evening light"].entries()) {
+  for (const [index, caption] of ["Front of the house", "The back yard", "Evening light"].entries()) {
     const field = owner.getByLabel(`Caption for photo ${index + 1}`);
     await field.fill(caption);
     await field.press("Enter");
@@ -187,15 +187,15 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await visitor.getByRole("region", { name: "Lots", exact: true }).scrollIntoViewIfNeeded();
   await shot(visitor, "04-filters");
 
-  await visitor.goto("/juniper-bench/lots/8");
-  await expect(visitor.getByRole("heading", { level: 1, name: "Lot 8" })).toBeVisible();
+  await visitor.goto("/juniper-bench/lots/2-6");
+  await expect(visitor.getByRole("heading", { level: 1, name: "Lot 2-6" })).toBeVisible();
   await shot(visitor, "05-lot");
   await mapReady(visitor);
   await shot(visitor, "06-lot-full", true);
   await expect(visitor.getByRole("button", { name: "Send question" })).toBeEnabled({ timeout: 20_000 });
   await visitor.getByLabel("Your name").fill("Jordan Walk-in");
   await visitor.getByLabel("Email").fill("jordan@example.test");
-  await visitor.getByLabel("Your question").fill("Is the well shared with lot 7?");
+  await visitor.getByLabel("Your question").fill("Is the irrigation shared with lot 2-5?");
   await visitor.locator("#contact").scrollIntoViewIfNeeded();
   await visitor.getByRole("heading", { name: "Contact the owner" }).click();
   await visitor.addStyleTag({ content: HIDE_TEST_TURNSTILE });
@@ -203,7 +203,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await visitor.getByRole("button", { name: "Send question" }).click();
   await expect(visitor.getByRole("status").filter({ hasText: "Sent." })).toBeVisible();
 
-  const card = await request.get("/juniper-bench/lots/8/opengraph-image");
+  const card = await request.get("/juniper-bench/lots/2-6/opengraph-image");
   writeFileSync(path.join(OUT, "08-link-preview.png"), await card.body());
 
   await visitor.goto("/q/zzzzzzzz");
@@ -213,8 +213,8 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await phone.goto("/juniper-bench");
   await mapReady(phone);
   await shot(phone, "10-mobile-subdivision");
-  await phone.goto("/juniper-bench/lots/8");
-  await expect(phone.getByRole("heading", { level: 1, name: "Lot 8" })).toBeVisible();
+  await phone.goto("/juniper-bench/lots/2-6");
+  await expect(phone.getByRole("heading", { level: 1, name: "Lot 2-6" })).toBeVisible();
   await phone.waitForTimeout(1_500);
   await shot(phone, "11-mobile-lot");
 
@@ -222,7 +222,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await clearInbox(request, BUYER);
   const buyerContext = await newContext(browser);
   const buyer = await buyerContext.newPage();
-  await buyer.goto("/juniper-bench/lots/8");
+  await buyer.goto("/juniper-bench/lots/2-6");
   await buyer.getByRole("link", { name: "Save this lot" }).click();
   // Enabled means hydrated with a Turnstile token; typing before hydration would be lost.
   const send = buyer.getByRole("button", { name: "Email me a sign-in link" });
@@ -238,7 +238,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await buyer.goto(await signInLink(request, BUYER));
   await shot(buyer, "15-verify");
   await buyer.getByRole("button", { name: "Sign in" }).click();
-  await expect(buyer).toHaveURL(/\/juniper-bench\/lots\/8$/);
+  await expect(buyer).toHaveURL(/\/juniper-bench\/lots\/2-6$/);
 
   await buyer.getByRole("button", { name: "Save this lot" }).click();
   await expect(buyer.getByRole("button", { name: "Saved" })).toBeVisible();
@@ -251,7 +251,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await buyer.getByRole("button", { name: "Send question" }).click();
   await expect(buyer.getByRole("status").filter({ hasText: "Sent." })).toBeVisible();
 
-  await buyer.goto("/juniper-bench/lots/12");
+  await buyer.goto("/juniper-bench/lots/3-8");
   await buyer.getByLabel("Ask the owner to hold this lot").check();
   await buyer.getByLabel("Message (optional)").fill("Our loan is approved; can you hold it until Friday?");
   await buyer.locator("#contact").scrollIntoViewIfNeeded();
@@ -260,7 +260,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await expect(buyer.getByText("Hold requested.")).toBeVisible();
 
   // --- the owner hears about it ------------------------------------------------------------
-  await mailShot(mail, request, OWNER, "New question about Lot 8", "30-email-owner-question");
+  await mailShot(mail, request, OWNER, "New question about Lot 2-6", "30-email-owner-question");
   await owner.goto(`/app/${DEMO_TENANT_ID}/inquiries`);
   await shot(owner, "26-portal-inquiries", true);
 
@@ -269,10 +269,10 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await owner.getByLabel("Price (whole dollars)").fill("479000");
   await owner.getByRole("button", { name: "Save lot" }).click();
   await expect(owner.getByText("$489,000 → $479,000")).toBeVisible();
-  await mailShot(mail, request, BUYER, "Lot 8 at Juniper Bench", "31-email-saved-lot");
+  await mailShot(mail, request, BUYER, "Lot 2-6 at Juniper Bench", "31-email-saved-lot");
 
   await owner.goto(`${lot8Url}/sign`);
-  await expect(owner.getByRole("heading", { name: "Sign for Lot 8" })).toBeVisible();
+  await expect(owner.getByRole("heading", { name: "Sign for Lot 2-6" })).toBeVisible();
   await shot(owner, "27-portal-sign");
   await owner.emulateMedia({ media: "print" });
   await owner.getByRole("article", { name: "Sign" }).screenshot({
@@ -288,7 +288,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   // --- offline -------------------------------------------------------------------------------
   const offlineContext = await newContext(browser);
   const offline = await offlineContext.newPage();
-  await offline.goto("/juniper-bench/lots/8");
+  await offline.goto("/juniper-bench/lots/2-6");
   await offline.waitForFunction(() => navigator.serviceWorker.controller !== null);
   await expect
     .poll(
@@ -300,7 +300,7 @@ test("walkthrough screenshots", async ({ browser, request }) => {
     )
     .toBe(true);
   await offlineContext.setOffline(true);
-  await offline.goto("/juniper-bench/lots/9");
+  await offline.goto("/juniper-bench/lots/3-9");
   await expect(offline.getByRole("heading", { name: "You're offline" })).toBeVisible();
   await shot(offline, "19-offline");
 

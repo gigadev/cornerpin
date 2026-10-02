@@ -61,20 +61,25 @@ def seed_e2e(conn: Connection) -> None:
 
 
 def seed_media(conn: Connection) -> None:
-    """Photos and a plat for Juniper Bench lot 7 (published), and a photo for lot 16 (phase 2,
-    unpublished), so the public-page tests can check both sides."""
+    """Photos and a plat for Juniper Bench lot 2-5 (published), and a photo for lot 2-13
+    (phase 2, unpublished), so the public-page tests can check both sides. Keep in sync with
+    DEMO_LOTS in apps/web/e2e/fixtures.ts."""
     storage = LocalStorage(E2E_STORAGE)
     lots = {
         number: lot_id
         for number, lot_id in conn.execute(
             text(
                 "SELECT l.number, l.id FROM lots l JOIN subdivisions s ON s.id = l.subdivision_id"
-                " WHERE s.slug = :slug AND l.number IN ('7', '16')"
+                " WHERE s.slug = :slug AND l.number IN ('2-5', '2-13')"
             ),
             {"slug": DEMO_SLUG},
         )
     }
-    photos = (("7", "Front of the house", 0), ("7", "Back porch", 1), ("16", "Not yet public", 0))
+    photos = (
+        ("2-5", "Front of the house", 0),
+        ("2-5", "Back porch", 1),
+        ("2-13", "Not yet public", 0),
+    )
     for number, caption, order in photos:
         lot_id = lots[number]
         key = f"tenants/{DEMO_TENANT_ID}/lots/{lot_id}/photos/{uuid4()}.png"
@@ -88,14 +93,14 @@ def seed_media(conn: Connection) -> None:
             ),
             {"t": DEMO_TENANT_ID, "l": lot_id, "k": key, "c": caption, "o": order},
         )
-    key = f"tenants/{DEMO_TENANT_ID}/lots/{lots['7']}/documents/{uuid4()}.pdf"
+    key = f"tenants/{DEMO_TENANT_ID}/lots/{lots['2-5']}/documents/{uuid4()}.pdf"
     storage.put(key, PLAT_PDF, "application/pdf")
     conn.execute(
         text(
             "INSERT INTO lot_documents (tenant_id, lot_id, kind, title, storage_key, content_type,"
             " size_bytes) VALUES (:t, :l, 'plat', 'Recorded plat', :k, 'application/pdf', :n)"
         ),
-        {"t": DEMO_TENANT_ID, "l": lots["7"], "k": key, "n": len(PLAT_PDF)},
+        {"t": DEMO_TENANT_ID, "l": lots["2-5"], "k": key, "n": len(PLAT_PDF)},
     )
 
 

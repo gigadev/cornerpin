@@ -1,5 +1,7 @@
 import { expect, test, type Browser, type Page } from "@playwright/test";
-import { DEMO_TENANT_ID } from "./fixtures";
+import { DEMO_LOTS, DEMO_TENANT_ID, lotRow } from "./fixtures";
+
+const { home, otherHome, unopened } = DEMO_LOTS;
 
 // P1-10 acceptance: installable; a viewed lot opens offline; no /app response in any cache.
 // Runs in the buyer projects (signed in as buyer+<viewport>@buyers.cornerpin.test), against
@@ -41,7 +43,7 @@ async function cachedUrls(page: Page): Promise<string[]> {
 }
 
 test("each subdivision and the owner portal install as their own app", async ({ page }) => {
-  await page.goto("/juniper-bench/lots/7");
+  await page.goto(`/juniper-bench/lots/${home}`);
   await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
     "href",
     "/juniper-bench/manifest.webmanifest",
@@ -74,25 +76,25 @@ test("each subdivision and the owner portal install as their own app", async ({ 
 
 test("a viewed lot opens offline, with its subdivision", async ({ browser }) => {
   const page = await freshPage(browser);
-  await page.goto("/juniper-bench/lots/7");
-  await expect(page.getByRole("heading", { level: 1, name: "Lot 7" })).toBeVisible();
-  await waitUntilKept(page, "/juniper-bench/lots/7");
+  await page.goto(`/juniper-bench/lots/${home}`);
+  await expect(page.getByRole("heading", { level: 1, name: `Lot ${home}` })).toBeVisible();
+  await waitUntilKept(page, `/juniper-bench/lots/${home}`);
   await waitUntilKept(page, "/juniper-bench");
 
   await page.context().setOffline(true);
-  await page.goto("/juniper-bench/lots/7");
-  await expect(page.getByRole("heading", { level: 1, name: "Lot 7" })).toBeVisible();
+  await page.goto(`/juniper-bench/lots/${home}`);
+  await expect(page.getByRole("heading", { level: 1, name: `Lot ${home}` })).toBeVisible();
   await expect(page.getByText("$549,000")).toBeVisible();
 
   await page.goto("/juniper-bench");
   const lots = page.getByRole("region", { name: "Lots" });
-  await expect(lots.getByRole("link", { name: /^Lot 7\b/ })).toBeVisible();
-  await expect(lots.getByRole("link", { name: /^Lot 9\b/ })).toBeVisible();
+  await expect(lots.getByRole("link", { name: lotRow(home) })).toBeVisible();
+  await expect(lots.getByRole("link", { name: lotRow(unopened) })).toBeVisible();
 
   // A lot that was never opened gets the offline page, which lists what this device has.
-  await page.goto("/juniper-bench/lots/9");
+  await page.goto(`/juniper-bench/lots/${unopened}`);
   await expect(page.getByRole("heading", { name: "You're offline" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Lot 7, Juniper Bench" })).toBeVisible();
+  await expect(page.getByRole("link", { name: `Lot ${home}, Juniper Bench` })).toBeVisible();
   await expect(page.getByRole("link", { name: "Juniper Bench", exact: true })).toBeVisible();
 });
 
@@ -102,7 +104,7 @@ test("a question written offline is sent when the connection returns", async ({
   const view = viewport(testInfo.project.name);
   const question = `Can I walk the lot this weekend? (${view} ${Date.now()})`;
   const page = await freshPage(browser);
-  await page.goto("/juniper-bench/lots/7");
+  await page.goto(`/juniper-bench/lots/${home}`);
   // The form is ready once Cloudflare's test key has passed.
   await expect(page.getByRole("button", { name: "Send question" })).toBeEnabled({
     timeout: 15_000,
@@ -115,11 +117,13 @@ test("a question written offline is sent when the connection returns", async ({
   await page.getByRole("button", { name: "Send question" }).click();
   await expect(page.getByText("Your question is saved on this device")).toBeVisible();
   await expect(
-    page.getByText("Your question about Lot 7, Juniper Bench will be sent when you're back online"),
+    page.getByText(
+      `Your question about Lot ${home}, Juniper Bench will be sent when you're back online`,
+    ),
   ).toBeVisible();
 
   await page.context().setOffline(false);
-  await expect(page.getByText("Sent your question about Lot 7, Juniper Bench.")).toBeVisible({
+  await expect(page.getByText(`Sent your question about Lot ${home}, Juniper Bench.`)).toBeVisible({
     timeout: 20_000,
   });
 
@@ -134,11 +138,11 @@ test("nothing private is ever cached", async ({ page, browser }, testInfo) => {
   test.setTimeout(60_000);
   const view = viewport(testInfo.project.name);
   // The buyer's own pages and data, through the worker.
-  await page.goto("/juniper-bench/lots/7");
-  await waitUntilKept(page, "/juniper-bench/lots/7");
+  await page.goto(`/juniper-bench/lots/${home}`);
+  await waitUntilKept(page, `/juniper-bench/lots/${home}`);
   await page.goto("/account");
   await expect(page.getByRole("heading", { name: "Your account" })).toBeVisible();
-  await page.goto("/juniper-bench/lots/8");
+  await page.goto(`/juniper-bench/lots/${otherHome}`);
   await expect(page.getByRole("button", { name: /Save this lot|Saved/ })).toBeVisible();
 
   // The owner portal, in a session that has the worker too.
@@ -159,7 +163,7 @@ test("nothing private is ever cached", async ({ page, browser }, testInfo) => {
   const kept = [...(await cachedUrls(page)), ...(await cachedUrls(owner))]
     .filter((url) => url.startsWith(origin))
     .map((url) => new URL(url).pathname);
-  expect(kept).toContain("/juniper-bench/lots/7");
+  expect(kept).toContain(`/juniper-bench/lots/${home}`);
   const privatePaths = kept.filter(
     (path) =>
       /^\/(app|account|signin|auth|graphql)(\/|$)/.test(path) ||
