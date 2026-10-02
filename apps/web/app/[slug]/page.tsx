@@ -74,7 +74,11 @@ export default async function SubdivisionPage({
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader>
+        <Link href="/account" className="underline">
+          Account
+        </Link>
+      </SiteHeader>
       <main className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{subdivision.name}</h1>

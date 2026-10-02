@@ -5,6 +5,7 @@ from functools import lru_cache
 from typing import Protocol
 
 import httpx
+from fastapi import Request
 
 from cornerpin.core.config import get_settings
 
@@ -36,3 +37,11 @@ class CloudflareTurnstile:
 @lru_cache
 def get_turnstile() -> TurnstileVerifier:
     return CloudflareTurnstile(get_settings().turnstile_secret_key)
+
+
+def client_ip(request: Request) -> str | None:
+    """The visitor's address, for Turnstile. Behind Cloud Run the first forwarded hop."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else None

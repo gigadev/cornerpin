@@ -23,7 +23,14 @@ def current_user(cp_session: Annotated[str | None, Cookie()] = None) -> CurrentU
     return CurrentUser(id=user_id)
 
 
+def optional_user(cp_session: Annotated[str | None, Cookie()] = None) -> CurrentUser | None:
+    """The signed-in user, or None for an anonymous visitor."""
+    user_id = resolve_session(cp_session) if cp_session else None
+    return CurrentUser(id=user_id) if user_id else None
+
+
 SignedInUser = Annotated[CurrentUser, Depends(current_user)]
+MaybeUser = Annotated[CurrentUser | None, Depends(optional_user)]
 
 
 def secure_cookies() -> bool:

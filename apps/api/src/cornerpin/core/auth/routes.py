@@ -1,38 +1,23 @@
 import secrets
 from typing import Annotated
 
-from email_validator import EmailNotValidError, validate_email
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
-from pydantic import AfterValidator, BaseModel, Field
+from pydantic import BaseModel
 
 from cornerpin.core.auth import service
 from cornerpin.core.auth.deps import SESSION_COOKIE, clear_session_cookie, set_session_cookie
 from cornerpin.core.auth.google import GoogleSignIn, get_google
 from cornerpin.core.auth.tokens import safe_next, sign, unsign
-from cornerpin.core.auth.turnstile import TurnstileVerifier, get_turnstile
+from cornerpin.core.auth.turnstile import TurnstileVerifier, client_ip, get_turnstile
 from cornerpin.core.config import get_settings
+from cornerpin.core.fields import EmailAddress
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 OAUTH_COOKIE = "cp_oauth"
 OAUTH_COOKIE_PATH = "/v1/auth/google"
 OAUTH_MAX_AGE_SECONDS = 600
-
-
-def _email_address(value: str) -> str:
-    """Normalized address. Locally .test domains are allowed, so Mailpit can receive them."""
-    try:
-        return validate_email(
-            value, check_deliverability=False, test_environment=get_settings().is_local
-        ).normalized
-    except EmailNotValidError as exc:
-        raise ValueError(str(exc)) from exc
-
-
-EmailAddress = Annotated[
-    str, AfterValidator(_email_address), Field(json_schema_extra={"format": "email"})
-]
 
 
 class AuthProviders(BaseModel):
@@ -58,13 +43,6 @@ class SignInResult(BaseModel):
     next: str
 
 
-def _client_ip(request: Request) -> str | None:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else None
-
-
 @router.get("/providers")
 def providers(google: Annotated[GoogleSignIn | None, Depends(get_google)]) -> AuthProviders:
     return AuthProviders(
@@ -79,7 +57,7 @@ def request_magic_link(
     turnstile: Annotated[TurnstileVerifier, Depends(get_turnstile)],
 ) -> MagicLinkSent:
     """Always 202 for a human, whether or not the address has an account."""
-    if not turnstile.verify(body.turnstile_token, _client_ip(request)):
+    if not turnstile.verify(body.turnstile_token, client_ip(request)):
         raise HTTPException(status.HTTP_400_BAD_REQUEST, "Turnstile check failed")
     service.request_magic_link(body.email, body.next)
     return MagicLinkSent()

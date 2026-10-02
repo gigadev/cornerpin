@@ -12,8 +12,13 @@ export default async function HomePage() {
         {me ? (
           <>
             <span className="hidden text-muted-foreground sm:inline">{me.email}</span>
-            <Link href="/app" className="underline">
-              {me.memberships.length > 0 ? "Owner portal" : "Your account"}
+            {me.memberships.length > 0 ? (
+              <Link href="/app" className="underline">
+                Owner portal
+              </Link>
+            ) : null}
+            <Link href="/account" className="underline">
+              Your account
             </Link>
             <SignOutButton />
           </>

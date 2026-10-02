@@ -3,7 +3,8 @@
 import { Serwist } from "serwist";
 
 // Deliberately empty: no precache and no runtime caching. The caching rules, offline fallback
-// and queued inquiries arrive in P1-10, and authenticated and /app responses are never cached.
+// and queued inquiries arrive in P1-10, and authenticated responses (/app, /account, /v1/me/*)
+// are never cached.
 const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,

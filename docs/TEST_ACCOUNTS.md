@@ -11,6 +11,8 @@ stays switched off until a Google client id exists.
 | Web app | http://localhost:3300 |
 | Sign in | http://localhost:3300/signin |
 | Owner portal | http://localhost:3300/app |
+| Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
+| Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
 | Public page for a lot | http://localhost:3300/juniper-bench/lots/7 |
 | Owner map editor | Owner portal → Juniper Bench → Map and lot shapes |
@@ -28,7 +30,8 @@ These exist in the dev database `cornerpin` after `uv run python -m cornerpin.se
 | Email | What it is | Can see |
 | --- | --- | --- |
 | `owner@demo.cornerpin.test` | Owner of **Demo Land Co.** | The owner portal for Demo Land Co. and its subdivision **Juniper Bench** (`/juniper-bench`) |
-| Any new address, e.g. `you@example.test` | Created on first sign-in, as a buyer | No portal ("You don't manage any subdivisions") |
+| Any new address, e.g. `you@example.test` | Created on first sign-in, as a buyer | No portal; lands on `/account`. Can save lots, ask for holds and give contact permission on a lot page |
+| No account (signed out) | A visitor | Can send a question from a lot page's "Contact the owner" form; nothing else |
 
 Locally, addresses ending in `.test` are accepted, so you can make up as many as you like.
 Elsewhere they are rejected.
@@ -81,6 +84,8 @@ with one on the dev site just creates a new buyer account with no portal.
 | `owner+mobile@demo.cornerpin.test`, `owner+desktop@demo.cornerpin.test` | Owners of Demo Land Co.; the sign-in tests use them |
 | `portal+mobile@demo.cornerpin.test`, `portal+desktop@demo.cornerpin.test` | Owners of Demo Land Co.; the portal tests use them |
 | `owner@other.cornerpin.test` | Owner of **Other Land Co.** (tenant `1aca3c52-936f-5fd9-8a5b-aa1b6e00ae2e`); used to prove one owner can't open another's portal |
+| `buyer+mobile@buyers.cornerpin.test`, `buyer+desktop@buyers.cornerpin.test` | Buyers; the buyer tests use them (they ask to hold lots 12 and 13, which the owner approves) |
+| `walkin+mobile@example.test`, `walkin+desktop@example.test` | Not accounts: the email typed into a signed-out question |
 | `visitor+<project>-<time>@cornerpin.test` | Made up per run; a new buyer account |
 
 Its uploads go to `var/e2e-storage`, emptied at the start of each run.

@@ -81,7 +81,9 @@ test("a used sign-in link cannot be used again", async ({ page, request }, testI
 
   await page.goto(link);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page).toHaveURL(/\/app$/);
+  // A new account manages nothing, so the portal sends it on to the account page (P1-08).
+  await expect(page).toHaveURL(/\/account$/);
+  await expect(page.getByRole("heading", { name: "Your account" })).toBeVisible();
 
   await page.context().clearCookies();
   await page.goto(link);

@@ -4,6 +4,8 @@ export type LotStatus = components["schemas"]["LotStatus"];
 export type ListingType = components["schemas"]["ListingType"];
 export type ReleaseStatus = components["schemas"]["ReleaseStatus"];
 export type DocumentKind = components["schemas"]["DocumentKind"];
+export type HoldStatus = components["schemas"]["HoldRequestOut"]["status"];
+export type Channel = components["schemas"]["ConsentOut"]["channel"];
 
 export const LOT_STATUSES: readonly LotStatus[] = ["available", "on_hold", "sold"];
 export const LISTING_TYPES: readonly ListingType[] = ["land_only", "lot_and_home"];
@@ -50,6 +52,27 @@ const RELEASE_LABELS: Record<ReleaseStatus, string> = {
   upcoming: "Upcoming",
   released: "Released",
 };
+
+const HOLD_LABELS: Record<HoldStatus, string> = {
+  pending: "Pending",
+  approved: "Approved",
+  declined: "Declined",
+  withdrawn: "Withdrawn",
+};
+
+const CHANNEL_LABELS: Record<Channel, string> = {
+  email: "Email",
+  sms: "Text messages",
+  voice: "Phone calls",
+};
+
+export function holdStatusLabel(status: HoldStatus): string {
+  return HOLD_LABELS[status];
+}
+
+export function channelLabel(channel: Channel): string {
+  return CHANNEL_LABELS[channel];
+}
 
 export function statusLabel(status: LotStatus): string {
   return STATUS_LABELS[status];

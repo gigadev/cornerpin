@@ -154,6 +154,164 @@
         "title": "BoundaryOut",
         "type": "object"
       },
+      "BuyerLotState": {
+        "description": "What the lot page needs to show a signed-in buyer's own activity on one lot.",
+        "properties": {
+          "contact": {
+            "$ref": "#/components/schemas/ContactChoices"
+          },
+          "display_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "pending_hold": {
+            "title": "Pending Hold",
+            "type": "boolean"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "saved": {
+            "title": "Saved",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "saved",
+          "pending_hold",
+          "contact",
+          "email",
+          "display_name",
+          "phone"
+        ],
+        "title": "BuyerLotState",
+        "type": "object"
+      },
+      "ConsentChange": {
+        "properties": {
+          "channel": {
+            "enum": [
+              "email",
+              "sms",
+              "voice"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "channel",
+          "granted"
+        ],
+        "title": "ConsentChange",
+        "type": "object"
+      },
+      "ConsentOut": {
+        "description": "The current consent for one tenant and channel: its latest row.",
+        "properties": {
+          "channel": {
+            "enum": [
+              "email",
+              "sms",
+              "voice"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "granted": {
+            "title": "Granted",
+            "type": "boolean"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "tenant_id": {
+            "format": "uuid",
+            "title": "Tenant Id",
+            "type": "string"
+          },
+          "tenant_name": {
+            "title": "Tenant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_id",
+          "tenant_name",
+          "channel",
+          "granted",
+          "source",
+          "recorded_at"
+        ],
+        "title": "ConsentOut",
+        "type": "object"
+      },
+      "ContactChoices": {
+        "description": "Whether the lot's owner may contact the buyer on each channel (ADR-022). Calls (voice)\nare not offered until Phase 4.",
+        "properties": {
+          "email": {
+            "default": false,
+            "title": "Email",
+            "type": "boolean"
+          },
+          "sms": {
+            "default": false,
+            "title": "Sms",
+            "type": "boolean"
+          }
+        },
+        "title": "ContactChoices",
+        "type": "object"
+      },
+      "Created": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ],
+        "title": "Created",
+        "type": "object"
+      },
       "DocumentKind": {
         "enum": [
           "plat",
@@ -312,6 +470,172 @@
           "status"
         ],
         "title": "Health",
+        "type": "object"
+      },
+      "HoldDecision": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "decline"
+            ],
+            "title": "Decision",
+            "type": "string"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "HoldDecision",
+        "type": "object"
+      },
+      "HoldRequestCreate": {
+        "properties": {
+          "contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactChoices"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Omit to leave contact consent unchanged."
+          },
+          "message": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "HoldRequestCreate",
+        "type": "object"
+      },
+      "HoldRequestOut": {
+        "properties": {
+          "contact": {
+            "description": "Channels the buyer currently allows",
+            "items": {
+              "enum": [
+                "email",
+                "sms",
+                "voice"
+              ],
+              "type": "string"
+            },
+            "title": "Contact",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decided_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decided At"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_id": {
+            "format": "uuid",
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "lot_number": {
+            "title": "Lot Number",
+            "type": "string"
+          },
+          "lot_status": {
+            "$ref": "#/components/schemas/LotStatus"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "approved",
+              "declined",
+              "withdrawn"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lot_id",
+          "lot_number",
+          "lot_status",
+          "subdivision_name",
+          "name",
+          "email",
+          "phone",
+          "message",
+          "status",
+          "contact",
+          "created_at",
+          "decided_at"
+        ],
+        "title": "HoldRequestOut",
         "type": "object"
       },
       "Home": {
@@ -501,6 +825,158 @@
           "action"
         ],
         "title": "ImportRow",
+        "type": "object"
+      },
+      "InquiryCreate": {
+        "properties": {
+          "contact": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ContactChoices"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Signed in only. Omit to leave contact consent unchanged."
+          },
+          "email": {
+            "anyOf": [
+              {
+                "format": "email",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required when signed out; signed in, the account's is used.",
+            "title": "Email"
+          },
+          "message": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "turnstile_token": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required when signed out.",
+            "title": "Turnstile Token"
+          }
+        },
+        "required": [
+          "name",
+          "message"
+        ],
+        "title": "InquiryCreate",
+        "type": "object"
+      },
+      "InquiryOut": {
+        "properties": {
+          "contact": {
+            "description": "Channels the buyer currently allows",
+            "items": {
+              "enum": [
+                "email",
+                "sms",
+                "voice"
+              ],
+              "type": "string"
+            },
+            "title": "Contact",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_id": {
+            "format": "uuid",
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "lot_number": {
+            "title": "Lot Number",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "signed_in": {
+            "title": "Signed In",
+            "type": "boolean"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "lot_id",
+          "lot_number",
+          "subdivision_name",
+          "name",
+          "email",
+          "phone",
+          "message",
+          "signed_in",
+          "contact",
+          "created_at"
+        ],
+        "title": "InquiryOut",
         "type": "object"
       },
       "JsonValue": {},
@@ -999,15 +1475,81 @@
             },
             "title": "Memberships",
             "type": "array"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "time_zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Zone"
           }
         },
         "required": [
           "id",
           "email",
           "display_name",
+          "phone",
+          "time_zone",
           "memberships"
         ],
         "title": "Me",
+        "type": "object"
+      },
+      "MeUpdate": {
+        "description": "Only the fields sent are changed; an empty name or null clears it.",
+        "properties": {
+          "display_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Display Name"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "time_zone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Zone"
+          }
+        },
+        "title": "MeUpdate",
         "type": "object"
       },
       "Membership": {
@@ -1072,6 +1614,22 @@
           "coordinates"
         ],
         "title": "MultiPolygonGeometry",
+        "type": "object"
+      },
+      "NotificationPrefs": {
+        "properties": {
+          "email_saved_lot_changes": {
+            "default": true,
+            "title": "Email Saved Lot Changes",
+            "type": "boolean"
+          },
+          "push_saved_lot_changes": {
+            "default": false,
+            "title": "Push Saved Lot Changes",
+            "type": "boolean"
+          }
+        },
+        "title": "NotificationPrefs",
         "type": "object"
       },
       "OverlayOut": {
@@ -1437,6 +1995,57 @@
         ],
         "title": "ReleaseStatus",
         "type": "string"
+      },
+      "SavedLot": {
+        "properties": {
+          "lot_id": {
+            "format": "uuid",
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "saved_at": {
+            "format": "date-time",
+            "title": "Saved At",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LotStatus"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          },
+          "subdivision_slug": {
+            "title": "Subdivision Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lot_id",
+          "number",
+          "status",
+          "price",
+          "subdivision_name",
+          "subdivision_slug",
+          "saved_at"
+        ],
+        "title": "SavedLot",
+        "type": "object"
       },
       "SignInResult": {
         "properties": {
@@ -2152,6 +2761,156 @@
         ]
       }
     },
+    "/v1/lots/{lot_id}/hold-requests": {
+      "post": {
+        "operationId": "create_hold_request_v1_lots__lot_id__hold_requests_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Created"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No such published lot"
+          },
+          "409": {
+            "description": "Not available, or already requested"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Hold Request",
+        "tags": [
+          "buyers"
+        ]
+      }
+    },
+    "/v1/lots/{lot_id}/inquiries": {
+      "post": {
+        "operationId": "create_inquiry_v1_lots__lot_id__inquiries_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InquiryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Created"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "Turnstile check failed"
+          },
+          "404": {
+            "description": "No such published lot"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Inquiry",
+        "tags": [
+          "buyers"
+        ]
+      }
+    },
     "/v1/me": {
       "get": {
         "operationId": "me_v1_me_get",
@@ -2198,6 +2957,499 @@
         "summary": "Me",
         "tags": [
           "accounts"
+        ]
+      },
+      "patch": {
+        "operationId": "update_me_v1_me_patch",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MeUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Me",
+        "tags": [
+          "accounts"
+        ]
+      }
+    },
+    "/v1/me/consents": {
+      "get": {
+        "description": "The current answer for each owner and channel the buyer has ever answered.",
+        "operationId": "my_consents_v1_me_consents_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConsentOut"
+                  },
+                  "title": "Response My Consents V1 Me Consents Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "My Consents",
+        "tags": [
+          "buyers"
+        ]
+      },
+      "post": {
+        "description": "Change an earlier answer. Only owners the buyer has already answered appear on the\naccount page, so a first answer always comes from a lot page.",
+        "operationId": "change_consent_v1_me_consents_post",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsentChange"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No earlier answer for that owner"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Consent",
+        "tags": [
+          "buyers"
+        ]
+      }
+    },
+    "/v1/me/lots/{lot_id}": {
+      "get": {
+        "operationId": "buyer_lot_state_v1_me_lots__lot_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuyerLotState"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No such published lot"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Buyer Lot State",
+        "tags": [
+          "buyers"
+        ]
+      }
+    },
+    "/v1/me/notification-prefs": {
+      "get": {
+        "operationId": "get_prefs_v1_me_notification_prefs_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPrefs"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Prefs",
+        "tags": [
+          "notifications"
+        ]
+      },
+      "put": {
+        "operationId": "put_prefs_v1_me_notification_prefs_put",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotificationPrefs"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationPrefs"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Put Prefs",
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/v1/me/saved-lots": {
+      "get": {
+        "description": "Saved lots the public can still see, newest first. A lot that is unpublished drops out\nof the list but stays saved, and comes back if it is published again.",
+        "operationId": "saved_lots_v1_me_saved_lots_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SavedLot"
+                  },
+                  "title": "Response Saved Lots V1 Me Saved Lots Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Saved Lots",
+        "tags": [
+          "buyers"
+        ]
+      }
+    },
+    "/v1/me/saved-lots/{lot_id}": {
+      "delete": {
+        "description": "Works for any lot the buyer saved, published or not.",
+        "operationId": "unsave_lot_v1_me_saved_lots__lot_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsave Lot",
+        "tags": [
+          "buyers"
+        ]
+      },
+      "put": {
+        "operationId": "save_lot_v1_me_saved_lots__lot_id__put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No such published lot"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save Lot",
+        "tags": [
+          "buyers"
         ]
       }
     },
@@ -2477,6 +3729,225 @@
         "summary": "Document File",
         "tags": [
           "media"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/hold-requests": {
+      "get": {
+        "description": "Pending first, then newest first.",
+        "operationId": "list_hold_requests_v1_tenants__tenant_id__hold_requests_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HoldRequestOut"
+                  },
+                  "title": "Response List Hold Requests V1 Tenants  Tenant Id  Hold Requests Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Hold Requests",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/hold-requests/{hold_id}/decision": {
+      "post": {
+        "operationId": "decide_hold_request_v1_tenants__tenant_id__hold_requests__hold_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "hold_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Hold Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HoldRequestOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Already decided, or the lot is sold"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Hold Request",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/inquiries": {
+      "get": {
+        "description": "Newest first.",
+        "operationId": "list_inquiries_v1_tenants__tenant_id__inquiries_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InquiryOut"
+                  },
+                  "title": "Response List Inquiries V1 Tenants  Tenant Id  Inquiries Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Inquiries",
+        "tags": [
+          "leads"
         ]
       }
     },

@@ -126,6 +126,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/lots/{lot_id}/hold-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Hold Request */
+        post: operations["create_hold_request_v1_lots__lot_id__hold_requests_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lots/{lot_id}/inquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Inquiry */
+        post: operations["create_inquiry_v1_lots__lot_id__inquiries_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/me": {
         parameters: {
             query?: never;
@@ -138,6 +172,109 @@ export interface paths {
         put?: never;
         post?: never;
         delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Me */
+        patch: operations["update_me_v1_me_patch"];
+        trace?: never;
+    };
+    "/v1/me/consents": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Consents
+         * @description The current answer for each owner and channel the buyer has ever answered.
+         */
+        get: operations["my_consents_v1_me_consents_get"];
+        put?: never;
+        /**
+         * Change Consent
+         * @description Change an earlier answer. Only owners the buyer has already answered appear on the
+         *     account page, so a first answer always comes from a lot page.
+         */
+        post: operations["change_consent_v1_me_consents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/lots/{lot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Buyer Lot State */
+        get: operations["buyer_lot_state_v1_me_lots__lot_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/notification-prefs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Prefs */
+        get: operations["get_prefs_v1_me_notification_prefs_get"];
+        /** Put Prefs */
+        put: operations["put_prefs_v1_me_notification_prefs_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/saved-lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Saved Lots
+         * @description Saved lots the public can still see, newest first. A lot that is unpublished drops out
+         *     of the list but stays saved, and comes back if it is published again.
+         */
+        get: operations["saved_lots_v1_me_saved_lots_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/saved-lots/{lot_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Save Lot */
+        put: operations["save_lot_v1_me_saved_lots__lot_id__put"];
+        post?: never;
+        /**
+         * Unsave Lot
+         * @description Works for any lot the buyer saved, published or not.
+         */
+        delete: operations["unsave_lot_v1_me_saved_lots__lot_id__delete"];
         options?: never;
         head?: never;
         patch?: never;
@@ -220,6 +357,63 @@ export interface paths {
         };
         /** Document File */
         get: operations["document_file_v1_tenants__tenant_id__documents__document_id__file_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/hold-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Hold Requests
+         * @description Pending first, then newest first.
+         */
+        get: operations["list_hold_requests_v1_tenants__tenant_id__hold_requests_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/hold-requests/{hold_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decide Hold Request */
+        post: operations["decide_hold_request_v1_tenants__tenant_id__hold_requests__hold_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/inquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Inquiries
+         * @description Newest first.
+         */
+        get: operations["list_inquiries_v1_tenants__tenant_id__inquiries_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -603,6 +797,90 @@ export interface components {
             overlaps: string[];
         };
         /**
+         * BuyerLotState
+         * @description What the lot page needs to show a signed-in buyer's own activity on one lot.
+         */
+        BuyerLotState: {
+            contact: components["schemas"]["ContactChoices"];
+            /** Display Name */
+            display_name: string | null;
+            /** Email */
+            email: string;
+            /** Pending Hold */
+            pending_hold: boolean;
+            /** Phone */
+            phone: string | null;
+            /** Saved */
+            saved: boolean;
+        };
+        /** ConsentChange */
+        ConsentChange: {
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "email" | "sms" | "voice";
+            /** Granted */
+            granted: boolean;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+        };
+        /**
+         * ConsentOut
+         * @description The current consent for one tenant and channel: its latest row.
+         */
+        ConsentOut: {
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "email" | "sms" | "voice";
+            /** Granted */
+            granted: boolean;
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /** Source */
+            source: string;
+            /**
+             * Tenant Id
+             * Format: uuid
+             */
+            tenant_id: string;
+            /** Tenant Name */
+            tenant_name: string;
+        };
+        /**
+         * ContactChoices
+         * @description Whether the lot's owner may contact the buyer on each channel (ADR-022). Calls (voice)
+         *     are not offered until Phase 4.
+         */
+        ContactChoices: {
+            /**
+             * Email
+             * @default false
+             */
+            email?: boolean;
+            /**
+             * Sms
+             * @default false
+             */
+            sms?: boolean;
+        };
+        /** Created */
+        Created: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /**
          * DocumentKind
          * @enum {string}
          */
@@ -669,6 +947,71 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** HoldDecision */
+        HoldDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "decline";
+        };
+        /** HoldRequestCreate */
+        HoldRequestCreate: {
+            /** @description Omit to leave contact consent unchanged. */
+            contact?: components["schemas"]["ContactChoices"] | null;
+            /**
+             * Message
+             * @default
+             */
+            message?: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone?: string | null;
+        };
+        /** HoldRequestOut */
+        HoldRequestOut: {
+            /**
+             * Contact
+             * @description Channels the buyer currently allows
+             */
+            contact: ("email" | "sms" | "voice")[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Decided At */
+            decided_at: string | null;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /** Lot Number */
+            lot_number: string;
+            lot_status: components["schemas"]["LotStatus"];
+            /** Message */
+            message: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "approved" | "declined" | "withdrawn";
+            /** Subdivision Name */
+            subdivision_name: string;
+        };
         /**
          * Home
          * @description The house on a lot + home listing. All optional while a home is being finished.
@@ -727,6 +1070,64 @@ export interface components {
             number: string | null;
             /** Reason */
             reason?: string | null;
+        };
+        /** InquiryCreate */
+        InquiryCreate: {
+            /** @description Signed in only. Omit to leave contact consent unchanged. */
+            contact?: components["schemas"]["ContactChoices"] | null;
+            /**
+             * Email
+             * @description Required when signed out; signed in, the account's is used.
+             */
+            email?: string | null;
+            /** Message */
+            message: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone?: string | null;
+            /**
+             * Turnstile Token
+             * @description Required when signed out.
+             */
+            turnstile_token?: string | null;
+        };
+        /** InquiryOut */
+        InquiryOut: {
+            /**
+             * Contact
+             * @description Channels the buyer currently allows
+             */
+            contact: ("email" | "sms" | "voice")[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /** Lot Number */
+            lot_number: string;
+            /** Message */
+            message: string;
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /** Signed In */
+            signed_in: boolean;
+            /** Subdivision Name */
+            subdivision_name: string;
         };
         JsonValue: unknown;
         /**
@@ -903,6 +1304,22 @@ export interface components {
             id: string;
             /** Memberships */
             memberships: components["schemas"]["Membership"][];
+            /** Phone */
+            phone: string | null;
+            /** Time Zone */
+            time_zone: string | null;
+        };
+        /**
+         * MeUpdate
+         * @description Only the fields sent are changed; an empty name or null clears it.
+         */
+        MeUpdate: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Phone */
+            phone?: string | null;
+            /** Time Zone */
+            time_zone?: string | null;
         };
         /** Membership */
         Membership: {
@@ -928,6 +1345,19 @@ export interface components {
              * @enum {string}
              */
             type: "MultiPolygon";
+        };
+        /** NotificationPrefs */
+        NotificationPrefs: {
+            /**
+             * Email Saved Lot Changes
+             * @default true
+             */
+            email_saved_lot_changes?: boolean;
+            /**
+             * Push Saved Lot Changes
+             * @default false
+             */
+            push_saved_lot_changes?: boolean;
         };
         /** OverlayOut */
         OverlayOut: {
@@ -1043,6 +1473,28 @@ export interface components {
          * @enum {string}
          */
         ReleaseStatus: "upcoming" | "released";
+        /** SavedLot */
+        SavedLot: {
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /** Number */
+            number: string;
+            /** Price */
+            price: number | null;
+            /**
+             * Saved At
+             * Format: date-time
+             */
+            saved_at: string;
+            status: components["schemas"]["LotStatus"];
+            /** Subdivision Name */
+            subdivision_name: string;
+            /** Subdivision Slug */
+            subdivision_slug: string;
+        };
         /** SignInResult */
         SignInResult: {
             /** Next */
@@ -1404,6 +1856,108 @@ export interface operations {
             };
         };
     };
+    create_hold_request_v1_lots__lot_id__hold_requests_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HoldRequestCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+            /** @description No such published lot */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not available, or already requested */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_inquiry_v1_lots__lot_id__inquiries_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InquiryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+            /** @description Turnstile check failed */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such published lot */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     me_v1_me_get: {
         parameters: {
             query?: never;
@@ -1423,6 +1977,318 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["Me"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_me_v1_me_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MeUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Me"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_consents_v1_me_consents_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConsentOut"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_consent_v1_me_consents_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConsentChange"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No earlier answer for that owner */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    buyer_lot_state_v1_me_lots__lot_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BuyerLotState"];
+                };
+            };
+            /** @description No such published lot */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_prefs_v1_me_notification_prefs_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPrefs"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    put_prefs_v1_me_notification_prefs_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationPrefs"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationPrefs"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    saved_lots_v1_me_saved_lots_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedLot"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_lot_v1_me_saved_lots__lot_id__put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description No such published lot */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsave_lot_v1_me_saved_lots__lot_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -1611,6 +2477,138 @@ export interface operations {
                 };
                 content: {
                     "application/pdf": unknown;
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_hold_requests_v1_tenants__tenant_id__hold_requests_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HoldRequestOut"][];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_hold_request_v1_tenants__tenant_id__hold_requests__hold_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                hold_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HoldDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HoldRequestOut"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Already decided, or the lot is sold */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_inquiries_v1_tenants__tenant_id__inquiries_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InquiryOut"][];
                 };
             };
             /** @description Not found, or not your tenant */

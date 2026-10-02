@@ -1,21 +1,29 @@
 import { expect, test as setup } from "@playwright/test";
 import { clearInbox, signInLink } from "./fixtures";
 
-// Signs in one portal owner per viewport and saves the session for portal.spec.ts. The UI
-// sign-in flow itself is covered by auth.spec.ts; this goes through the API to stay quick.
+// Signs in one portal owner and one buyer per viewport and saves their sessions for
+// portal.spec.ts and buyer.spec.ts. The UI sign-in flow itself is covered by auth.spec.ts;
+// this goes through the API to stay quick. Buyers get an account on first sign-in.
+const ACCOUNTS = [
+  ["portal", "portal+{viewport}@demo.cornerpin.test"],
+  ["buyer", "buyer+{viewport}@buyers.cornerpin.test"],
+] as const;
+
 for (const viewport of ["mobile", "desktop"] as const) {
-  setup(`sign in the ${viewport} portal owner`, async ({ page, request }) => {
-    const owner = `portal+${viewport}@demo.cornerpin.test`;
-    await clearInbox(request, owner);
-    const requested = await page.request.post("/v1/auth/magic-link", {
-      data: { email: owner, turnstile_token: "XXXX.DUMMY.TOKEN.XXXX", next: "/app" },
+  for (const [role, template] of ACCOUNTS) {
+    setup(`sign in the ${viewport} ${role}`, async ({ page, request }) => {
+      const email = template.replace("{viewport}", viewport);
+      await clearInbox(request, email);
+      const requested = await page.request.post("/v1/auth/magic-link", {
+        data: { email, turnstile_token: "XXXX.DUMMY.TOKEN.XXXX", next: "/" },
+      });
+      expect(requested.status()).toBe(202);
+
+      const token = new URL(await signInLink(request, email)).searchParams.get("token");
+      const verified = await page.request.post("/v1/auth/magic-link/verify", { data: { token } });
+      expect(verified.ok()).toBe(true);
+
+      await page.context().storageState({ path: `playwright/.auth/${role}-${viewport}.json` });
     });
-    expect(requested.status()).toBe(202);
-
-    const token = new URL(await signInLink(request, owner)).searchParams.get("token");
-    const verified = await page.request.post("/v1/auth/magic-link/verify", { data: { token } });
-    expect(verified.ok()).toBe(true);
-
-    await page.context().storageState({ path: `playwright/.auth/portal-${viewport}.json` });
-  });
+  }
 }

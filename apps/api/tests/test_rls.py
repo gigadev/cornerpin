@@ -223,6 +223,68 @@ def test_status_and_price_changes_are_recorded(
         raise Rollback
 
 
+def test_buyer_rows_only_for_public_lots(
+    db: Databases, tenants: tuple[TenantData, TenantData]
+) -> None:
+    """The database refuses buyer activity on a lot the public can't see, even if the API
+    forgot to look (migration 0007)."""
+    alpha, _ = tenants
+    statements = [
+        "INSERT INTO saved_lots (user_id, lot_id, tenant_id) VALUES (:b, :l, :t)",
+        "INSERT INTO inquiries (tenant_id, lot_id, user_id, name, email, message)"
+        " VALUES (:t, :l, :b, 'B', 'b@example.test', 'Hi')",
+        "INSERT INTO hold_requests (tenant_id, lot_id, user_id, name, email)"
+        " VALUES (:t, :l, :b, 'B', 'b@example.test')",
+    ]
+    for sql in statements:
+        with (
+            pytest.raises(ProgrammingError, match="row-level security"),
+            user_session(alpha.buyer_id, engine=db.api) as session,
+        ):
+            session.execute(
+                text(sql),
+                {"b": alpha.buyer_id, "l": alpha.unpublished_lot_id, "t": alpha.tenant_id},
+            )
+
+
+def test_buyer_cannot_file_a_decided_hold(
+    db: Databases, tenants: tuple[TenantData, TenantData]
+) -> None:
+    alpha, _ = tenants
+    with (
+        pytest.raises(ProgrammingError, match="row-level security"),
+        user_session(alpha.buyer_id, engine=db.api) as session,
+    ):
+        session.execute(
+            text(
+                "INSERT INTO hold_requests (tenant_id, lot_id, user_id, name, email, status,"
+                " decided_at) VALUES (:t, :l, :b, 'B', 'b@example.test', 'approved', now())"
+            ),
+            {"b": alpha.buyer_id, "l": alpha.lot_id, "t": alpha.tenant_id},
+        )
+
+
+def test_users_change_only_their_profile_columns(
+    db: Databases, tenants: tuple[TenantData, TenantData]
+) -> None:
+    alpha, _ = tenants
+    with (
+        pytest.raises(ProgrammingError, match="permission denied"),
+        user_session(alpha.buyer_id, engine=db.api) as session,
+    ):
+        session.execute(text("UPDATE users SET email = 'taken@example.test'"))
+
+
+def test_buyer_sees_only_tenants_they_answered(
+    db: Databases, tenants: tuple[TenantData, TenantData]
+) -> None:
+    """The fixture gives each buyer a consent row with their own tenant only."""
+    alpha, _ = tenants
+    with user_session(alpha.buyer_id, engine=db.api) as session:
+        visible = session.execute(text("SELECT id FROM tenants")).scalars().all()
+    assert visible == [alpha.tenant_id]
+
+
 # --- public reads --------------------------------------------------------------------------
 
 
@@ -306,6 +368,25 @@ def test_public_cannot_write(db: Databases, tenants: tuple[TenantData, TenantDat
         public_session(engine=db.api) as session,
     ):
         session.execute(text("UPDATE lots SET price = 1 WHERE id = :id"), {"id": alpha.lot_id})
+
+
+def test_public_may_file_only_anonymous_inquiries_on_public_lots(
+    db: Databases, tenants: tuple[TenantData, TenantData]
+) -> None:
+    alpha, _ = tenants
+    sql = text(
+        "INSERT INTO inquiries (tenant_id, lot_id, user_id, name, email, message)"
+        " VALUES (:t, :l, :u, 'Walk-in', 'w@example.test', 'Hi')"
+    )
+    with pytest.raises(Rollback), public_session(engine=db.api) as session:
+        session.execute(sql, {"t": alpha.tenant_id, "l": alpha.lot_id, "u": None})
+        raise Rollback
+    for lot, user in ((alpha.unpublished_lot_id, None), (alpha.lot_id, alpha.buyer_id)):
+        with (
+            pytest.raises(ProgrammingError, match="row-level security"),
+            public_session(engine=db.api) as session,
+        ):
+            session.execute(sql, {"t": alpha.tenant_id, "l": lot, "u": user})
 
 
 # --- the login role itself -----------------------------------------------------------------

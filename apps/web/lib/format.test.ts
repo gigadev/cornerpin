@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  channelLabel,
   documentLabel,
   formatAcres,
   formatBytes,
   formatPrice,
   formatWhen,
+  holdStatusLabel,
   parseDollars,
   parseOptionalNumber,
   statusLabel,
@@ -77,5 +79,12 @@ describe("formatBytes", () => {
 describe("documentLabel", () => {
   it("names every kind", () => {
     expect(documentLabel("covenants")).toBe("Covenants");
+  });
+});
+
+describe("buyer activity labels", () => {
+  it("names channels and hold statuses", () => {
+    expect(channelLabel("sms")).toBe("Text messages");
+    expect(holdStatusLabel("pending")).toBe("Pending");
   });
 });

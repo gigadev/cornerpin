@@ -3,13 +3,12 @@ keeps cents for the future but the portal never shows them."""
 
 import re
 from datetime import datetime
-from functools import cache
 from typing import Annotated, Self
 from uuid import UUID
-from zoneinfo import available_timezones
 
 from pydantic import AfterValidator, BaseModel, Field, StringConstraints, model_validator
 
+from cornerpin.core.fields import TimeZone
 from cornerpin.listings.models import ListingType, LotStatus, ReleaseStatus
 
 # Must match the CHECK constraint on subdivisions.slug (migration 0002); tests/test_listings.py
@@ -34,20 +33,8 @@ def _slug(value: str) -> str:
     return value
 
 
-@cache
-def _time_zones() -> frozenset[str]:
-    return frozenset(available_timezones())
-
-
-def _time_zone(value: str) -> str:
-    if value not in _time_zones():
-        raise ValueError("Not a known time zone, e.g. America/Boise")
-    return value
-
-
 Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 Slug = Annotated[str, AfterValidator(_slug)]
-TimeZone = Annotated[str, AfterValidator(_time_zone)]
 Description = Annotated[str, StringConstraints(max_length=5000)]
 Latitude = Annotated[float, Field(ge=-90, le=90)]
 Longitude = Annotated[float, Field(ge=-180, le=180)]

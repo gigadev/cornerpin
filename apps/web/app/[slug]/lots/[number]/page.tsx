@@ -4,6 +4,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 import { PublicLotMap } from "@/components/map/public-lot-map";
+import { BuyerLotProvider, SaveLotButton } from "@/components/public/buyer-lot";
+import { ContactOwner } from "@/components/public/contact-owner";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { SiteHeader } from "@/components/site-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -22,7 +24,8 @@ import { PublicLotPageDocument } from "@/lib/graphql/generated";
 import { lotStatusFromGraphql, type MapLotInput } from "@/lib/map/lots";
 
 // The public lot page (P1-07): price, status, photos, documents, a map and directions.
-// Rendered on the server; it all works without JavaScript except the map.
+// Rendered on the server; it all works without JavaScript except the map and the buyer's own
+// activity (P1-08), which the browser asks the API for so the page stays the same for everyone.
 
 type Params = Promise<{ slug: string; number: string }>;
 
@@ -78,10 +81,15 @@ export default async function LotPage({ params }: { params: Params }) {
     boundary: other.boundary,
   }));
   const [cover, ...gallery] = lot.photos;
+  const lotPath = `/${subdivision.slug}/lots/${encodeURIComponent(lot.number)}`;
 
   return (
-    <>
-      <SiteHeader />
+    <BuyerLotProvider lotId={lot.id} lotPath={lotPath}>
+      <SiteHeader>
+        <Link href="/account" className="underline">
+          Account
+        </Link>
+      </SiteHeader>
       <main className="mx-auto grid max-w-5xl gap-6 px-4 py-8">
         <nav aria-label="Breadcrumb" className="text-sm text-muted-foreground">
           <Link href={`/${subdivision.slug}`} className="underline-offset-4 hover:underline">
@@ -95,6 +103,12 @@ export default async function LotPage({ params }: { params: Params }) {
             <StatusBadge status={status} />
           </div>
           <p className="text-2xl tabular-nums">{formatPrice(lot.price)}</p>
+          <div className="flex flex-wrap gap-3">
+            <a href="#contact" className={buttonVariants()}>
+              Contact the owner
+            </a>
+            <SaveLotButton />
+          </div>
         </div>
 
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 rounded-lg border border-border p-4 sm:grid-cols-4">
@@ -211,12 +225,26 @@ export default async function LotPage({ params }: { params: Params }) {
           </section>
         ) : null}
 
+        <section
+          id="contact"
+          aria-labelledby="contact-heading"
+          className="grid scroll-mt-4 gap-3"
+        >
+          <h2 id="contact-heading" className="text-lg font-semibold">
+            Contact the owner
+          </h2>
+          <noscript>
+            <p className="text-sm text-muted-foreground">The contact form needs JavaScript.</p>
+          </noscript>
+          <ContactOwner subdivisionName={subdivision.name} available={status === "available"} />
+        </section>
+
         <p>
           <Link href={`/${subdivision.slug}`} className="underline">
             All lots in {subdivision.name}
           </Link>
         </p>
       </main>
-    </>
+    </BuyerLotProvider>
   );
 }

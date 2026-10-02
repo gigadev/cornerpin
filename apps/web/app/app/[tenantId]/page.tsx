@@ -23,21 +23,29 @@ export default async function TenantPortal({
   const { tenantId } = await params;
   const tenant = await getTenant(tenantId);
   const api = await serverApi();
-  const subdivisions = await loadOr404(
-    api.GET("/v1/tenants/{tenant_id}/subdivisions", {
-      params: { path: { tenant_id: tenantId } },
-    }),
-    `/app/${tenantId}`,
-  );
+  const options = { params: { path: { tenant_id: tenantId } } };
+  const [subdivisions, holds] = await Promise.all([
+    loadOr404(api.GET("/v1/tenants/{tenant_id}/subdivisions", options), `/app/${tenantId}`),
+    loadOr404(api.GET("/v1/tenants/{tenant_id}/hold-requests", options), `/app/${tenantId}`),
+  ]);
+  const pendingHolds = holds.filter((hold) => hold.status === "pending").length;
 
   return (
     <div className="grid gap-6">
       <Breadcrumbs items={[{ href: "/app", label: "Organizations" }]} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{tenant.name}</h1>
-        <Button asChild>
-          <Link href={`/app/${tenantId}/subdivisions/new`}>New subdivision</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/app/${tenantId}/inquiries`}>
+              Inquiries and holds
+              {pendingHolds > 0 ? ` (${pendingHolds} pending)` : ""}
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href={`/app/${tenantId}/subdivisions/new`}>New subdivision</Link>
+          </Button>
+        </div>
       </div>
 
       {subdivisions.length === 0 ? (

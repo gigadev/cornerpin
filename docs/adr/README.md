@@ -38,6 +38,7 @@ not started yet is still binding: it describes how that part will be built.
 | [025](025-photo-and-document-storage.md) | Photo and document storage | P1-05 | Accepted |
 | [026](026-lot-geometry-and-public-map.md) | Lot geometry, the plat overlay and the first public map | P1-06 | Accepted |
 | [027](027-public-pages.md) | Public pages: rendering, filters, files and link previews | P1-07 | Accepted |
+| [028](028-buyer-activity.md) | Buyer activity: who may do what, consent capture and hold approval | P1-08 | Accepted |
 
 ## Adding a decision
 
