@@ -94,7 +94,8 @@ test.describe("without JavaScript", () => {
       const description = await page.locator('meta[property="og:description"]').getAttribute("content");
       expect(description).toBeTruthy();
       const image = await page.locator('meta[property="og:image"]').getAttribute("content");
-      expect(image).toMatch(/^http:\/\/localhost:3100\//);
+      // Absolute, on the site's own origin (SITE_URL).
+      expect(image?.startsWith(`${new URL(page.url()).origin}/`)).toBe(true);
       const card = await request.get(image ?? "");
       expect(card.headers()["content-type"]).toBe("image/png");
       await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute(

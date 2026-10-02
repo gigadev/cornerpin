@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Breadcrumbs } from "@/components/portal/breadcrumbs";
 import { DeleteLotButton } from "@/components/portal/delete-button";
 import { DocumentsCard } from "@/components/portal/documents-card";
@@ -5,6 +6,7 @@ import { LotForm } from "@/components/portal/lot-form";
 import { LotHistory } from "@/components/portal/lot-history";
 import { PhotosCard } from "@/components/portal/photos-card";
 import { PublishedBadge, StatusBadge } from "@/components/portal/status-badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTenant, loadOr404 } from "@/lib/api/portal";
 import { serverApi } from "@/lib/api/server";
@@ -51,6 +53,9 @@ export default async function LotPage({
         <StatusBadge status={lot.status} />
         <PublishedBadge published={lot.published} />
         <span className="text-muted-foreground tabular-nums">{formatPrice(lot.price)}</span>
+        <Button asChild variant="outline" size="sm" className="ml-auto">
+          <Link href={`${here}/sign`}>Print a sign</Link>
+        </Button>
       </div>
 
       <Card>

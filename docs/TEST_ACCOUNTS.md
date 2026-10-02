@@ -16,6 +16,8 @@ stays switched off until a Google client id exists.
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
 | Public page for a lot | http://localhost:3300/juniper-bench/lots/7 |
 | Owner map editor | Owner portal → Juniper Bench → Map and lot shapes |
+| Printable lot sign with QR code | Owner portal → a lot → **Print a sign** |
+| Where a sign's code lands | http://localhost:3300/q/{code} (the code is under the QR on the sign) |
 | Mailpit (all local email) | http://localhost:8025 |
 | API | http://localhost:8000 |
 | API docs (try requests here) | http://localhost:8000/docs |
@@ -99,6 +101,14 @@ The service worker doesn't run under `next dev`. To try offline behaviour and in
 5. Chrome's address bar offers to install "Juniper Bench · Cornerpin" on that subdivision's
    pages, and "Cornerpin owner portal" under `/app`.
 
+### Trying a lot sign
+
+Open a lot in the owner portal and click **Print a sign**; the first time creates the lot's code.
+A phone can't reach `localhost`, so locally open the short URL printed under the code
+(`localhost:3300/q/…`) instead of scanning it. To see a sign
+survive a rename, change the subdivision's web address and open the same `/q/…` link again.
+Printing uses the browser's print dialog (letter paper).
+
 ### Resetting the demo data
 
 ```bash
@@ -114,7 +124,9 @@ lots and subdivisions you added, and owners you added with the SQL above (run it
 You don't need these for smoke testing, and they don't exist in the dev database. Signing in
 with one on the dev site just creates a new buyer account with no portal.
 
-**Playwright** (`pnpm e2e`) uses a separate database, `cornerpin_e2e`, rebuilt on every run:
+**Playwright** (`pnpm e2e`) uses a separate database, `cornerpin_e2e`, rebuilt on every run, and
+web port 3310. If something else is using 3310, pick another, e.g. `E2E_WEB_PORT=3320 pnpm e2e`.
+The sign test creates a subdivision called `Sign Ridge <viewport>` and renames its slug.
 
 | Email | Role |
 | --- | --- |

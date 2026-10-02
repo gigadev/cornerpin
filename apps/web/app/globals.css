@@ -129,3 +129,10 @@
     @apply font-sans;
   }
 }
+/* Printing (P1-11): a lot sign fills one letter page. */
+@media print {
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+}

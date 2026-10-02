@@ -41,6 +41,7 @@ not started yet is still binding: it describes how that part will be built.
 | [028](028-buyer-activity.md) | Buyer activity: who may do what, consent capture and hold approval | P1-08 | Accepted |
 | [029](029-notifications-and-task-runner.md) | Notifications, the task runner and web push | P1-09 | Accepted |
 | [030](030-pwa-caching-and-offline.md) | PWA caching, offline questions and updates | P1-10 | Accepted |
+| [031](031-qr-codes-and-signs.md) | QR codes and lot signs | P1-11 | Accepted |
 
 ## Adding a decision
 

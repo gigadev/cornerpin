@@ -1,0 +1,6 @@
+query QrTarget($code: String!) {
+  qrTarget(code: $code) {
+    subdivisionSlug
+    lotNumber
+  }
+}

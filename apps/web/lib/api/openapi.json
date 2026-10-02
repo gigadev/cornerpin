@@ -2028,6 +2028,20 @@
         "title": "PushSubscriptionIn",
         "type": "object"
       },
+      "QrCode": {
+        "properties": {
+          "code": {
+            "description": "Signs link to /q/{code}",
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "QrCode",
+        "type": "object"
+      },
       "ReleaseStatus": {
         "enum": [
           "upcoming",
@@ -4909,6 +4923,79 @@
         "summary": "Reorder Photos",
         "tags": [
           "media"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/lots/{lot_id}/qr-code": {
+      "post": {
+        "description": "The lot's code, created the first time it's asked for. Always the same afterwards.",
+        "operationId": "lot_qr_code_v1_tenants__tenant_id__lots__lot_id__qr_code_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QrCode"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Lot Qr Code",
+        "tags": [
+          "listings"
         ]
       }
     },

@@ -115,7 +115,7 @@ def main() -> None:
 
     os.environ["DATABASE_URL"] = owner_url.render_as_string(hide_password=False)
     os.environ["API_DATABASE_URL"] = api_url.render_as_string(hide_password=False)
-    os.environ.setdefault("WEB_ORIGIN", "http://localhost:3100")
+    os.environ.setdefault("WEB_ORIGIN", "http://localhost:3310")
     os.environ["STORAGE_DIR"] = str(E2E_STORAGE)
     os.environ["OUTBOX_RUNNER"] = "inprocess"
     os.environ["MAGIC_LINKS_PER_15_MINUTES"] = "1000"

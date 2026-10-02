@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const webPort = 3100;
+// 3310, next to the dev server's 3300 and clear of the common 3000/3100; E2E_WEB_PORT moves it.
+const webPort = Number(process.env.E2E_WEB_PORT ?? 3310);
 const apiPort = 8100;
 const baseURL = `http://localhost:${webPort}`;
 
@@ -26,8 +27,8 @@ export default defineConfig({
   },
   projects: [
     { name: "setup", testMatch: /portal\.setup\.ts/ },
-    { name: "mobile", use: mobile, testIgnore: /(portal|buyer|pwa)\./ },
-    { name: "desktop", use: desktop, testIgnore: /(portal|buyer|pwa)\./ },
+    { name: "mobile", use: mobile, testIgnore: /(portal|buyer|pwa|sign)\./ },
+    { name: "desktop", use: desktop, testIgnore: /(portal|buyer|pwa|sign)\./ },
     {
       name: "mobile-portal",
       use: {
@@ -35,7 +36,7 @@ export default defineConfig({
         storageState: "playwright/.auth/portal-mobile.json",
         serviceWorkers: "block",
       },
-      testMatch: /portal\.spec\.ts/,
+      testMatch: /(portal|sign)\.spec\.ts/,
       dependencies: ["setup"],
     },
     {
@@ -45,7 +46,7 @@ export default defineConfig({
         storageState: "playwright/.auth/portal-desktop.json",
         serviceWorkers: "block",
       },
-      testMatch: /portal\.spec\.ts/,
+      testMatch: /(portal|sign)\.spec\.ts/,
       dependencies: ["setup"],
     },
     {
@@ -74,7 +75,8 @@ export default defineConfig({
       command: `pnpm build && pnpm exec next start --port ${webPort}`,
       url: baseURL,
       env: { API_BASE_URL: `http://localhost:${apiPort}`, SITE_URL: baseURL },
-      reuseExistingServer: !process.env.CI,
+      // Never reuse: whatever else answers on the port isn't this build.
+      reuseExistingServer: false,
       timeout: 240_000,
     },
   ],

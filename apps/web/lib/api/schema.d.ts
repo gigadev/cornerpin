@@ -563,6 +563,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/lots/{lot_id}/qr-code": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lot Qr Code
+         * @description The lot's code, created the first time it's asked for. Always the same afterwards.
+         */
+        post: operations["lot_qr_code_v1_tenants__tenant_id__lots__lot_id__qr_code_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/phases/{phase_id}": {
         parameters: {
             query?: never;
@@ -1523,6 +1543,14 @@ export interface components {
             /** Endpoint */
             endpoint: string;
             keys: components["schemas"]["SubscriptionKeys"];
+        };
+        /** QrCode */
+        QrCode: {
+            /**
+             * Code
+             * @description Signs link to /q/{code}
+             */
+            code: string;
         };
         /**
          * ReleaseStatus
@@ -3227,6 +3255,47 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    lot_qr_code_v1_tenants__tenant_id__lots__lot_id__qr_code_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QrCode"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };

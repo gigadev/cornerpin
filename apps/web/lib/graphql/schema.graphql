@@ -90,10 +90,21 @@ type PublicSubdivision {
   lots: [PublicLot!]!
 }
 
+"""Where a sign's QR code points right now."""
+type QrTarget {
+  subdivisionSlug: String!
+  lotNumber: String!
+}
+
 type Query {
   """A published subdivision by its web address, or null."""
   subdivision(slug: String!): PublicSubdivision
 
   """A published lot by subdivision web address and lot number."""
   lot(subdivisionSlug: String!, number: String!): PublicLot
+
+  """
+  The published lot a sign's QR code names, or null (ADR-031). Looked up when scanned, so a renamed subdivision still works.
+  """
+  qrTarget(code: String!): QrTarget
 }

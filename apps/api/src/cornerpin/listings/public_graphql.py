@@ -5,11 +5,12 @@ their published lots, nothing else. No mutations.
 Photos and documents are resolved per lot only when asked for, so the subdivision page does not
 load every lot's media. Their files are served by the REST routes in public_files.py."""
 
+import re
 from typing import Any, NewType
 from uuid import UUID
 
 import strawberry
-from sqlalchemy import func, select
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 from strawberry.extensions import MaxTokensLimiter, QueryDepthLimiter
 from strawberry.fastapi import GraphQLRouter
@@ -28,6 +29,7 @@ from cornerpin.listings.models import (
     Subdivision,
     lot_number_order,
 )
+from cornerpin.listings.qr import CODE_PATTERN
 
 # A GeoJSON geometry, passed through as JSON; typed in TypeScript by GraphQL codegen.
 GeoJSONValue = NewType("GeoJSONValue", dict[str, object])
@@ -182,6 +184,12 @@ def _lot_rows(session: Session, subdivision: Subdivision, *conditions: Any) -> l
     return lots
 
 
+@strawberry.type(description="Where a sign's QR code points right now.")
+class QrTarget:
+    subdivision_slug: str
+    lot_number: str
+
+
 def _subdivision(session: Session, slug: str) -> Subdivision | None:
     return session.scalar(select(Subdivision).where(Subdivision.slug == slug))
 
@@ -211,6 +219,23 @@ class Query:
                 return None
             lots = _lot_rows(session, found, Lot.number == number)
             return lots[0] if lots else None
+
+    @strawberry.field(
+        description="The published lot a sign's QR code names, or null (ADR-031). Looked up "
+        "when scanned, so a renamed subdivision still works."
+    )
+    def qr_target(self, code: str) -> QrTarget | None:
+        if not re.fullmatch(CODE_PATTERN, code):
+            return None
+        with public_session() as session:
+            row = session.execute(
+                text(
+                    "SELECT s.slug, l.number FROM qr_codes q JOIN lots l ON l.id = q.lot_id"
+                    " JOIN subdivisions s ON s.id = l.subdivision_id WHERE q.code = :code"
+                ),
+                {"code": code},
+            ).one_or_none()
+        return None if row is None else QrTarget(subdivision_slug=row.slug, lot_number=row.number)
 
 
 schema = strawberry.Schema(
