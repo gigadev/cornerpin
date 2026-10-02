@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import Function
 
 from cornerpin.core.auth.deps import SignedInUser
+from cornerpin.core.outbox import expect_events
 from cornerpin.core.storage import remove_later
 from cornerpin.core.tenancy import constraint_errors, tenant_session
 from cornerpin.listings.models import (
@@ -359,6 +360,8 @@ def update_lot(tenant_id: UUID, lot_id: UUID, body: LotUpdate, user: SignedInUse
             lot.price = Decimal(body.price) if body.price is not None else None
         if body.status is not None:
             lot.status = body.status
+        if "price" in sent or body.status is not None:
+            expect_events(session)  # the lots trigger queues listings.lot_changed (ADR-029)
         if body.listing_type is not None:
             lot.listing_type = body.listing_type
         if lot.listing_type == ListingType.LAND_ONLY:

@@ -1,7 +1,15 @@
 import { withSerwist } from "@serwist/turbopack";
+import path from "node:path";
 import type { NextConfig } from "next";
 
+// The web image builds a standalone server (apps/web/Dockerfile sets NEXT_OUTPUT); local runs
+// and Playwright use `next start` as before.
+const standalone = process.env.NEXT_OUTPUT === "standalone";
+
 const nextConfig: NextConfig = {
+  ...(standalone
+    ? { output: "standalone", outputFileTracingRoot: path.resolve(process.cwd(), "../..") }
+    : {}),
   reactStrictMode: true,
   poweredByHeader: false,
   images: {

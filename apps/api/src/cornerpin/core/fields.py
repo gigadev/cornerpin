@@ -15,7 +15,7 @@ E164 = re.compile(r"^\+[1-9][0-9]{6,14}$")
 SEPARATORS = re.compile(r"[\s().-]")
 
 
-def _email_address(value: str) -> str:
+def normalize_email(value: str) -> str:
     """Normalized address. Locally .test domains are allowed, so Mailpit can receive them."""
     try:
         return validate_email(
@@ -55,7 +55,7 @@ def _time_zone(value: str) -> str:
 
 
 EmailAddress = Annotated[
-    str, AfterValidator(_email_address), Field(json_schema_extra={"format": "email"})
+    str, AfterValidator(normalize_email), Field(json_schema_extra={"format": "email"})
 ]
 Phone = Annotated[str, AfterValidator(normalize_phone), Field(max_length=32)]
 TimeZone = Annotated[str, AfterValidator(_time_zone)]

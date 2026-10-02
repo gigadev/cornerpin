@@ -1,4 +1,5 @@
 import type { NextRequest } from "next/server";
+import { apiAuthHeaders } from "@/lib/api/identity";
 import { apiBaseUrl, forwardRequestHeaders, forwardResponseHeaders } from "@/lib/api/proxy";
 
 export const dynamic = "force-dynamic";
@@ -9,9 +10,11 @@ async function proxy(request: NextRequest, { params }: { params: Promise<{ path:
   target.search = request.nextUrl.search;
 
   const hasBody = !["GET", "HEAD"].includes(request.method);
+  const headers = forwardRequestHeaders(request.headers, null);
+  for (const [name, value] of Object.entries(await apiAuthHeaders())) headers.set(name, value);
   const upstream = await fetch(target, {
     method: request.method,
-    headers: forwardRequestHeaders(request.headers, null),
+    headers,
     body: hasBody ? await request.arrayBuffer() : undefined,
     redirect: "manual",
     cache: "no-store",

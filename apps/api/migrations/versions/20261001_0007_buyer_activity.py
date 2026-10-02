@@ -32,7 +32,11 @@ def upgrade() -> None:
         CREATE FUNCTION app_lot_is_public(lot uuid) RETURNS boolean
           LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, pg_temp
           AS $$ SELECT EXISTS (SELECT 1 FROM lots WHERE id = lot) $$;
+        -- A function's new owner needs CREATE on its schema; a superuser skips that check, a
+        -- managed database's owner (Neon) doesn't. Granted only for the hand-over.
+        GRANT CREATE ON SCHEMA public TO cornerpin_public;
         ALTER FUNCTION app_lot_is_public(uuid) OWNER TO cornerpin_public;
+        REVOKE CREATE ON SCHEMA public FROM cornerpin_public;
         REVOKE ALL ON FUNCTION app_lot_is_public(uuid) FROM PUBLIC;
         GRANT EXECUTE ON FUNCTION app_lot_is_public(uuid) TO cornerpin_user, cornerpin_public;
 

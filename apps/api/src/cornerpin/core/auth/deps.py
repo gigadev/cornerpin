@@ -7,7 +7,11 @@ from fastapi import Cookie, Depends, HTTPException, Response, status
 from cornerpin.core.auth.service import resolve_session
 from cornerpin.core.config import get_settings
 
-SESSION_COOKIE = "cp_session"
+# Firebase Hosting, in front of the web app in production, forwards only a cookie with exactly
+# this name to Cloud Run and strips every other (ADR-032).
+SESSION_COOKIE = "__session"
+
+SessionCookie = Annotated[str | None, Cookie(alias=SESSION_COOKIE)]
 
 
 @dataclass(frozen=True)
@@ -15,17 +19,17 @@ class CurrentUser:
     id: UUID
 
 
-def current_user(cp_session: Annotated[str | None, Cookie()] = None) -> CurrentUser:
+def current_user(session_token: SessionCookie = None) -> CurrentUser:
     """The signed-in user from the session cookie; 401 otherwise."""
-    user_id = resolve_session(cp_session) if cp_session else None
+    user_id = resolve_session(session_token) if session_token else None
     if user_id is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not signed in")
     return CurrentUser(id=user_id)
 
 
-def optional_user(cp_session: Annotated[str | None, Cookie()] = None) -> CurrentUser | None:
+def optional_user(session_token: SessionCookie = None) -> CurrentUser | None:
     """The signed-in user, or None for an anonymous visitor."""
-    user_id = resolve_session(cp_session) if cp_session else None
+    user_id = resolve_session(session_token) if session_token else None
     return CurrentUser(id=user_id) if user_id else None
 
 

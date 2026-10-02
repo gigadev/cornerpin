@@ -9,6 +9,7 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from cornerpin.core.auth.deps import SignedInUser
+from cornerpin.core.outbox import expect_events
 from cornerpin.core.tenancy import tenant_session
 from cornerpin.leads.consent import allowed_channels_sql
 from cornerpin.leads.schemas import HoldDecision, HoldRequestOut, InquiryOut
@@ -98,6 +99,7 @@ def decide_hold_request(
                 text("UPDATE lots SET status = 'on_hold' WHERE id = :id AND status = 'available'"),
                 {"id": row.lot_id},
             )
+            expect_events(session)
         session.execute(
             text(
                 "UPDATE hold_requests SET status = CAST(:status AS hold_request_status),"

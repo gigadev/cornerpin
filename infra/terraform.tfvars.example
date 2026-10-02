@@ -1,0 +1,7 @@
+# Copy to terraform.tfvars (gitignored) and fill in.
+project_id         = "cornerpin-prod"
+billing_account_id = "000000-000000-000000"
+turnstile_site_key = "0x4AAAA..."
+# Optional:
+# vapid_public_key = "B..."   # from `uv run python -m cornerpin.devtools vapid-keys`
+# email_from       = "Cornerpin <hello@cornerpin.app>"

@@ -2,6 +2,7 @@ import "server-only";
 import createClient from "openapi-fetch";
 import { cookies } from "next/headers";
 import { cache } from "react";
+import { apiAuthHeaders } from "./identity";
 import { apiBaseUrl } from "./proxy";
 import type { components, paths } from "./schema";
 
@@ -14,7 +15,7 @@ export async function serverApi() {
   const cookieHeader = (await cookies()).toString();
   return createClient<paths>({
     baseUrl: apiBaseUrl(),
-    headers: cookieHeader ? { cookie: cookieHeader } : {},
+    headers: { ...(cookieHeader ? { cookie: cookieHeader } : {}), ...(await apiAuthHeaders()) },
     cache: "no-store",
   });
 }

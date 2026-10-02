@@ -143,6 +143,12 @@ Its uploads go to `var/e2e-storage`, emptied at the start of each run.
 run, and a temporary folder for uploads. It has two tenants, `alpha` and `bravo`, each with `owner@<tenant>.test` and
 `buyer@<tenant>.test`.
 
+## Production
+
+Production (https://cornerpin.app) has no test accounts and refuses `.test` addresses. How it's
+set up, and the commands for seeding the demo and creating tenants, are in
+[DEPLOY.md](DEPLOY.md).
+
 ## Keys and settings that are test-only
 
 These are already the defaults locally (see `.env.example`). The API refuses to start with them

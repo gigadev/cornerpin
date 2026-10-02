@@ -12,7 +12,7 @@ repeats a send that already succeeded. A handler that fails leaves nothing behin
 
 After a commit that queued events, the dispatcher is told: locally the in-process runner wakes;
 in the cloud a Cloud Task calls /internal/outbox/drain. A scheduled drain catches anything a
-notification missed, including trigger-queued events and retries.
+notification missed and retries; code that may fire a queuing trigger calls `expect_events`.
 """
 
 import logging
@@ -76,6 +76,12 @@ def enqueue(session: Session, event: Event) -> None:
         text("INSERT INTO outbox (event_type, payload) VALUES (:type, CAST(:payload AS jsonb))"),
         {"type": event.event_type, "payload": event.model_dump_json()},
     )
+    expect_events(session)
+
+
+def expect_events(session: Session) -> None:
+    """Tell the dispatcher after this transaction commits, for events a database trigger
+    queues (a lot's status or price changing) that Python never sees."""
     session.info[_PENDING_FLAG] = True
 
 

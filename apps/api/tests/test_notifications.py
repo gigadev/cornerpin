@@ -485,3 +485,15 @@ def test_housekeeping_removes_only_what_has_expired(db: Databases) -> None:
         )
     assert emails == {"fresh@housekeeping.test"}
     assert events == {"test.recent"}
+
+
+def test_a_lot_change_wakes_the_dispatcher_at_once(
+    dispatcher: CountingDispatcher, alpha_owner: TestClient, listing: Listing
+) -> None:
+    """The lots trigger queues the event, which Python never sees; the route says so, so savers
+    don't wait for the hourly drain (ADR-032)."""
+    before = dispatcher.calls
+    owner_patch(alpha_owner, listing, listing.available, acreage=1.25)
+    assert dispatcher.calls == before
+    owner_patch(alpha_owner, listing, listing.available, status="on_hold")
+    assert dispatcher.calls == before + 1

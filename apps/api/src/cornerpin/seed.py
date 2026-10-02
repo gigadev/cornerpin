@@ -73,7 +73,9 @@ def land_price(number: int) -> int:
     return 84_000 + (number % 5) * 3_500 + (number // 5) * 2_000
 
 
-def seed(conn: Connection) -> UUID:
+def seed(conn: Connection, owner_email: str = DEMO_OWNER_EMAIL) -> UUID:
+    """Rebuild the demo tenant from scratch. `owner_email` is its owner: the .test address
+    locally, a real one in production (`python -m cornerpin.ops seed-demo`)."""
     # Buyer records block deleting their lot (migration 0004), so clear them first.
     for table in ("inquiries", "hold_requests"):
         conn.execute(text(f"DELETE FROM {table} WHERE tenant_id = :id"), {"id": DEMO_TENANT_ID})  # noqa: S608
@@ -89,7 +91,7 @@ def seed(conn: Connection) -> UUID:
             "ON CONFLICT (email) DO UPDATE SET display_name = EXCLUDED.display_name "
             "RETURNING id"
         ),
-        {"email": DEMO_OWNER_EMAIL},
+        {"email": owner_email},
     ).scalar_one()
     conn.execute(
         text("INSERT INTO memberships (tenant_id, user_id, role) VALUES (:t, :u, 'owner')"),

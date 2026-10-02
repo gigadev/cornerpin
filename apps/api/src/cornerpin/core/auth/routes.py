@@ -6,7 +6,12 @@ from fastapi.responses import RedirectResponse
 from pydantic import BaseModel
 
 from cornerpin.core.auth import service
-from cornerpin.core.auth.deps import SESSION_COOKIE, clear_session_cookie, set_session_cookie
+from cornerpin.core.auth.deps import (
+    SESSION_COOKIE,
+    SessionCookie,
+    clear_session_cookie,
+    set_session_cookie,
+)
 from cornerpin.core.auth.google import GoogleSignIn, get_google
 from cornerpin.core.auth.tokens import safe_next, sign, unsign
 from cornerpin.core.auth.turnstile import TurnstileVerifier, client_ip, get_turnstile
@@ -15,6 +20,8 @@ from cornerpin.core.fields import EmailAddress
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+# Not forwarded by Firebase Hosting (ADR-032): before Google sign-in is switched on in
+# production, this state has to travel in the session cookie instead.
 OAUTH_COOKIE = "cp_oauth"
 OAUTH_COOKIE_PATH = "/v1/auth/google"
 OAUTH_MAX_AGE_SECONDS = 600
@@ -78,9 +85,9 @@ def verify_magic_link(body: MagicLinkVerify, request: Request, response: Respons
 
 
 @router.post("/signout", status_code=status.HTTP_204_NO_CONTENT)
-def sign_out(response: Response, cp_session: Annotated[str | None, Cookie()] = None) -> None:
-    if cp_session:
-        service.end_session(cp_session)
+def sign_out(response: Response, session_token: SessionCookie = None) -> None:
+    if session_token:
+        service.end_session(session_token)
     clear_session_cookie(response)
 
 

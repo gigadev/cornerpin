@@ -1,6 +1,7 @@
 import "server-only";
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { print } from "graphql";
+import { apiAuthHeaders } from "@/lib/api/identity";
 import { apiBaseUrl } from "@/lib/api/proxy";
 
 type GraphqlResponse<T> = { data?: T | null; errors?: { message: string }[] };
@@ -13,9 +14,9 @@ export async function publicQuery<Result, Variables>(
 ): Promise<Result> {
   const response = await fetch(`${apiBaseUrl()}/graphql`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...(await apiAuthHeaders()) },
     body: JSON.stringify({ query: print(document), variables }),
-    // Publishing should show at once; caching for public pages is decided in P1-07.
+    // Publishing should show at once (ADR-027).
     cache: "no-store",
   });
   const body = (await response.json()) as GraphqlResponse<Result>;

@@ -4,14 +4,14 @@ import { forwardRequestHeaders, forwardResponseHeaders } from "./proxy";
 describe("forwardRequestHeaders", () => {
   it("passes the session cookie, origin and body type, and nothing else", () => {
     const incoming = new Headers({
-      cookie: "cp_session=abc",
+      cookie: "__session=abc",
       origin: "http://localhost:3300",
       "content-type": "application/json",
       host: "localhost:3300",
       authorization: "Bearer should-not-pass",
     });
     const forwarded = forwardRequestHeaders(incoming, null);
-    expect(forwarded.get("cookie")).toBe("cp_session=abc");
+    expect(forwarded.get("cookie")).toBe("__session=abc");
     expect(forwarded.get("origin")).toBe("http://localhost:3300");
     expect(forwarded.get("content-type")).toBe("application/json");
     expect(forwarded.has("host")).toBe(false);
@@ -31,7 +31,7 @@ describe("forwardRequestHeaders", () => {
 describe("forwardResponseHeaders", () => {
   it("keeps every set-cookie and marks the response uncacheable", () => {
     const upstream = new Headers();
-    upstream.append("set-cookie", "cp_session=abc; HttpOnly; Path=/");
+    upstream.append("set-cookie", "__session=abc; HttpOnly; Path=/");
     upstream.append("set-cookie", "cp_oauth=; Max-Age=0; Path=/v1/auth/google");
     upstream.set("content-type", "application/json");
     upstream.set("server", "uvicorn");
