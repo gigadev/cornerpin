@@ -216,6 +216,30 @@ export interface paths {
         patch: operations["update_lot_v1_tenants__tenant_id__lots__lot_id__patch"];
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/lots/{lot_id}/boundary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Boundary
+         * @description Save a lot's boundary. Acreage is recalculated from it; overlaps are reported.
+         */
+        put: operations["set_boundary_v1_tenants__tenant_id__lots__lot_id__boundary_put"];
+        post?: never;
+        /**
+         * Clear Boundary
+         * @description Remove a lot's boundary. Its last acreage stays and becomes editable again.
+         */
+        delete: operations["clear_boundary_v1_tenants__tenant_id__lots__lot_id__boundary_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/lots/{lot_id}/documents": {
         parameters: {
             query?: never;
@@ -362,6 +386,28 @@ export interface paths {
         patch: operations["update_subdivision_v1_tenants__tenant_id__subdivisions__subdivision_id__patch"];
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/import": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Import Geojson
+         * @description Match each GeoJSON feature to a lot by its number and set the lot's boundary. With
+         *     `apply` false nothing is saved: the report previews what would happen. Unusable features
+         *     are skipped with a reason; the rest still apply.
+         */
+        post: operations["import_geojson_v1_tenants__tenant_id__subdivisions__subdivision_id__import_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/lots": {
         parameters: {
             query?: never;
@@ -373,6 +419,68 @@ export interface paths {
         put?: never;
         /** Create Lot */
         post: operations["create_lot_v1_tenants__tenant_id__subdivisions__subdivision_id__lots_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Subdivision Map
+         * @description Everything the owner's map editor draws: all lots (published or not) and the overlay.
+         */
+        get: operations["subdivision_map_v1_tenants__tenant_id__subdivisions__subdivision_id__map_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/overlay": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Upload Overlay
+         * @description Add the plat image, replacing any earlier one, placed roughly over the lots.
+         */
+        post: operations["upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post"];
+        /** Delete Overlay */
+        delete: operations["delete_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Overlay
+         * @description Save where the overlay's corners sit and how see-through it is.
+         */
+        patch: operations["update_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_patch"];
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/overlay/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Overlay File */
+        get: operations["overlay_file_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_file_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -418,6 +526,14 @@ export interface components {
             /** Title */
             title: string;
         };
+        /** Body_upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post */
+        Body_upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post: {
+            /**
+             * File
+             * @description A plat image: JPEG, PNG or WebP
+             */
+            file: string;
+        };
         /** Body_upload_photo_v1_tenants__tenant_id__lots__lot_id__photos_post */
         Body_upload_photo_v1_tenants__tenant_id__lots__lot_id__photos_post: {
             /**
@@ -430,6 +546,27 @@ export interface components {
              * @description JPEG, PNG or WebP, up to 15 MB
              */
             file: string;
+        };
+        /** BoundaryIn */
+        BoundaryIn: {
+            /** Boundary */
+            boundary: components["schemas"]["PolygonGeometry"] | components["schemas"]["MultiPolygonGeometry"];
+        };
+        /** BoundaryOut */
+        BoundaryOut: {
+            /** Acreage */
+            acreage: number | null;
+            boundary: components["schemas"]["MultiPolygonGeometry"] | null;
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /**
+             * Overlaps
+             * @description Numbers of lots whose interiors overlap this one
+             */
+            overlaps: string[];
         };
         /**
          * DocumentKind
@@ -458,6 +595,36 @@ export interface components {
             /** Url */
             url: string;
         };
+        /** Feature */
+        Feature: {
+            /** Geometry */
+            geometry?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            } | null;
+            /** Properties */
+            properties?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            } | null;
+            /**
+             * Type
+             * @constant
+             */
+            type: "Feature";
+        };
+        /** FeatureCollection */
+        FeatureCollection: {
+            /** Crs */
+            crs?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            } | null;
+            /** Features */
+            features: components["schemas"]["Feature"][];
+            /**
+             * Type
+             * @constant
+             */
+            type: "FeatureCollection";
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -482,6 +649,52 @@ export interface components {
             /** Square Feet */
             square_feet?: number | null;
         };
+        /** ImportReport */
+        ImportReport: {
+            /** Applied */
+            applied: boolean;
+            /**
+             * Lots Without Shape
+             * @description Lots in the subdivision the file missed
+             */
+            lots_without_shape: string[];
+            /** Rows */
+            rows: components["schemas"]["ImportRow"][];
+        };
+        /** ImportRequest */
+        ImportRequest: {
+            /**
+             * Apply
+             * @description False previews; true saves
+             * @default false
+             */
+            apply?: boolean;
+            collection: components["schemas"]["FeatureCollection"];
+            /**
+             * Phase Id
+             * @description Create lots that don't exist yet, in this phase
+             */
+            phase_id?: string | null;
+        };
+        /** ImportRow */
+        ImportRow: {
+            /** Acreage */
+            acreage?: number | null;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "update" | "create" | "skip";
+            /** Index */
+            index: number;
+            /** Lot Id */
+            lot_id?: string | null;
+            /** Number */
+            number: string | null;
+            /** Reason */
+            reason?: string | null;
+        };
+        JsonValue: unknown;
         /**
          * ListingType
          * @enum {string}
@@ -627,6 +840,22 @@ export interface components {
             /** Token */
             token: string;
         };
+        /** MapLot */
+        MapLot: {
+            /** Acreage */
+            acreage: number | null;
+            boundary: components["schemas"]["MultiPolygonGeometry"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Number */
+            number: string;
+            /** Published */
+            published: boolean;
+            status: components["schemas"]["LotStatus"];
+        };
         /** Me */
         Me: {
             /** Display Name */
@@ -655,6 +884,36 @@ export interface components {
             tenant_id: string;
             /** Tenant Name */
             tenant_name: string;
+        };
+        /** MultiPolygonGeometry */
+        MultiPolygonGeometry: {
+            /** Coordinates */
+            coordinates: number[][][][];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "MultiPolygon";
+        };
+        /** OverlayOut */
+        OverlayOut: {
+            /** Corners */
+            corners: number[][];
+            /** Height */
+            height: number;
+            /** Opacity */
+            opacity: number;
+            /** Url */
+            url: string;
+            /** Width */
+            width: number;
+        };
+        /** OverlayUpdate */
+        OverlayUpdate: {
+            /** Corners */
+            corners?: number[][] | null;
+            /** Opacity */
+            opacity?: number | null;
         };
         /** PhaseCreate */
         PhaseCreate: {
@@ -720,6 +979,16 @@ export interface components {
         PhotoUpdate: {
             /** Caption */
             caption: string;
+        };
+        /** PolygonGeometry */
+        PolygonGeometry: {
+            /** Coordinates */
+            coordinates: number[][][];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "Polygon";
         };
         /** PriceChange */
         PriceChange: {
@@ -805,6 +1074,21 @@ export interface components {
             slug: string;
             /** Time Zone */
             time_zone: string;
+        };
+        /** SubdivisionMap */
+        SubdivisionMap: {
+            /** Center */
+            center: number[];
+            /** Lots */
+            lots: components["schemas"]["MapLot"][];
+            /** Name */
+            name: string;
+            overlay: components["schemas"]["OverlayOut"] | null;
+            /**
+             * Subdivision Id
+             * Format: uuid
+             */
+            subdivision_id: string;
         };
         /** SubdivisionSummary */
         SubdivisionSummary: {
@@ -1360,6 +1644,92 @@ export interface operations {
             };
             /** @description Duplicate, or still in use */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_boundary_v1_tenants__tenant_id__lots__lot_id__boundary_put: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BoundaryIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoundaryOut"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clear_boundary_v1_tenants__tenant_id__lots__lot_id__boundary_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lot_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BoundaryOut"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -2051,6 +2421,49 @@ export interface operations {
             };
         };
     };
+    import_geojson_v1_tenants__tenant_id__subdivisions__subdivision_id__import_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ImportRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportReport"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not usable GeoJSON */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     create_lot_v1_tenants__tenant_id__subdivisions__subdivision_id__lots_post: {
         parameters: {
             query?: never;
@@ -2087,6 +2500,224 @@ export interface operations {
             };
             /** @description Duplicate, or still in use */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    subdivision_map_v1_tenants__tenant_id__subdivisions__subdivision_id__map_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SubdivisionMap"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverlayOut"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Too large */
+            413: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverlayUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OverlayOut"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    overlay_file_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_file_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                subdivision_id: string;
+            };
+            cookie?: {
+                cp_session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/*": unknown;
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -11,9 +11,12 @@ stays switched off until a Google client id exists.
 | Web app | http://localhost:3300 |
 | Sign in | http://localhost:3300/signin |
 | Owner portal | http://localhost:3300/app |
+| Public page for the demo subdivision | http://localhost:3300/juniper-bench |
+| Owner map editor | Owner portal → Juniper Bench → Map and lot shapes |
 | Mailpit (all local email) | http://localhost:8025 |
 | API | http://localhost:8000 |
 | API docs (try requests here) | http://localhost:8000/docs |
+| Public GraphQL explorer (GraphiQL) | http://localhost:8000/graphql |
 | Postgres + PostGIS | `localhost:5434`, database `cornerpin` |
 | Uploaded photos and documents | the `var/storage` folder in the repo (gitignored) |
 

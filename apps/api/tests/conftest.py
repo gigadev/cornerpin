@@ -111,7 +111,13 @@ def build_tenant(conn: Connection, label: str) -> TenantData:
     unpublished_lot_id = _one(
         conn, lot_sql, t=tenant_id, s=subdivision_id, p=phase_id, n="2", pub=False
     )
-    params = {"t": tenant_id, "l": lot_id, "b": buyer_id, "u": unpublished_lot_id}
+    params = {
+        "t": tenant_id,
+        "s": subdivision_id,
+        "l": lot_id,
+        "b": buyer_id,
+        "u": unpublished_lot_id,
+    }
     for sql in (
         "INSERT INTO lot_media (tenant_id, lot_id, storage_key, content_type)"
         " VALUES (:t, :l, 'photo.jpg', 'image/jpeg'), (:t, :u, 'hidden.jpg', 'image/jpeg')",
@@ -127,6 +133,9 @@ def build_tenant(conn: Connection, label: str) -> TenantData:
         "INSERT INTO contact_consents (tenant_id, user_id, channel, granted, source)"
         " VALUES (:t, :b, 'email', true, 'test')",
         "INSERT INTO notification_prefs (user_id) VALUES (:b)",
+        "INSERT INTO subdivision_overlays (tenant_id, subdivision_id, storage_key, content_type,"
+        " width, height, corners) VALUES (:t, :s, 'plat.png', 'image/png', 10, 10,"
+        " '[[0,1],[1,1],[1,0],[0,0]]'::jsonb)",
         "INSERT INTO push_subscriptions (user_id, endpoint, p256dh, auth)"
         " VALUES (:b, 'https://push.example.test/' || CAST(:b AS text), 'key', 'auth')",
     ):

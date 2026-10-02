@@ -13,6 +13,8 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 MAX_PHOTO_BYTES = 15 * 1024 * 1024
 MAX_DOCUMENT_BYTES = 25 * 1024 * 1024
 MAX_PHOTO_EDGE = 2560
+# Plat overlays keep more detail: lot lines and numbers must stay readable when zoomed in.
+MAX_OVERLAY_EDGE = 4096
 CHUNK = 1024 * 1024
 
 # Pillow format -> (content type, extension)
@@ -63,7 +65,7 @@ async def read_limited(upload: UploadFile, limit: int) -> bytes:
     return bytes(buffer)
 
 
-def prepare_photo(data: bytes) -> PreparedPhoto:
+def prepare_photo(data: bytes, max_edge: int = MAX_PHOTO_EDGE) -> PreparedPhoto:
     try:
         with Image.open(io.BytesIO(data)) as original:
             fmt = original.format or ""
@@ -74,7 +76,7 @@ def prepare_photo(data: bytes) -> PreparedPhoto:
     except (UnidentifiedImageError, Image.DecompressionBombError, OSError) as exc:
         raise UnsupportedUpload("That file isn't a photo we can read") from exc
 
-    image.thumbnail((MAX_PHOTO_EDGE, MAX_PHOTO_EDGE))
+    image.thumbnail((max_edge, max_edge))
     content_type, extension = PHOTO_FORMATS[fmt]
     out = io.BytesIO()
     if fmt == "JPEG":

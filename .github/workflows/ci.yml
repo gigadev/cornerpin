@@ -79,7 +79,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - name: Generated API types are current
-        run: pnpm gen:api && git diff --exit-code apps/web/lib/api/
+        run: pnpm gen:api && git diff --exit-code apps/web/lib/api/ apps/web/lib/graphql/
       - run: pnpm lint
       - run: pnpm test
       - run: pnpm --filter web exec playwright install --with-deps chromium

@@ -233,7 +233,19 @@ def test_public_sees_only_published_listings(
     with public_session(engine=db.api) as session:
         lots = set(session.execute(text("SELECT id FROM lots")).scalars().all())
         media = session.execute(text("SELECT storage_key FROM lot_media")).scalars().all()
-    assert lots == {alpha.lot_id, bravo.lot_id}
+    # Other tests publish lots too, so compare with what the owner role says is published.
+    with db.owner.connect() as conn:
+        published = set(
+            conn.execute(
+                text(
+                    "SELECT l.id FROM lots l JOIN subdivisions s ON s.id = l.subdivision_id"
+                    " WHERE l.published AND s.published"
+                )
+            ).scalars()
+        )
+    assert lots == published
+    assert {alpha.lot_id, bravo.lot_id} <= lots
+    assert alpha.unpublished_lot_id not in lots
     assert "hidden.jpg" not in media
 
 

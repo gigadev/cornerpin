@@ -15,9 +15,10 @@ from sqlalchemy import (
     Numeric,
     SmallInteger,
     Text,
+    case,
     func,
 )
-from sqlalchemy.dialects.postgresql import CITEXT, ENUM
+from sqlalchemy.dialects.postgresql import CITEXT, ENUM, JSONB, REAL
 from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column
 from sqlalchemy.types import TypeEngine
 
@@ -194,3 +195,36 @@ class LotDocument(Base):
     content_type: Mapped[str] = mapped_column(Text)
     size_bytes: Mapped[int] = mapped_column(BigInteger)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+class SubdivisionOverlay(Base):
+    """A plat image lined up on the map for tracing (ADR-026). Owner-only."""
+
+    __tablename__ = "subdivision_overlays"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["subdivision_id", "tenant_id"], ["subdivisions.id", "subdivisions.tenant_id"]
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, server_default=func.gen_random_uuid())
+    tenant_id: Mapped[UUID]
+    subdivision_id: Mapped[UUID] = mapped_column(unique=True)
+    storage_key: Mapped[str] = mapped_column(Text)
+    content_type: Mapped[str] = mapped_column(Text)
+    width: Mapped[int]
+    height: Mapped[int]
+    corners: Mapped[list[list[float]]] = mapped_column(JSONB)
+    opacity: Mapped[float] = mapped_column(REAL, server_default="0.6")
+    created_at: Mapped[datetime] = mapped_column(server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(server_default=func.now())
+
+
+def lot_number_order() -> tuple[Any, ...]:
+    """Lot ordering everywhere: numeric lot numbers first, as numbers ("2" before "10"), then
+    the rest by text ("B-1")."""
+    return (
+        case((Lot.number.regexp_match("^[0-9]+$"), 0), else_=1),
+        func.lpad(Lot.number, 16, "0"),
+        Lot.number,
+    )

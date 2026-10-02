@@ -7,6 +7,7 @@ import type { components } from "./schema";
 export type Photo = components["schemas"]["PhotoOut"];
 export type LotDocument = components["schemas"]["DocumentOut"];
 export type DocumentKind = components["schemas"]["DocumentKind"];
+export type Overlay = components["schemas"]["OverlayOut"];
 
 export type UploadResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
@@ -46,4 +47,14 @@ export function uploadDocument(
   form.append("kind", kind);
   form.append("title", title);
   return postForm(`/v1/tenants/${tenantId}/lots/${lotId}/documents`, form);
+}
+
+export function uploadOverlay(
+  tenantId: string,
+  subdivisionId: string,
+  file: File,
+): Promise<UploadResult<Overlay>> {
+  const form = new FormData();
+  form.append("file", file);
+  return postForm(`/v1/tenants/${tenantId}/subdivisions/${subdivisionId}/overlay`, form);
 }

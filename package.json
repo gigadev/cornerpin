@@ -10,6 +10,6 @@
     "test": "pnpm -r --if-present test",
     "build": "pnpm -r --if-present build",
     "e2e": "pnpm -r --if-present e2e",
-    "gen:api": "uv run python -m cornerpin.openapi apps/web/lib/api/openapi.json && pnpm --filter web exec openapi-typescript lib/api/openapi.json --default-non-nullable false -o lib/api/schema.d.ts"
+    "gen:api": "uv run python -m cornerpin.openapi apps/web/lib/api/openapi.json && uv run python -m cornerpin.graphql_schema apps/web/lib/graphql/schema.graphql && pnpm --filter web exec openapi-typescript lib/api/openapi.json --default-non-nullable false -o lib/api/schema.d.ts && pnpm --filter web exec graphql-codegen --config codegen.ts"
   }
 }

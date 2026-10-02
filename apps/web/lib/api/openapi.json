@@ -45,6 +45,21 @@
         "title": "Body_upload_document_v1_tenants__tenant_id__lots__lot_id__documents_post",
         "type": "object"
       },
+      "Body_upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "description": "A plat image: JPEG, PNG or WebP",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post",
+        "type": "object"
+      },
       "Body_upload_photo_v1_tenants__tenant_id__lots__lot_id__photos_post": {
         "properties": {
           "caption": {
@@ -64,6 +79,79 @@
           "file"
         ],
         "title": "Body_upload_photo_v1_tenants__tenant_id__lots__lot_id__photos_post",
+        "type": "object"
+      },
+      "BoundaryIn": {
+        "properties": {
+          "boundary": {
+            "discriminator": {
+              "mapping": {
+                "MultiPolygon": "#/components/schemas/MultiPolygonGeometry",
+                "Polygon": "#/components/schemas/PolygonGeometry"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PolygonGeometry"
+              },
+              {
+                "$ref": "#/components/schemas/MultiPolygonGeometry"
+              }
+            ],
+            "title": "Boundary"
+          }
+        },
+        "required": [
+          "boundary"
+        ],
+        "title": "BoundaryIn",
+        "type": "object"
+      },
+      "BoundaryOut": {
+        "properties": {
+          "acreage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acreage"
+          },
+          "boundary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MultiPolygonGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "lot_id": {
+            "format": "uuid",
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "overlaps": {
+            "description": "Numbers of lots whose interiors overlap this one",
+            "items": {
+              "type": "string"
+            },
+            "title": "Overlaps",
+            "type": "array"
+          }
+        },
+        "required": [
+          "lot_id",
+          "boundary",
+          "acreage",
+          "overlaps"
+        ],
+        "title": "BoundaryOut",
         "type": "object"
       },
       "DocumentKind": {
@@ -119,6 +207,85 @@
           "url"
         ],
         "title": "DocumentOut",
+        "type": "object"
+      },
+      "Feature": {
+        "properties": {
+          "geometry": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry"
+          },
+          "properties": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Properties"
+          },
+          "type": {
+            "const": "Feature",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "Feature",
+        "type": "object"
+      },
+      "FeatureCollection": {
+        "properties": {
+          "crs": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Crs"
+          },
+          "features": {
+            "items": {
+              "$ref": "#/components/schemas/Feature"
+            },
+            "maxItems": 2000,
+            "title": "Features",
+            "type": "array"
+          },
+          "type": {
+            "const": "FeatureCollection",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "features"
+        ],
+        "title": "FeatureCollection",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -206,6 +373,137 @@
         "title": "Home",
         "type": "object"
       },
+      "ImportReport": {
+        "properties": {
+          "applied": {
+            "title": "Applied",
+            "type": "boolean"
+          },
+          "lots_without_shape": {
+            "description": "Lots in the subdivision the file missed",
+            "items": {
+              "type": "string"
+            },
+            "title": "Lots Without Shape",
+            "type": "array"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ImportRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "applied",
+          "rows",
+          "lots_without_shape"
+        ],
+        "title": "ImportReport",
+        "type": "object"
+      },
+      "ImportRequest": {
+        "properties": {
+          "apply": {
+            "default": false,
+            "description": "False previews; true saves",
+            "title": "Apply",
+            "type": "boolean"
+          },
+          "collection": {
+            "$ref": "#/components/schemas/FeatureCollection"
+          },
+          "phase_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Create lots that don't exist yet, in this phase",
+            "title": "Phase Id"
+          }
+        },
+        "required": [
+          "collection"
+        ],
+        "title": "ImportRequest",
+        "type": "object"
+      },
+      "ImportRow": {
+        "properties": {
+          "acreage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acreage"
+          },
+          "action": {
+            "enum": [
+              "update",
+              "create",
+              "skip"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "index": {
+            "title": "Index",
+            "type": "integer"
+          },
+          "lot_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lot Id"
+          },
+          "number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "index",
+          "number",
+          "action"
+        ],
+        "title": "ImportRow",
+        "type": "object"
+      },
+      "JsonValue": {},
       "ListingType": {
         "enum": [
           "land_only",
@@ -622,6 +920,57 @@
         "title": "MagicLinkVerify",
         "type": "object"
       },
+      "MapLot": {
+        "properties": {
+          "acreage": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Acreage"
+          },
+          "boundary": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MultiPolygonGeometry"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "published": {
+            "title": "Published",
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/LotStatus"
+          }
+        },
+        "required": [
+          "id",
+          "number",
+          "status",
+          "published",
+          "acreage",
+          "boundary"
+        ],
+        "title": "MapLot",
+        "type": "object"
+      },
       "Me": {
         "properties": {
           "display_name": {
@@ -687,6 +1036,125 @@
           "role"
         ],
         "title": "Membership",
+        "type": "object"
+      },
+      "MultiPolygonGeometry": {
+        "properties": {
+          "coordinates": {
+            "items": {
+              "items": {
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "maxItems": 3,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "minItems": 4,
+                "type": "array"
+              },
+              "minItems": 1,
+              "type": "array"
+            },
+            "minItems": 1,
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "const": "MultiPolygon",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "MultiPolygonGeometry",
+        "type": "object"
+      },
+      "OverlayOut": {
+        "properties": {
+          "corners": {
+            "items": {
+              "items": {
+                "type": "number"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "type": "array"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Corners",
+            "type": "array"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "opacity": {
+            "title": "Opacity",
+            "type": "number"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "url",
+          "width",
+          "height",
+          "corners",
+          "opacity"
+        ],
+        "title": "OverlayOut",
+        "type": "object"
+      },
+      "OverlayUpdate": {
+        "properties": {
+          "corners": {
+            "anyOf": [
+              {
+                "items": {
+                  "items": {
+                    "type": "number"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "type": "array"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Corners"
+          },
+          "opacity": {
+            "anyOf": [
+              {
+                "maximum": 1.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Opacity"
+          }
+        },
+        "title": "OverlayUpdate",
         "type": "object"
       },
       "PhaseCreate": {
@@ -878,6 +1346,38 @@
           "caption"
         ],
         "title": "PhotoUpdate",
+        "type": "object"
+      },
+      "PolygonGeometry": {
+        "properties": {
+          "coordinates": {
+            "items": {
+              "items": {
+                "items": {
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 2,
+                "type": "array"
+              },
+              "minItems": 4,
+              "type": "array"
+            },
+            "minItems": 1,
+            "title": "Coordinates",
+            "type": "array"
+          },
+          "type": {
+            "const": "Polygon",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "coordinates"
+        ],
+        "title": "PolygonGeometry",
         "type": "object"
       },
       "PriceChange": {
@@ -1105,6 +1605,54 @@
           "lots"
         ],
         "title": "SubdivisionDetail",
+        "type": "object"
+      },
+      "SubdivisionMap": {
+        "properties": {
+          "center": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Center",
+            "type": "array"
+          },
+          "lots": {
+            "items": {
+              "$ref": "#/components/schemas/MapLot"
+            },
+            "title": "Lots",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "overlay": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OverlayOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subdivision_id": {
+            "format": "uuid",
+            "title": "Subdivision Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subdivision_id",
+          "name",
+          "center",
+          "lots",
+          "overlay"
+        ],
+        "title": "SubdivisionMap",
         "type": "object"
       },
       "SubdivisionSummary": {
@@ -2067,6 +2615,160 @@
         "summary": "Update Lot",
         "tags": [
           "listings"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/lots/{lot_id}/boundary": {
+      "delete": {
+        "description": "Remove a lot's boundary. Its last acreage stays and becomes editable again.",
+        "operationId": "clear_boundary_v1_tenants__tenant_id__lots__lot_id__boundary_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoundaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Boundary",
+        "tags": [
+          "map"
+        ]
+      },
+      "put": {
+        "description": "Save a lot's boundary. Acreage is recalculated from it; overlaps are reported.",
+        "operationId": "set_boundary_v1_tenants__tenant_id__lots__lot_id__boundary_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoundaryIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoundaryOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Boundary",
+        "tags": [
+          "map"
         ]
       }
     },
@@ -3189,6 +3891,82 @@
         ]
       }
     },
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/import": {
+      "post": {
+        "description": "Match each GeoJSON feature to a lot by its number and set the lot's boundary. With\n`apply` false nothing is saved: the report previews what would happen. Unusable features\nare skipped with a reason; the rest still apply.",
+        "operationId": "import_geojson_v1_tenants__tenant_id__subdivisions__subdivision_id__import_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReport"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "description": "Not usable GeoJSON"
+          }
+        },
+        "summary": "Import Geojson",
+        "tags": [
+          "map"
+        ]
+      }
+    },
     "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/lots": {
       "post": {
         "operationId": "create_lot_v1_tenants__tenant_id__subdivisions__subdivision_id__lots_post",
@@ -3271,6 +4049,377 @@
         "summary": "Create Lot",
         "tags": [
           "listings"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/map": {
+      "get": {
+        "description": "Everything the owner's map editor draws: all lots (published or not) and the overlay.",
+        "operationId": "subdivision_map_v1_tenants__tenant_id__subdivisions__subdivision_id__map_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubdivisionMap"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Subdivision Map",
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/overlay": {
+      "delete": {
+        "operationId": "delete_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Overlay",
+        "tags": [
+          "map"
+        ]
+      },
+      "patch": {
+        "description": "Save where the overlay's corners sit and how see-through it is.",
+        "operationId": "update_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OverlayUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Overlay",
+        "tags": [
+          "map"
+        ]
+      },
+      "post": {
+        "description": "Add the plat image, replacing any earlier one, placed roughly over the lots.",
+        "operationId": "upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_overlay_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverlayOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "413": {
+            "description": "Too large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Overlay",
+        "tags": [
+          "map"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/subdivisions/{subdivision_id}/overlay/file": {
+      "get": {
+        "operationId": "overlay_file_v1_tenants__tenant_id__subdivisions__subdivision_id__overlay_file_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "subdivision_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subdivision Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "cp_session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cp Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/*": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Overlay File",
+        "tags": [
+          "map"
         ]
       }
     },

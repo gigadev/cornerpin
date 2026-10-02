@@ -45,6 +45,16 @@ export default async function SubdivisionPage({
       <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{subdivision.name}</h1>
         <PublishedBadge published={subdivision.published} />
+        <div className="ml-auto flex gap-2">
+          <Button asChild size="sm" variant="outline">
+            <Link href={`${here}/map`}>Map and lot shapes</Link>
+          </Button>
+          {subdivision.published ? (
+            <Button asChild size="sm" variant="ghost">
+              <Link href={`/${subdivision.slug}`}>Public page</Link>
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <Card>

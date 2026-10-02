@@ -7,7 +7,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Response, status
-from sqlalchemy import case, func, select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.functions import Function
 
@@ -24,6 +24,8 @@ from cornerpin.listings.models import (
     LotStatusChange,
     Phase,
     Subdivision,
+    SubdivisionOverlay,
+    lot_number_order,
 )
 from cornerpin.listings.schemas import (
     Home,
@@ -161,7 +163,14 @@ def delete_subdivision(tenant_id: UUID, subdivision_id: UUID, user: SignedInUser
         lots = session.scalar(select(func.count()).where(Lot.subdivision_id == subdivision_id))
         if lots:
             raise HTTPException(status.HTTP_409_CONFLICT, "Delete or move its lots first")
-        session.delete(subdivision)  # its phases go with it
+        overlay_key = session.scalar(
+            select(SubdivisionOverlay.storage_key).where(
+                SubdivisionOverlay.subdivision_id == subdivision_id
+            )
+        )
+        if overlay_key:
+            remove_later(session, overlay_key)
+        session.delete(subdivision)  # its phases and overlay go with it
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
@@ -182,14 +191,7 @@ def _subdivision_detail(session: Session, subdivision_id: UUID) -> SubdivisionDe
     ).all()
     phase_names = {phase.id: phase.name for phase in phases}
     lots = session.scalars(
-        select(Lot)
-        .where(Lot.subdivision_id == subdivision_id)
-        .order_by(
-            # Numeric lot numbers first, as numbers ("2" before "10"); then the rest by text.
-            case((Lot.number.regexp_match("^[0-9]+$"), 0), else_=1),
-            func.lpad(Lot.number, 16, "0"),
-            Lot.number,
-        )
+        select(Lot).where(Lot.subdivision_id == subdivision_id).order_by(*lot_number_order())
     ).all()
     return SubdivisionDetail(
         id=subdivision.id,

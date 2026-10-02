@@ -16,6 +16,7 @@ dependencies = [
     "pyjwt[crypto]>=2.10",
     "python-multipart>=0.0.20",
     "sqlalchemy>=2.0.41",
+    "strawberry-graphql[fastapi]>=0.270",
     "uvicorn[standard]>=0.35",
 ]
 

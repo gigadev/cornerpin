@@ -109,8 +109,7 @@ const PDF = Buffer.from("%PDF-1.4\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n"
 
 type SubdivisionDetail = { id: string; slug: string; phases: { id: string; name: string }[] };
 
-/** A fresh lot in Juniper Bench for this viewport, so parallel runs never share photos. */
-async function newLot(page: Page, number: string): Promise<string> {
+async function juniperBench(page: Page): Promise<SubdivisionDetail> {
   const base = `/v1/tenants/${DEMO_TENANT_ID}`;
   const list = (await (await page.request.get(`${base}/subdivisions`)).json()) as {
     id: string;
@@ -118,13 +117,19 @@ async function newLot(page: Page, number: string): Promise<string> {
   }[];
   const juniper = list.find((s) => s.slug === "juniper-bench");
   if (!juniper) throw new Error("Juniper Bench is not seeded");
-  const detail = (await (
+  return (await (
     await page.request.get(`${base}/subdivisions/${juniper.id}`)
   ).json()) as SubdivisionDetail;
+}
+
+/** A fresh lot in Juniper Bench for this viewport, so parallel runs never share it. */
+async function newLot(page: Page, number: string, published = false): Promise<string> {
+  const base = `/v1/tenants/${DEMO_TENANT_ID}`;
+  const detail = await juniperBench(page);
   const phase = detail.phases[0];
   if (!phase) throw new Error("Juniper Bench has no phases");
-  const created = await page.request.post(`${base}/subdivisions/${juniper.id}/lots`, {
-    data: { number, phase_id: phase.id },
+  const created = await page.request.post(`${base}/subdivisions/${detail.id}/lots`, {
+    data: { number, phase_id: phase.id, published },
   });
   expect(created.status()).toBe(201);
   return ((await created.json()) as { id: string }).id;
@@ -183,4 +188,132 @@ test("owner uploads, captions and reorders photos, and downloads a document", as
   // Deleting a photo takes it off the page.
   await page.getByRole("button", { name: "Delete photo 2" }).click();
   await expect(page.getByLabel("Caption for photo 2")).toHaveCount(0);
+});
+
+// P1-06 acceptance: a drawn lot round-trips through PostGIS and renders on the public map.
+
+test("owner draws a lot on the map and it appears on the public map", async ({
+  page,
+}, testInfo) => {
+  const number = `M-${viewport(testInfo.project.name)}`;
+  const lotId = await newLot(page, number, true);
+  const juniper = await juniperBench(page);
+
+  await page.goto(`/app/${DEMO_TENANT_ID}/subdivisions/${juniper.id}/map`);
+  const editor = page.getByRole("region", { name: "Map editor" });
+  await expect(editor).toHaveAttribute("data-ready", "true", { timeout: 20_000 });
+
+  await page.getByRole("button", { name: new RegExp(`Lot ${number}`) }).click();
+  await expect(page.getByRole("heading", { name: `Lot ${number}` })).toBeVisible();
+  await page.getByRole("button", { name: "Draw shape" }).click();
+
+  // Four corners around the middle of the map, then Enter to close the shape.
+  await editor.scrollIntoViewIfNeeded();
+  const box = await editor.boundingBox();
+  if (!box) throw new Error("map editor has no size");
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  for (const [dx, dy] of [
+    [-40, -30],
+    [40, -30],
+    [40, 30],
+    [-40, 30],
+  ] as const) {
+    await page.mouse.click(cx + dx, cy + dy);
+  }
+  await page.keyboard.press("Enter");
+  await page.getByRole("button", { name: "Save shape" }).click();
+  await expect(page.getByText(new RegExp(`Saved lot ${number}: [0-9.]+ ac`))).toBeVisible();
+
+  // Stored in PostGIS: the map endpoint returns it as a MultiPolygon with acreage.
+  const saved = (await (
+    await page.request.get(`/v1/tenants/${DEMO_TENANT_ID}/subdivisions/${juniper.id}/map`)
+  ).json()) as { lots: { id: string; acreage: number | null; boundary: { type: string } | null }[] };
+  const lot = saved.lots.find((candidate) => candidate.id === lotId);
+  expect(lot?.boundary?.type).toBe("MultiPolygon");
+  expect(lot?.acreage).toBeGreaterThan(0);
+
+  // Rendered on the public map.
+  await page.goto(`/${juniper.slug}`);
+  const publicMap = page.getByRole("region", { name: "Map of lots" });
+  await expect
+    .poll(async () => (await publicMap.getAttribute("data-rendered-lots"))?.split(",") ?? [], {
+      timeout: 20_000,
+    })
+    .toContain(number);
+  await expect(page.getByText(`Lot ${number}`, { exact: true })).toBeVisible();
+});
+
+test("owner imports a lot shape from GeoJSON", async ({ page }, testInfo) => {
+  const number = `I-${viewport(testInfo.project.name)}`;
+  const lotId = await newLot(page, number);
+  const juniper = await juniperBench(page);
+  const mapUrl = `/v1/tenants/${DEMO_TENANT_ID}/subdivisions/${juniper.id}/map`;
+  const { center } = (await (await page.request.get(mapUrl)).json()) as { center: [number, number] };
+  const [lng, lat] = center;
+  const ring = [
+    [lng, lat],
+    [lng + 0.0005, lat],
+    [lng + 0.0005, lat + 0.0004],
+    [lng, lat + 0.0004],
+    [lng, lat],
+  ];
+  const geojson = {
+    type: "FeatureCollection",
+    features: [
+      { type: "Feature", properties: { LOT: `Lot ${number}` }, geometry: { type: "Polygon", coordinates: [ring] } },
+    ],
+  };
+
+  await page.goto(`/app/${DEMO_TENANT_ID}/subdivisions/${juniper.id}/map`);
+  await page.getByLabel("GeoJSON file").setInputFiles({
+    name: "lots.geojson",
+    mimeType: "application/geo+json",
+    buffer: Buffer.from(JSON.stringify(geojson)),
+  });
+  const row = page.getByRole("row", { name: new RegExp(number) });
+  await expect(row.getByText("Update")).toBeVisible();
+  await page.getByRole("button", { name: "Apply import (1)" }).click();
+  await expect(page.getByText("Imported 1 shape.")).toBeVisible();
+
+  const after = (await (await page.request.get(mapUrl)).json()) as {
+    lots: { id: string; boundary: unknown }[];
+  };
+  expect(after.lots.find((lot) => lot.id === lotId)?.boundary).not.toBeNull();
+
+});
+
+test("owner adds a plat image and removes it", async ({ page }, testInfo) => {
+  page.on("dialog", (dialog) => void dialog.accept());
+  // A subdivision of its own: there is one plat per subdivision, and viewports run in parallel.
+  const created = await page.request.post(`/v1/tenants/${DEMO_TENANT_ID}/subdivisions`, {
+    data: {
+      name: `Plat ${viewport(testInfo.project.name)}`,
+      slug: `plat-${viewport(testInfo.project.name)}`,
+      time_zone: "America/Boise",
+      latitude: 43.4,
+      longitude: -116.4,
+    },
+  });
+  expect(created.status()).toBe(201);
+  const { id } = (await created.json()) as { id: string };
+
+  await page.goto(`/app/${DEMO_TENANT_ID}/subdivisions/${id}/map`);
+  await expect(page.getByRole("region", { name: "Map editor" })).toHaveAttribute(
+    "data-ready",
+    "true",
+    { timeout: 20_000 },
+  );
+  await page.getByLabel("Add plat image").setInputFiles({
+    name: "plat.png",
+    mimeType: "image/png",
+    buffer: PNG,
+  });
+  await expect(page.getByText("Plat added.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Line up plat" })).toBeVisible();
+  await expect(page.getByLabel(/See-through/)).toBeVisible();
+
+  await page.getByRole("button", { name: "Remove plat" }).click();
+  await expect(page.getByText("Plat removed.")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Line up plat" })).toHaveCount(0);
 });

@@ -10,7 +10,13 @@ const config = [
     },
   },
   {
-    ignores: [".next/**", "next-env.d.ts", "playwright-report/**", "test-results/**"],
+    ignores: [
+      ".next/**",
+      "next-env.d.ts",
+      "playwright-report/**",
+      "test-results/**",
+      "public/maplibre/**",
+    ],
   },
 ];
 

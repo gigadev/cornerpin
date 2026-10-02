@@ -1,0 +1,45 @@
+"""
+A GeoJSON geometry in longitude/latitude (WGS 84); lots are MultiPolygons.
+"""
+scalar GeoJSON
+
+enum ListingType {
+  LAND_ONLY
+  LOT_AND_HOME
+}
+
+enum LotStatus {
+  AVAILABLE
+  ON_HOLD
+  SOLD
+}
+
+"""A published lot."""
+type PublicLot {
+  id: ID!
+  number: String!
+  status: LotStatus!
+  listingType: ListingType!
+
+  """Whole dollars; null when not priced yet."""
+  price: Int
+  acreage: Float
+  boundary: GeoJSON
+}
+
+"""A published subdivision."""
+type PublicSubdivision {
+  slug: String!
+  name: String!
+  description: String!
+  timeZone: String!
+
+  """[longitude, latitude]"""
+  center: [Float!]!
+  lots: [PublicLot!]!
+}
+
+type Query {
+  """A published subdivision by its web address, or null."""
+  subdivision(slug: String!): PublicSubdivision
+}
