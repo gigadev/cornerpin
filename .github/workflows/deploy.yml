@@ -82,7 +82,7 @@ jobs:
       - name: Smoke check
         run: |
           # /v1/health goes through the web app to the private API: the whole chain works.
-          for path in /v1/health /juniper-bench /juniper-bench/lots/7 /serwist/sw.js; do
+          for path in /v1/health /juniper-bench /juniper-bench/lots/2-5 /serwist/sw.js; do
             curl --fail --silent --show-error --retry 5 --retry-all-errors --retry-delay 5 \
               --output /dev/null "$SMOKE_URL$path"
             echo "ok $path"
