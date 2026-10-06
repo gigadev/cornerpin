@@ -11,7 +11,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 
 from cornerpin.core.db import user_session
-from cornerpin.core.outbox import process_pending
+from cornerpin.core.outbox import drain
 from cornerpin.core.storage import get_storage
 from cornerpin.listings import media_routes
 
@@ -209,7 +209,7 @@ def test_deleted_photo_file_is_removed_by_the_outbox(
     assert alpha_owner.get(photo["url"]).status_code == 404
     assert get_storage().get(key)  # still there until the outbox runs
 
-    process_pending()
+    drain()  # everything due, whatever earlier tests queued
     with pytest.raises(FileNotFoundError):
         get_storage().get(key)
 
@@ -277,7 +277,7 @@ def test_deleting_a_lot_removes_its_files(
     assert len(keys) == 2
 
     assert alpha_owner.delete(f"{base(alpha)}/lots/{lot}").status_code == 204
-    process_pending()
+    drain()  # everything due, whatever earlier tests queued
     for key in keys:
         with pytest.raises(FileNotFoundError):
             get_storage().get(key)

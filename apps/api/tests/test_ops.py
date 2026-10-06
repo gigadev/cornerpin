@@ -4,18 +4,23 @@ bypass row-level security, as on Neon, and leave RLS forced afterwards."""
 from collections.abc import Iterator
 
 import pytest
+from alembic import command
+from alembic.config import Config
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
 from cornerpin import ops
-from cornerpin.core.config import get_settings
+from cornerpin.core.config import REPO_ROOT, get_settings
 from cornerpin.seed import DEMO_SLUG
 
-from .conftest import TEST_API_URL, TEST_OWNER_URL, Databases
+from .conftest import TEST_API_URL, TEST_OWNER_URL, Databases, build_tenant
 
 OPS_DATABASE = "cornerpin_ops"
 OPS_OWNER = "cornerpin_ops_owner"
-APP_ROLES = "cornerpin_user, cornerpin_public, cornerpin_api, cornerpin_auth, cornerpin_worker"
+APP_ROLES = (
+    "cornerpin_user, cornerpin_public, cornerpin_api, cornerpin_auth, cornerpin_worker,"
+    " cornerpin_leads"
+)
 
 
 @pytest.fixture(scope="module")
@@ -76,14 +81,49 @@ def forced_tables(url: URL) -> set[str]:
 def test_migrate_seed_and_create_a_tenant_as_a_plain_owner(
     ops_env: URL, capsys: pytest.CaptureFixture[str]
 ) -> None:
+    # Production had buyer activity before leads existed (P2-01): migrate to just before them,
+    # add some, then the rest of the way, and the activity becomes leads.
+    command.upgrade(Config(str(REPO_ROOT / "alembic.ini")), "0010")
+    superuser = create_engine(TEST_OWNER_URL.set(database=OPS_DATABASE))
+    with superuser.begin() as conn:
+        earlier = build_tenant(conn, "earlier")
+        conn.execute(
+            text(
+                "INSERT INTO inquiries (tenant_id, lot_id, name, email, message)"
+                " VALUES (:t, :l, 'Walk-in', 'walkin@example.test', 'Still available?')"
+            ),
+            {"t": earlier.tenant_id, "l": earlier.lot_id},
+        )
+        conn.execute(
+            text(
+                "UPDATE hold_requests SET status = 'approved', decided_by = :o,"
+                " decided_at = now() + interval '1 minute' WHERE tenant_id = :t"
+            ),
+            {"t": earlier.tenant_id, "o": earlier.owner_id},
+        )
     ops.migrate()
+    with superuser.connect() as conn:
+        leads = conn.execute(
+            text(
+                "SELECT l.email::text, l.stage::text, l.user_id IS NOT NULL,"
+                " array_agg(e.kind::text ORDER BY e.created_at, e.kind::text)"
+                " FROM leads l JOIN lead_events e ON e.lead_id = l.id WHERE l.tenant_id = :t"
+                " GROUP BY l.id ORDER BY l.email"
+            ),
+            {"t": earlier.tenant_id},
+        ).all()
+    assert [tuple(lead) for lead in leads] == [
+        ("buyer@earlier.test", "holding", True,
+         ["consent_changed", "hold_requested", "inquiry", "hold_approved"]),
+        ("walkin@example.test", "new", False, ["inquiry"]),
+    ]  # fmt: skip
     forced = forced_tables(ops_env)
     assert {"lots", "tenants", "memberships", "contact_consents"} <= forced
 
     ops.check()
     report = capsys.readouterr().out
     assert "owner bypasses RLS: False" in report
-    assert "migration: 0010" in report
+    assert "migration: 0011" in report
 
     ops.seed_demo("demo-owner@example.test")
     tenant_id = ops.create_tenant("Ricky's Land Co.", "ricky@example.test", "Ricky")
@@ -91,7 +131,6 @@ def test_migrate_seed_and_create_a_tenant_as_a_plain_owner(
         ops.create_tenant("ricky's land co.", "someone@example.test", None)
 
     assert forced_tables(ops_env) == forced  # RLS is forced again afterwards
-    superuser = create_engine(TEST_OWNER_URL.set(database=OPS_DATABASE))
     with superuser.connect() as conn:
         lots = conn.execute(
             text(

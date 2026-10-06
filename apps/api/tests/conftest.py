@@ -152,10 +152,31 @@ def build_tenant(conn: Connection, label: str) -> TenantData:
     )
 
 
+def add_outreach_rows(conn: Connection, tenant: TenantData) -> None:
+    """Rows for the Phase 2 tables a tenant's activity doesn't fill (the inquiry above makes the
+    lead and its events). Separate from build_tenant, which also builds pre-0011 databases."""
+    params = {"t": tenant.tenant_id, "b": tenant.buyer_id}
+    conn.execute(
+        text(
+            "INSERT INTO outreach_messages (tenant_id, lead_id, channel, direction, status, body)"
+            " SELECT tenant_id, id, 'email', 'outbound', 'sent', 'Hello' FROM leads"
+            " WHERE tenant_id = :t AND user_id = :b"
+        ),
+        params,
+    )
+    conn.execute(
+        text("INSERT INTO integration_connections (tenant_id, provider) VALUES (:t, 'slack')"),
+        params,
+    )
+
+
 @pytest.fixture(scope="session")
 def tenants(db: Databases) -> tuple[TenantData, TenantData]:
     with db.owner.begin() as conn:
-        return build_tenant(conn, "alpha"), build_tenant(conn, "bravo")
+        built = build_tenant(conn, "alpha"), build_tenant(conn, "bravo")
+        for tenant in built:
+            add_outreach_rows(conn, tenant)
+        return built
 
 
 @pytest.fixture
