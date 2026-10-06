@@ -17,6 +17,7 @@ stays switched off until a Google client id exists.
 | Unsubscribe from an owner's outreach | The "Stop these emails" link in an outreach email (`/unsubscribe?token=…`) |
 | Play a buyer replying to outreach (local only) | `POST http://localhost:8000/v1/dev/inbound-email` with `to` set to the email's Reply-To (needs `INBOUND_EMAIL_DOMAIN=reply.cornerpin.test` in `.env`) |
 | Send a tenant's Slack alerts to a real channel (local only) | `POST http://localhost:8000/v1/dev/integrations/slack` with `{"tenant_id": "957ccd5e-b6d1-531f-a102-ddef309c396e", "webhook_url": "<an incoming webhook made in the Slack app>"}`; Integrations in the portal then shows it. New leads, hold requests and handoffs post there |
+| Sync a tenant to a real Salesforce org (works locally) | Integrations → Salesforce in the owner portal, with a Developer Edition org's My Domain and an External Client App's consumer key and secret; [INTEGRATIONS.md](INTEGRATIONS.md) has the steps. Leads, approved holds and lots then appear in the org |
 | Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
 | Public page for a lot | http://localhost:3300/juniper-bench/lots/2-5 |
@@ -164,7 +165,8 @@ Mailpit. By default the model's replies come from `evals/recordings/`, which cos
 
 Production (https://cornerpin.app) has no test accounts and refuses `.test` addresses. How it's
 set up, and the commands for seeding the demo and creating tenants, are in
-[DEPLOY.md](DEPLOY.md).
+[DEPLOY.md](DEPLOY.md). Its Phase 2 gate uses a buyer address of your own; the dev-only routes
+(`/v1/dev/inbound-email`, `/v1/dev/integrations/slack`) don't exist there.
 
 ## Keys and settings that are test-only
 

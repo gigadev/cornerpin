@@ -9,7 +9,7 @@ import {
   type Page,
 } from "@playwright/test";
 import { PNG } from "pngjs";
-import { DEMO_TENANT_ID, clearInbox, signInLink } from "../e2e/fixtures";
+import { API_URL, DEMO_TENANT_ID, clearInbox, signInLink } from "../e2e/fixtures";
 
 // Takes the screenshots in public/walkthrough/, used by the in-app guide (/help) and by
 // docs/WALKTHROUGH.md, and records their sizes in lib/walkthrough-shots.json. Run with
@@ -278,6 +278,23 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await expect(timeline).toContainText("walking the lot Saturday");
   await expect(owner.getByLabel("Add a note")).toHaveValue("");
   await shot(owner, "33-portal-lead", true);
+
+  // Integrations (P2-07, P2-08): Slack connected the local way, to a webhook nobody listens on
+  // (the stack has no Slack app), and Salesforce waiting for an org's details.
+  const slack = await request.post(`${API_URL}/v1/dev/integrations/slack`, {
+    data: {
+      tenant_id: DEMO_TENANT_ID,
+      webhook_url: "http://127.0.0.1:9/walkthrough-slack",
+      team_name: "Demo Land Co.",
+      channel: "#new-leads",
+    },
+  });
+  expect(slack.status()).toBe(204);
+  await owner.goto(`/app/${DEMO_TENANT_ID}/integrations`);
+  await expect(owner.getByText("Connected. Alerts on: #new-leads")).toBeVisible();
+  await shot(owner, "34-portal-integrations", true);
+  await owner.getByRole("region", { name: "Slack" }).getByRole("button", { name: "Disconnect" }).click();
+  await expect(owner.getByText("Slack isn't set up on this Cornerpin yet.")).toBeVisible();
 
   // A price change emails the buyer who saved the lot.
   await owner.goto(lot8Url);

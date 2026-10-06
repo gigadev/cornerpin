@@ -189,6 +189,9 @@ def alert_text(activity: Activity) -> str | None:
 class SlackAdapter:
     provider = PROVIDER
 
+    def wants(self, activity: Activity) -> bool:
+        return alert_text(activity) is not None
+
     def deliver(self, connection: Connection, activity: Activity) -> None:
         message = alert_text(activity)
         if message is None:

@@ -328,6 +328,22 @@ decisions, contact permissions, stage changes and notes, each with who and when.
 stage or add a note on the left; notes are seen only by your organization. Approving a hold
 moves the lead to **Holding** by itself.
 
+### Integrations
+
+![Integrations](../apps/web/public/walkthrough/34-portal-integrations.png)
+
+**Integrations** connects the organization to Slack and Salesforce
+([docs/INTEGRATIONS.md](INTEGRATIONS.md) has the setup for each).
+
+- **Slack:** **Add to Slack** picks a channel. New leads, hold requests and leads that need a
+  person post there, and `/lot Juniper Bench 2-6` in Slack answers with that lot's status and
+  price. **Turn alerts off** keeps `/lot` working.
+- **Salesforce:** enter the org's My Domain and an External Client App's key and secret. Each
+  lead becomes a Lead that follows its stage, an approved hold opens an Opportunity, and every
+  lot is a Product with its status and price.
+
+Credentials are stored encrypted and never shown again; **Disconnect** forgets them.
+
 ---
 
 ## 6. Email
@@ -346,6 +362,21 @@ Sent to every owner and staff member of the organization. Replying goes straight
 
 When an owner changes a published lot's status or price (or approves a hold on it), each buyer
 who saved it and kept alerts on gets exactly one email. Here the owner dropped lot 2-6's price.
+
+### From the assistant, to buyers who allowed email
+
+When a signed-in buyer asks about a lot and ticks **Email**, Cornerpin's assistant writes to
+them about 15 minutes later ([ADR-038](adr/038-outreach-agent.md)). It looks the lot up first
+and quotes only what the listing says: price, status, size, the home. Anything else goes to the
+owner's **Needs a person** inbox: financing, offers, a visit, or "please stop". The email ends
+by saying it's automated, and with a link to stop.
+
+When the buyer replies, the reply lands on their lead's timeline and the assistant answers it,
+until a person takes over or it has sent five. Every lookup it made and every email it sent are
+on the timeline too.
+
+Locally this needs `ANTHROPIC_API_KEY` in `.env`, and only sends between 9:00 and 20:00 in the
+buyer's time zone. TEST_ACCOUNTS.md shows how to play a buyer's reply.
 
 ---
 

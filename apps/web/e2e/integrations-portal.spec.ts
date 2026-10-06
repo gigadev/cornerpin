@@ -35,3 +35,18 @@ test("an owner sees Slack's connection, switches its alerts off and disconnects 
   await slack.getByRole("button", { name: "Disconnect" }).click();
   await expect(slack).toContainText("Slack isn't set up on this Cornerpin yet.");
 });
+
+// P2-08: Salesforce takes an org's credentials, and only for a Salesforce My Domain, so a
+// mistyped address never receives the secret. (Connecting for real needs an org: P2-10.)
+test("Salesforce asks for an org's My Domain and refuses any other address", async ({ page }) => {
+  await page.goto(`/app/${DEMO_TENANT_ID}/integrations`);
+  const salesforce = page.getByRole("region", { name: "Salesforce" });
+  await expect(salesforce).toContainText("Not connected.");
+  const form = salesforce.getByRole("form", { name: "Connect Salesforce" });
+  await form.getByLabel("My Domain").fill("login.example.com");
+  await form.getByLabel("Consumer key").fill("3MVG9-not-a-real-key");
+  await form.getByLabel("Consumer secret").fill("not-a-real-secret");
+  await form.getByRole("button", { name: "Connect Salesforce" }).click();
+  await expect(form.getByRole("alert")).toContainText("Enter your org's My Domain");
+  await expect(salesforce).toContainText("Not connected.");
+});

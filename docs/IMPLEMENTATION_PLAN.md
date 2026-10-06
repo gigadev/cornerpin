@@ -108,6 +108,8 @@ been walked on cornerpin.app.
 
 **Order.** P2-01 → P2-02. P2-03 → P2-04 → P2-05 → P2-06. P2-07 and P2-08 need only P2-01 and
 can be slotted in anywhere. P2-09 waits for Twilio and can land whenever registration clears.
+On 2026-10-06 Scott deferred P2-09 to avoid Twilio's fees for now: Phase 2 ships email-only
+outreach, and P2-10 goes ahead without it.
 P2-10 is last.
 
 **Costs (ADR-016).** Slack and Salesforce Developer Edition are free. The Claude API is pay as

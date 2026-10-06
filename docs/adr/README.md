@@ -51,6 +51,8 @@ not started yet is still binding: it describes how that part will be built.
 | [038](038-outreach-agent.md) | The outreach agent: model, tools, cadence and guardrails | P2-05 | Accepted |
 | [039](039-agent-evals.md) | Agent evals: recorded on a live run, replayed on every push | P2-06 | Accepted |
 | [040](040-integration-credentials-and-slack.md) | Integration credentials live sealed in the database; Slack connects by OAuth | P2-07 | Accepted |
+| [041](041-salesforce-sync.md) | Salesforce sync: client credentials, upserts on Cornerpin IDs, fields made on connect | P2-08 | Accepted |
+| [042](042-phase-2-in-production.md) | Phase 2 in production: each feature switched on by its secret | P2-10 | Accepted |
 
 ## Adding a decision
 

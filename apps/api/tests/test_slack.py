@@ -117,6 +117,10 @@ def command(client: TestClient, words: str, *, team: str = TEAM, **sign: Any) ->
     )
 
 
+def slack_of(integrations: list[dict[str, Any]]) -> dict[str, Any]:
+    return next(i for i in integrations if i["provider"] == "slack")
+
+
 def slug_of(db: Databases, listing: Listing) -> str:
     with db.owner.connect() as conn:
         slug: str = conn.execute(
@@ -172,6 +176,13 @@ def test_alerts_escape_what_buyers_wrote() -> None:
         lot="Lot 1, Buyers",
         lot_url="http://localhost:3300/buyers/lots/1",
         lead_url="http://localhost:3300/app/t/leads/l",
+        name="Pat <@channel>",
+        email="pat@example.test",
+        phone=None,
+        stage="new",
+        hold_request_id=None,
+        lot_price=None,
+        decided_at=None,
     )
     assert slack.alert_text(lead) == (
         "*New lead:* Pat &lt;@channel&gt; (email not verified) asked about"
@@ -191,7 +202,7 @@ def test_slack_is_dormant_until_it_is_set_up(
     alpha_owner: TestClient, tenants: tuple[TenantData, TenantData]
 ) -> None:
     base = f"/v1/tenants/{tenants[0].tenant_id}/integrations"
-    [listed] = alpha_owner.get(base).json()
+    listed = slack_of(alpha_owner.get(base).json())
     assert (listed["provider"], listed["available"]) == ("slack", False)
     assert alpha_owner.get(f"{base}/slack/install", follow_redirects=False).status_code == 404
     assert alpha_owner.post("/v1/integrations/slack/commands", content="").status_code == 404
@@ -218,16 +229,16 @@ def test_an_owner_adds_slack_and_never_sees_its_secret(
     assert back.status_code == 303
     page = f"/app/{alpha.tenant_id}/integrations?slack=connecting"
     assert back.headers["location"].endswith(page)
-    [connecting] = alpha_owner.get(base).json()
+    connecting = slack_of(alpha_owner.get(base).json())
     assert connecting["status"] == "connecting"
 
     drain()  # the worker exchanges the code
     assert fake_slack.codes == ["one-time-code"]
-    [connected] = alpha_owner.get(base).json()
-    assert {k: connected[k] for k in ("status", "enabled", "workspace", "channel")} == {
+    connected = slack_of(alpha_owner.get(base).json())
+    assert {k: connected[k] for k in ("status", "enabled", "account", "channel")} == {
         "status": "connected",
         "enabled": True,
-        "workspace": "Demo Land Co.",
+        "account": "Demo Land Co.",
         "channel": "#lots",
     }
     assert "secret" not in connected and WEBHOOK not in str(connected)
@@ -257,7 +268,7 @@ def test_an_owner_adds_slack_and_never_sees_its_secret(
     # Switched off, then removed.
     assert alpha_owner.patch(f"{base}/slack", json={"enabled": False}).json()["enabled"] is False
     assert alpha_owner.delete(f"{base}/slack").status_code == 204
-    assert alpha_owner.get(base).json()[0]["status"] == "not_connected"
+    assert slack_of(alpha_owner.get(base).json())["status"] == "not_connected"
     with db.owner.begin() as conn:  # put back the row the fixtures expect
         conn.execute(
             text("INSERT INTO integration_connections (tenant_id, provider) VALUES (:t, 'slack')"),
@@ -373,7 +384,9 @@ def test_a_dead_webhook_marks_the_connection_failed(
     with caplog.at_level(logging.WARNING):
         inquire(buyer, listing, allow_email=False)
         drain()
-    [slack_row] = alpha_owner.get(f"/v1/tenants/{listing.tenant.tenant_id}/integrations").json()
+    slack_row = slack_of(
+        alpha_owner.get(f"/v1/tenants/{listing.tenant.tenant_id}/integrations").json()
+    )
     assert slack_row["status"] == "failed"
     assert slack_row["error"] == "Slack stopped accepting alerts (no_service). Add it again."
     assert "slack connection" in caplog.text

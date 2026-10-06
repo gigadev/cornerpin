@@ -5,3 +5,7 @@ turnstile_site_key = "0x4AAAA..."
 # Optional:
 # vapid_public_key = "B..."   # from `uv run python -m cornerpin.devtools vapid-keys`
 # email_from       = "Cornerpin <hello@cornerpin.app>"
+# Phase 2 (ADR-042); set each only after its secrets are in (set-secrets.sh <project> phase2):
+# agent_enabled        = true                    # anthropic-api-key
+# inbound_email_domain = "reply.cornerpin.app"   # resend-webhook-secret, and Resend's MX record
+# slack_client_id      = "1234567890.1234567890" # slack-client-secret, slack-signing-secret

@@ -129,8 +129,10 @@ class Settings(BaseSettings):
             problems.append("SECRET_KEY must be set")
         if TURNSTILE_TEST_SECRET_KEY in (self.turnstile_secret_key, self.turnstile_site_key):
             problems.append("Turnstile test keys are for local use only")
-        if self.slack_enabled and self.integrations_key == LOCAL_INTEGRATIONS_KEY:
-            problems.append("INTEGRATIONS_KEY must be set to connect integrations")
+        # Salesforce can be connected without any app-level setting, so the key is required
+        # whenever the app runs outside local, not only once Slack is configured.
+        if self.integrations_key == LOCAL_INTEGRATIONS_KEY:
+            problems.append("INTEGRATIONS_KEY must be set")
         if self.storage_backend == "gcs" and not self.storage_bucket:
             problems.append("STORAGE_BUCKET must be set for the gcs storage backend")
         if self.email_backend == "resend" and not self.resend_api_key:

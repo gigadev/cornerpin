@@ -10,6 +10,7 @@ from sqlalchemy import Row, text
 from sqlalchemy.orm import Session
 
 from cornerpin.core.auth.deps import SignedInUser
+from cornerpin.core.outbox import expect_events
 from cornerpin.core.tenancy import tenant_session
 from cornerpin.leads.consent import allowed_channels_sql
 from cornerpin.leads.schemas import (
@@ -167,6 +168,7 @@ def update_lead(tenant_id: UUID, lead_id: UUID, body: LeadUpdate, user: SignedIn
         ).first()
         if changed is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
+        expect_events(session)  # the change is queued for integrations by trigger (ADR-041)
         return _detail(session, lead_id)
 
 

@@ -478,7 +478,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/tenants/{tenant_id}/integrations/slack": {
+    "/v1/tenants/{tenant_id}/integrations/salesforce": {
         parameters: {
             query?: never;
             header?: never;
@@ -487,20 +487,16 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        post?: never;
         /**
-         * Remove Slack
-         * @description Forget the connection and its webhook. Removing the app from the workspace is done in
-         *     Slack.
+         * Connect Salesforce
+         * @description Store the org's credentials, sealed, and queue the connection: the worker signs in, sets
+         *     the org up and sends the lots. Replaces an earlier connection's credentials.
          */
-        delete: operations["remove_slack_v1_tenants__tenant_id__integrations_slack_delete"];
+        post: operations["connect_salesforce_v1_tenants__tenant_id__integrations_salesforce_post"];
+        delete?: never;
         options?: never;
         head?: never;
-        /**
-         * Update Slack
-         * @description Switch alerts on or off; the connection stays.
-         */
-        patch: operations["update_slack_v1_tenants__tenant_id__integrations_slack_patch"];
+        patch?: never;
         trace?: never;
     };
     "/v1/tenants/{tenant_id}/integrations/slack/install": {
@@ -521,6 +517,31 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/integrations/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Integration
+         * @description Forget the connection and its credentials. Removing Cornerpin's app from the Slack
+         *     workspace or the Salesforce org is done there.
+         */
+        delete: operations["remove_integration_v1_tenants__tenant_id__integrations__provider__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Integration
+         * @description Switch alerts or syncing on or off; the connection stays.
+         */
+        patch: operations["update_integration_v1_tenants__tenant_id__integrations__provider__patch"];
         trace?: never;
     };
     "/v1/tenants/{tenant_id}/leads": {
@@ -1356,15 +1377,23 @@ export interface components {
         /** Integration */
         Integration: {
             /**
+             * Account
+             * @description The Slack workspace, or the Salesforce org's domain
+             */
+            account: string | null;
+            /**
              * Available
              * @description Set up on this Cornerpin, so it can be connected
              */
             available: boolean;
-            /** Channel */
+            /**
+             * Channel
+             * @description Where Slack alerts go
+             */
             channel: string | null;
             /**
              * Enabled
-             * @description Alerts are on
+             * @description Alerts (Slack) or syncing (Salesforce) are on
              */
             enabled: boolean;
             /**
@@ -1374,16 +1403,14 @@ export interface components {
             error: string | null;
             /**
              * Provider
-             * @constant
+             * @enum {string}
              */
-            provider: "slack";
+            provider: "slack" | "salesforce";
             /**
              * Status
              * @enum {string}
              */
             status: "not_connected" | "connecting" | "connected" | "failed";
-            /** Workspace */
-            workspace: string | null;
         };
         /** IntegrationUpdate */
         IntegrationUpdate: {
@@ -1982,6 +2009,19 @@ export interface components {
          * @enum {string}
          */
         ReleaseStatus: "upcoming" | "released";
+        /**
+         * SalesforceCredentials
+         * @description From the owner's External Client App: its consumer key and secret, and the org's My
+         *     Domain.
+         */
+        SalesforceCredentials: {
+            /** Client Id */
+            client_id: string;
+            /** Client Secret */
+            client_secret: string;
+            /** Domain */
+            domain: string;
+        };
         /** SavedLot */
         SavedLot: {
             /**
@@ -3291,45 +3331,7 @@ export interface operations {
             };
         };
     };
-    remove_slack_v1_tenants__tenant_id__integrations_slack_delete: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                tenant_id: string;
-            };
-            cookie?: {
-                __session?: string | null;
-            };
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Not found, or not your tenant */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    update_slack_v1_tenants__tenant_id__integrations_slack_patch: {
+    connect_salesforce_v1_tenants__tenant_id__integrations_salesforce_post: {
         parameters: {
             query?: never;
             header?: never;
@@ -3342,12 +3344,12 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["IntegrationUpdate"];
+                "application/json": components["schemas"]["SalesforceCredentials"];
             };
         };
         responses: {
             /** @description Successful Response */
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -3393,6 +3395,90 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_integration_v1_tenants__tenant_id__integrations__provider__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                provider: "slack" | "salesforce";
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_integration_v1_tenants__tenant_id__integrations__provider__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                provider: "slack" | "salesforce";
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntegrationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"];
                 };
             };
             /** @description Not found, or not your tenant */

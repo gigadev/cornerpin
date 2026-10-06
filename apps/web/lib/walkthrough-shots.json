@@ -126,5 +126,9 @@
   "33-portal-lead": {
     "width": 1280,
     "height": 800
+  },
+  "34-portal-integrations": {
+    "width": 1280,
+    "height": 860
   }
 }

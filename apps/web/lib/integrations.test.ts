@@ -1,13 +1,29 @@
 import { describe, expect, it } from "vitest";
-import { installNotice, slackSummary, type Integration } from "./integrations";
+import {
+  installNotice,
+  salesforceSummary,
+  slackSummary,
+  toggleLabel,
+  type Integration,
+} from "./integrations";
 
 const slack: Integration = {
   provider: "slack",
   available: true,
   status: "connected",
   enabled: true,
-  workspace: "Demo Land Co.",
+  account: "Demo Land Co.",
   channel: "#lots",
+  error: null,
+};
+
+const salesforce: Integration = {
+  provider: "salesforce",
+  available: true,
+  status: "connected",
+  enabled: true,
+  account: "cornerpin-dev.develop.my.salesforce.com",
+  channel: null,
   error: null,
 };
 
@@ -17,7 +33,7 @@ describe("slackSummary", () => {
     expect(slackSummary({ ...slack, enabled: false })).toBe(
       "Connected. Alerts off (/lot still answers): #lots in Demo Land Co.",
     );
-    expect(slackSummary({ ...slack, channel: null, workspace: null })).toBe(
+    expect(slackSummary({ ...slack, channel: null, account: null })).toBe(
       "Connected. Alerts on.",
     );
   });
@@ -31,6 +47,24 @@ describe("slackSummary", () => {
     expect(slackSummary({ ...slack, status: "not_connected", available: false })).toBe(
       "Slack isn't set up on this Cornerpin yet.",
     );
+  });
+});
+
+describe("salesforceSummary", () => {
+  it("names the org and whether it's syncing", () => {
+    expect(salesforceSummary(salesforce)).toBe(
+      "Connected. Syncing: cornerpin-dev.develop.my.salesforce.com",
+    );
+    expect(salesforceSummary({ ...salesforce, enabled: false })).toMatch(/^Connected\. Syncing is off/);
+    expect(salesforceSummary({ ...salesforce, status: "connecting" })).toMatch(/sending your lots/);
+    expect(salesforceSummary({ ...salesforce, status: "failed", error: "Bad key" })).toBe(
+      "Bad key",
+    );
+  });
+
+  it("labels the switch for each integration", () => {
+    expect(toggleLabel("slack", true)).toBe("Turn alerts off");
+    expect(toggleLabel("salesforce", false)).toBe("Turn syncing on");
   });
 });
 

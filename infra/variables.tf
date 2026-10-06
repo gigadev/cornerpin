@@ -54,3 +54,29 @@ variable "placeholder_image" {
   type        = string
   default     = "us-docker.pkg.dev/cloudrun/container/hello"
 }
+
+# --- Phase 2 (ADR-042). Each is off until its secrets are in Secret Manager. ---
+
+variable "agent_enabled" {
+  description = "Run the outreach agent; needs the anthropic-api-key secret (ADR-038)."
+  type        = bool
+  default     = false
+}
+
+variable "agent_model" {
+  description = "Claude model the outreach agent uses (ADR-038)."
+  type        = string
+  default     = "claude-sonnet-5-5"
+}
+
+variable "inbound_email_domain" {
+  description = "Subdomain whose mail Resend receives for replies, e.g. reply.cornerpin.app; needs the resend-webhook-secret secret (ADR-037). Empty: replies go to the owner."
+  type        = string
+  default     = ""
+}
+
+variable "slack_client_id" {
+  description = "Cornerpin's Slack app's client ID (public); needs the slack-client-secret and slack-signing-secret secrets (ADR-040). Empty: Slack stays off."
+  type        = string
+  default     = ""
+}
