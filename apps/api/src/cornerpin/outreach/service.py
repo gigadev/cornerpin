@@ -14,11 +14,13 @@ from uuid import UUID
 from sqlalchemy import Row, text
 from sqlalchemy.orm import Session
 
+from cornerpin.core.config import get_settings
 from cornerpin.core.outbox import enqueue
 from cornerpin.leads.schemas import Channel
 from cornerpin.outreach import policy
 from cornerpin.outreach.channels import ADAPTERS, Outbound
 from cornerpin.outreach.events import OutreachSend
+from cornerpin.outreach.replies import reply_address
 
 MESSAGE = """
     SELECT m.id, m.tenant_id, m.lead_id, m.channel::text AS channel, m.status::text AS status,
@@ -52,7 +54,7 @@ SENT_SINCE = """
     WHERE tenant_id = :tenant AND status = 'sent' AND sent_at > :since
 """
 
-# Replies go to the tenant's first owner until replies are read by Cornerpin (P2-04).
+# Where replies go while Cornerpin doesn't receive email itself (ADR-037).
 OWNER_EMAIL = """
     SELECT u.email FROM memberships m JOIN users u ON u.id = m.user_id
     WHERE m.tenant_id = :tenant AND m.role = 'owner'
@@ -117,6 +119,18 @@ def _time_zone(session: Session, row: Row[Any]) -> str | None:
     return found
 
 
+def _reply_to(session: Session, row: Row[Any]) -> str | None:
+    """A reply address that brings the answer back to this lead (ADR-037), or, until Cornerpin
+    receives email, the owner's own address."""
+    domain = get_settings().inbound_email_domain
+    if domain:
+        return reply_address(row.id, domain)
+    owner: str | None = session.execute(
+        text(OWNER_EMAIL), {"tenant": row.tenant_id}
+    ).scalar_one_or_none()
+    return owner
+
+
 def deliver(session: Session, message_id: UUID, now: datetime) -> None:
     """Send a queued message if it may go now; wait for sending hours, or refuse."""
     row = session.execute(text(MESSAGE), {"id": message_id}).one_or_none()
@@ -154,9 +168,7 @@ def deliver(session: Session, message_id: UUID, now: datetime) -> None:
             to_phone=row.phone,
             subject=row.subject,
             body=row.body,
-            reply_to=session.execute(
-                text(OWNER_EMAIL), {"tenant": row.tenant_id}
-            ).scalar_one_or_none(),
+            reply_to=_reply_to(session, row),
         )
     )
     session.execute(

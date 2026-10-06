@@ -64,6 +64,8 @@ describe("outreach messages", () => {
     expect(
       describeEvent({ ...sent, kind: "message_refused", reason: "opted_out", subject: "Hi" }),
     ).toEqual({ title: "Not sent: they opted out", body: "Hi" });
+    const reply = { ...sent, kind: "message_received", by_buyer: true, message: "Yes, 10?" };
+    expect(describeEvent(reply as LeadEvent)).toEqual({ title: "Replied", body: "Yes, 10?" });
   });
 });
 

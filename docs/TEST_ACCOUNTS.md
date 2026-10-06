@@ -15,6 +15,7 @@ stays switched off until a Google client id exists.
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
 | Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
 | Unsubscribe from an owner's outreach | The "Stop these emails" link in an outreach email (`/unsubscribe?token=…`) |
+| Play a buyer replying to outreach (local only) | `POST http://localhost:8000/v1/dev/inbound-email` with `to` set to the email's Reply-To (needs `INBOUND_EMAIL_DOMAIN=reply.cornerpin.test` in `.env`) |
 | Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
 | Public page for a lot | http://localhost:3300/juniper-bench/lots/2-5 |

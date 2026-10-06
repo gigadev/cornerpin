@@ -2,11 +2,7 @@
 window; after an opt-out the next send is refused and logged; every send has a row."""
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
-from typing import Any
-from uuid import UUID, uuid4
-from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
@@ -14,121 +10,23 @@ from sqlalchemy import text
 
 from cornerpin.core.db import worker_session
 from cornerpin.core.outbox import drain
-from cornerpin.notifications import handlers as notification_handlers
-from cornerpin.notifications.email import Email
-from cornerpin.outreach import channels, policy
-from cornerpin.outreach.service import deliver, request_send
+from cornerpin.outreach import policy
+from cornerpin.outreach.service import deliver
 
 from .conftest import Databases, Listing
-
-BOISE = ZoneInfo("America/Boise")
-AFTERNOON = datetime(2026, 10, 6, 15, 0, tzinfo=BOISE)  # within sending hours
-# Any token passes the fake verifier.
-TURNSTILE: dict[str, str] = {"turnstile_token": "t"}
-
-
-@dataclass
-class Mailbox:
-    sent: list[Email] = field(default_factory=lambda: [])
-    failing: bool = False
-
-    def send(self, email: Email) -> str | None:
-        if self.failing:
-            raise ConnectionError("mail server down")
-        self.sent.append(email)
-        return f"msg-{uuid4().hex}"  # unique, as a provider's ids are
-
-    def to(self, address: str) -> list[Email]:
-        return [email for email in self.sent if email.to == address]
-
-
-@dataclass
-class Clock:
-    now: datetime = AFTERNOON
-
-    def __call__(self) -> datetime:
-        return self.now
-
-
-@pytest.fixture
-def mailbox(db: Databases, monkeypatch: pytest.MonkeyPatch) -> Mailbox:
-    box = Mailbox()
-    monkeypatch.setattr(channels, "get_email_sender", lambda: box)
-    monkeypatch.setattr(notification_handlers, "get_email_sender", lambda: box)
-    drain()  # start from an empty outbox; earlier tests leave events behind
-    box.sent.clear()
-    return box
-
-
-@pytest.fixture
-def clock(monkeypatch: pytest.MonkeyPatch) -> Clock:
-    fixed = Clock()
-    monkeypatch.setattr(policy, "utcnow", fixed)
-    return fixed
-
-
-def inquire(client: TestClient, lot: Listing, *, allow_email: bool, **extra: Any) -> None:
-    body: dict[str, Any] = {"name": "Pat Buyer", "message": "Is the well shared?", **extra}
-    if allow_email:
-        body["contact"] = {"email": True}
-    sent = client.post(f"/v1/lots/{lot.available}/inquiries", json=body)
-    assert sent.status_code == 201, sent.text
-
-
-def lead_of(db: Databases, lot: Listing, email: str) -> UUID:
-    with db.owner.connect() as conn:
-        lead_id: UUID = conn.execute(
-            text("SELECT id FROM leads WHERE tenant_id = :t AND email = :e"),
-            {"t": lot.tenant.tenant_id, "e": email},
-        ).scalar_one()
-    return lead_id
-
-
-def ask_to_send(db: Databases, lot: Listing, lead_id: UUID, body: str = "Hi Pat") -> UUID:
-    with worker_session(engine=db.api) as session:
-        return request_send(
-            session,
-            tenant_id=lot.tenant.tenant_id,
-            lead_id=lead_id,
-            channel="email",
-            subject="Lot 1 at Buyers",
-            body=body,
-        )
-
-
-def message(db: Databases, message_id: UUID) -> Any:
-    with db.owner.connect() as conn:
-        return conn.execute(
-            text(
-                "SELECT status::text AS status, refused_reason, provider, provider_message_id,"
-                " sent_at FROM outreach_messages WHERE id = :id"
-            ),
-            {"id": message_id},
-        ).one()
-
-
-def timeline(db: Databases, lead_id: UUID) -> list[Any]:
-    with db.owner.connect() as conn:
-        return list(
-            conn.execute(
-                text(
-                    "SELECT kind::text AS kind, detail FROM lead_events WHERE lead_id = :l"
-                    " ORDER BY created_at, kind::text"
-                ),
-                {"l": lead_id},
-            )
-        )
-
-
-def email_of(client: TestClient) -> str:
-    address: str = client.get("/v1/me").json()["email"]
-    return address
-
-
-def token_in(email: Email) -> str:
-    link = next(line for line in email.text.splitlines() if "/unsubscribe?token=" in line)
-    return link.split("token=", 1)[1].strip()
-
+from .outreach_support import (
+    BOISE,
+    TURNSTILE,
+    Clock,
+    Mailbox,
+    ask_to_send,
+    email_of,
+    inquire,
+    lead_of,
+    message,
+    timeline,
+    token_in,
+)
 
 # --- the rules, without a database ----------------------------------------------------------
 
@@ -158,7 +56,7 @@ def test_unknown_time_zones_fall_back() -> None:
 
 
 def test_a_consented_email_is_sent_logged_and_says_how_to_stop(
-    buyer: TestClient, listing: Listing, db: Databases, mailbox: Mailbox, clock: Clock
+    buyer: TestClient, listing: Listing, db: Databases, outreach_mail: Mailbox, clock: Clock
 ) -> None:
     inquire(buyer, listing, allow_email=True)
     email = email_of(buyer)
@@ -172,7 +70,7 @@ def test_a_consented_email_is_sent_logged_and_says_how_to_stop(
     assert (sent.status, sent.provider) == ("sent", "smtp")
     assert sent.provider_message_id.startswith("msg-")
     assert sent.sent_at == clock.now
-    [mail] = mailbox.to(email)
+    [mail] = outreach_mail.to(email)
     assert mail.subject == "Lot 1 at Buyers"
     assert mail.text.startswith("Happy to walk the lot with you Saturday.")
     assert "because you allowed alpha to email you" in mail.text
@@ -186,7 +84,7 @@ def test_a_consented_email_is_sent_logged_and_says_how_to_stop(
     # A retried event never sends twice.
     with worker_session(engine=db.api) as session:
         deliver(session, message_id, clock.now)
-    assert len(mailbox.to(email)) == 1
+    assert len(outreach_mail.to(email)) == 1
 
 
 def test_no_send_without_consent(
@@ -194,7 +92,7 @@ def test_no_send_without_consent(
     anonymous: TestClient,
     listing: Listing,
     db: Databases,
-    mailbox: Mailbox,
+    outreach_mail: Mailbox,
     clock: Clock,
 ) -> None:
     # Signed in but never allowed email; and an anonymous inquirer, who can't consent.
@@ -213,12 +111,12 @@ def test_no_send_without_consent(
         )
         outcome = timeline(db, lead_id)[-1]
         assert (outcome.kind, outcome.detail["reason"]) == ("message_refused", "no_consent")
-    assert mailbox.to(email_of(buyer)) == []
-    assert mailbox.to(walk_in) == []
+    assert outreach_mail.to(email_of(buyer)) == []
+    assert outreach_mail.to(walk_in) == []
 
 
 def test_a_send_in_quiet_hours_waits_for_the_morning(
-    buyer: TestClient, listing: Listing, db: Databases, mailbox: Mailbox, clock: Clock
+    buyer: TestClient, listing: Listing, db: Databases, outreach_mail: Mailbox, clock: Clock
 ) -> None:
     inquire(buyer, listing, allow_email=True)
     email = email_of(buyer)
@@ -227,7 +125,7 @@ def test_a_send_in_quiet_hours_waits_for_the_morning(
     drain()
 
     assert message(db, message_id).status == "queued"
-    assert mailbox.to(email) == []
+    assert outreach_mail.to(email) == []
     with db.owner.connect() as conn:
         waiting = conn.execute(
             text(
@@ -246,11 +144,11 @@ def test_a_send_in_quiet_hours_waits_for_the_morning(
         )
     drain()
     assert message(db, message_id).status == "sent"
-    assert len(mailbox.to(email)) == 1
+    assert len(outreach_mail.to(email)) == 1
 
 
 def test_quiet_hours_are_the_buyers_own_when_they_have_set_a_time_zone(
-    buyer: TestClient, listing: Listing, db: Databases, mailbox: Mailbox, clock: Clock
+    buyer: TestClient, listing: Listing, db: Databases, outreach_mail: Mailbox, clock: Clock
 ) -> None:
     inquire(buyer, listing, allow_email=True)
     assert buyer.patch("/v1/me", json={"time_zone": "America/New_York"}).status_code == 200
@@ -265,7 +163,7 @@ def test_after_an_opt_out_the_next_send_is_refused_and_logged(
     anonymous: TestClient,
     listing: Listing,
     db: Databases,
-    mailbox: Mailbox,
+    outreach_mail: Mailbox,
     clock: Clock,
 ) -> None:
     inquire(buyer, listing, allow_email=True)
@@ -273,7 +171,7 @@ def test_after_an_opt_out_the_next_send_is_refused_and_logged(
     lead_id = lead_of(db, listing, email)
     ask_to_send(db, listing, lead_id)
     drain()
-    token = token_in(mailbox.to(email)[0])
+    token = token_in(outreach_mail.to(email)[0])
 
     # Opening the link changes nothing (mail scanners open links); the button does.
     page = anonymous.get("/v1/unsubscribe", params={"token": token})
@@ -300,7 +198,7 @@ def test_after_an_opt_out_the_next_send_is_refused_and_logged(
         "refused",
         "opted_out",
     )
-    assert len(mailbox.to(email)) == 1
+    assert len(outreach_mail.to(email)) == 1
     kinds = [event.kind for event in timeline(db, lead_id)]
     assert kinds[-2:] == ["consent_changed", "message_refused"]
 
@@ -315,7 +213,7 @@ def test_daily_caps(
     buyer: TestClient,
     listing: Listing,
     db: Databases,
-    mailbox: Mailbox,
+    outreach_mail: Mailbox,
     clock: Clock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -335,16 +233,16 @@ def test_daily_caps(
 
 
 def test_a_failed_send_is_retried_and_sent_once(
-    buyer: TestClient, listing: Listing, db: Databases, mailbox: Mailbox, clock: Clock
+    buyer: TestClient, listing: Listing, db: Databases, outreach_mail: Mailbox, clock: Clock
 ) -> None:
     inquire(buyer, listing, allow_email=True)
     email = email_of(buyer)
-    mailbox.failing = True
+    outreach_mail.failing = True
     message_id = ask_to_send(db, listing, lead_of(db, listing, email))
     drain()
     assert message(db, message_id).status == "queued"
 
-    mailbox.failing = False
+    outreach_mail.failing = False
     with db.owner.begin() as conn:  # skip the back-off
         conn.execute(
             text("UPDATE outbox SET available_at = now() WHERE payload->>'message_id' = :id"),
@@ -352,4 +250,4 @@ def test_a_failed_send_is_retried_and_sent_once(
         )
     drain()
     assert message(db, message_id).status == "sent"
-    assert len(mailbox.to(email)) == 1
+    assert len(outreach_mail.to(email)) == 1

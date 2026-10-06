@@ -1390,7 +1390,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "inquiry" | "hold_requested" | "hold_approved" | "hold_declined" | "hold_withdrawn" | "consent_changed" | "stage_changed" | "note" | "handoff" | "handoff_resolved" | "message_sent" | "message_refused";
+            kind: "inquiry" | "hold_requested" | "hold_approved" | "hold_declined" | "hold_withdrawn" | "consent_changed" | "stage_changed" | "note" | "handoff" | "handoff_resolved" | "message_sent" | "message_refused" | "message_received";
             lot: components["schemas"]["LeadLot"] | null;
             /** Message */
             message: string | null;

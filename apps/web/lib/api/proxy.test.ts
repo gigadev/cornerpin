@@ -18,6 +18,18 @@ describe("forwardRequestHeaders", () => {
     expect(forwarded.has("authorization")).toBe(false);
   });
 
+  it("passes a webhook's Svix signature headers, so the API can check them", () => {
+    const incoming = new Headers({
+      "svix-id": "msg_1",
+      "svix-timestamp": "1790000000",
+      "svix-signature": "v1,abc=",
+    });
+    const forwarded = forwardRequestHeaders(incoming, null);
+    expect(forwarded.get("svix-id")).toBe("msg_1");
+    expect(forwarded.get("svix-timestamp")).toBe("1790000000");
+    expect(forwarded.get("svix-signature")).toBe("v1,abc=");
+  });
+
   it("keeps an existing x-forwarded-for, else uses the client address", () => {
     expect(
       forwardRequestHeaders(new Headers({ "x-forwarded-for": "1.2.3.4" }), "5.6.7.8").get(

@@ -75,6 +75,8 @@ export function describeEvent(event: LeadEvent): { title: string; body: string |
         title: `${event.channel ? channelLabel(event.channel) : "Message"} sent`,
         body: event.subject ?? null,
       };
+    case "message_received":
+      return { title: "Replied", body: event.message ?? null };
     case "message_refused": {
       const why = event.reason ? (REFUSALS[event.reason] ?? event.reason) : null;
       return { title: why ? `Not sent: ${why}` : "Not sent", body: event.subject ?? null };

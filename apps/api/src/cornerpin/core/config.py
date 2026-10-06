@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     smtp_host: str = "localhost"
     smtp_port: int = 1025
     resend_api_key: str | None = None
+    # Replies to outreach (P2-04, ADR-037): the subdomain whose mail Resend receives, and the
+    # signing secret of the Resend webhook that reports it. Without a domain, outreach replies
+    # go to the owner's own address. Locally a domain alone lets /v1/dev/inbound-email play
+    # the provider.
+    inbound_email_domain: str | None = None
+    resend_webhook_secret: str | None = None
 
     # Uploaded photos and documents (ADR-025). "local" writes under storage_dir; "gcs" uses a
     # Cloud Storage bucket and stays dormant until storage_bucket is set.
@@ -102,6 +108,11 @@ class Settings(BaseSettings):
             problems.append("STORAGE_BUCKET must be set for the gcs storage backend")
         if self.email_backend == "resend" and not self.resend_api_key:
             problems.append("RESEND_API_KEY must be set for the resend email backend")
+        if self.inbound_email_domain and not (self.resend_webhook_secret and self.resend_api_key):
+            problems.append(
+                "RESEND_WEBHOOK_SECRET and RESEND_API_KEY must be set to receive email"
+                " at INBOUND_EMAIL_DOMAIN"
+            )
         if self.outbox_runner == "cloudtasks" and not (
             self.cloud_tasks_queue and self.internal_base_url and self.tasks_service_account
         ):

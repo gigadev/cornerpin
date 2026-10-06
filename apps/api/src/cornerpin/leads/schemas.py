@@ -139,6 +139,7 @@ LeadEventKind = Literal[
     "handoff_resolved",
     "message_sent",
     "message_refused",
+    "message_received",
 ]
 NoteText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
 

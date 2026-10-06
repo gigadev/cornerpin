@@ -1211,7 +1211,8 @@
               "handoff",
               "handoff_resolved",
               "message_sent",
-              "message_refused"
+              "message_refused",
+              "message_received"
             ],
             "title": "Kind",
             "type": "string"

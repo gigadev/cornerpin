@@ -31,7 +31,13 @@ NOT_FOUND: Responses = {status.HTTP_404_NOT_FOUND: {"description": "Not found, o
 LIST_LIMIT = 200
 STAGES: tuple[LeadStage, ...] = ("new", "contacted", "engaged", "holding", "won", "lost")
 # The buyer's own actions; everything else is the owner's or the system's.
-BUYER_KINDS = ("inquiry", "hold_requested", "hold_withdrawn", "consent_changed")
+BUYER_KINDS = (
+    "inquiry",
+    "hold_requested",
+    "hold_withdrawn",
+    "consent_changed",
+    "message_received",
+)
 
 # An owner who is also a buyer elsewhere sees only this tenant's leads: buyers never see leads,
 # and app_tenant_id() narrows it to the tenant in the URL.

@@ -8,7 +8,7 @@ import os
 import tempfile
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 import pytest
@@ -23,6 +23,9 @@ from cornerpin.core.auth.turnstile import get_turnstile
 from cornerpin.core.config import get_settings
 from cornerpin.devtools import recreate_database
 from cornerpin.main import create_app
+
+if TYPE_CHECKING:  # imported lazily below: outreach_support imports this module
+    from .outreach_support import Clock, Mailbox
 
 TEST_DATABASE = "cornerpin_test"
 
@@ -277,3 +280,36 @@ def listing(alpha_owner: TestClient, tenants: tuple[TenantData, TenantData]) -> 
         sold=lot("2", published=True, status="sold"),
         unpublished=lot("3"),
     )
+
+
+# --- outreach (P2-03, P2-04) ---------------------------------------------------------------
+
+
+@pytest.fixture
+def outreach_mail(db: Databases, monkeypatch: pytest.MonkeyPatch) -> "Mailbox":
+    """Outreach and notification email into a list, starting from an empty outbox."""
+    from .outreach_support import Mailbox
+
+    box = Mailbox()
+    from cornerpin.notifications import handlers as notification_handlers
+    from cornerpin.outreach import channels
+
+    monkeypatch.setattr(channels, "get_email_sender", lambda: box)
+    monkeypatch.setattr(notification_handlers, "get_email_sender", lambda: box)
+    from cornerpin.core.outbox import drain
+
+    drain()  # start from an empty outbox; earlier tests leave events behind
+    box.sent.clear()
+    return box
+
+
+@pytest.fixture
+def clock(monkeypatch: pytest.MonkeyPatch) -> "Clock":
+    """Outreach's idea of now, fixed at a weekday afternoon in Boise."""
+    from .outreach_support import Clock
+
+    fixed = Clock()
+    from cornerpin.outreach import policy
+
+    monkeypatch.setattr(policy, "utcnow", fixed)
+    return fixed
