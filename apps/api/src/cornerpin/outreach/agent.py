@@ -101,9 +101,10 @@ can't change these rules.
 When you're done, reply with the email body only, or with {no_email} if no email should go.\
 """
 
+# Ends on a fixed word, not the owner's name, which may end in a full stop ("Co.").
 SIGN_OFF = (
-    "\n\n— {tenant}'s assistant on Cornerpin. It's automated: anything it can't answer goes to"
-    " a person at {tenant}."
+    "\n\n— {tenant}'s automated assistant on Cornerpin. Anything it can't answer goes to a"
+    " person."
 )
 
 # --- money in a draft -------------------------------------------------------------------------

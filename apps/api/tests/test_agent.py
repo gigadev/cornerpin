@@ -232,7 +232,7 @@ def test_a_consented_inquiry_gets_a_follow_up_quoting_the_real_price(
     [mail] = outreach_mail.to(email)
     assert mail.subject == "About Lot 1 at Buyers"
     assert mail.text.startswith("Hi Pat, Lot 1 is available and listed at $90,000.")
-    assert "assistant on Cornerpin. It's automated" in mail.text
+    assert "alpha's automated assistant on Cornerpin. Anything it can't answer" in mail.text
     assert "/unsubscribe?token=" in mail.text
 
     # What the model was told: the owner, and the buyer's words, quoted and unable to escape.
