@@ -17,6 +17,7 @@ const base: LeadEvent = {
   from_stage: null,
   to_stage: null,
   reason: null,
+  subject: null,
 };
 
 describe("describeEvent", () => {
@@ -50,6 +51,19 @@ describe("describeEvent", () => {
       title: "Needs a person",
       body: "Asked about financing",
     });
+  });
+});
+
+describe("outreach messages", () => {
+  it("say what was sent, or why not", () => {
+    const sent = { ...base, kind: "message_sent", by_buyer: false, lot: null } as const;
+    expect(describeEvent({ ...sent, channel: "email", subject: "Saturday?" })).toEqual({
+      title: "Email sent",
+      body: "Saturday?",
+    });
+    expect(
+      describeEvent({ ...sent, kind: "message_refused", reason: "opted_out", subject: "Hi" }),
+    ).toEqual({ title: "Not sent: they opted out", body: "Hi" });
   });
 });
 

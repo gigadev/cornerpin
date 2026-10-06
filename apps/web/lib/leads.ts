@@ -70,10 +70,27 @@ export function describeEvent(event: LeadEvent): { title: string; body: string |
       return { title: "Needs a person", body: event.reason ?? null };
     case "handoff_resolved":
       return { title: "Marked handled", body: null };
+    case "message_sent":
+      return {
+        title: `${event.channel ? channelLabel(event.channel) : "Message"} sent`,
+        body: event.subject ?? null,
+      };
+    case "message_refused": {
+      const why = event.reason ? (REFUSALS[event.reason] ?? event.reason) : null;
+      return { title: why ? `Not sent: ${why}` : "Not sent", body: event.subject ?? null };
+    }
   }
 }
 
 /** Who did it: the buyer for their own actions, else whoever was signed in, else the system. */
+const REFUSALS: Record<string, string> = {
+  no_consent: "they haven't allowed it",
+  opted_out: "they opted out",
+  lead_daily_cap: "daily limit for this person reached",
+  tenant_daily_cap: "your organization's daily limit reached",
+  channel_unavailable: "that channel isn't available yet",
+};
+
 export function eventActor(event: LeadEvent, leadName: string): string {
   if (event.by_buyer) return event.verified ? leadName : `${leadName} (email not verified)`;
   return event.actor_email ?? "Cornerpin";

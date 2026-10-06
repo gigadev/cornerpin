@@ -111,6 +111,7 @@ def _event(row: Row[Any]) -> LeadEvent:
         from_stage=detail.get("from"),
         to_stage=detail.get("to"),
         reason=detail.get("reason") or None,
+        subject=detail.get("subject"),
     )
 
 

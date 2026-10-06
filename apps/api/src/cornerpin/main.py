@@ -18,9 +18,11 @@ from cornerpin.listings.public_graphql import graphql_router
 from cornerpin.notifications import handlers as notification_handlers
 from cornerpin.notifications import prefs as notification_prefs
 from cornerpin.notifications import push
+from cornerpin.outreach import handlers as outreach_handlers
+from cornerpin.outreach import routes as outreach_routes
 
 # Importing a module that defines outbox handlers registers them.
-OUTBOX_HANDLER_MODULES = (notification_handlers, storage)
+OUTBOX_HANDLER_MODULES = (notification_handlers, storage, outreach_handlers)
 
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
@@ -81,6 +83,7 @@ def create_app() -> FastAPI:
     v1.include_router(lead_routes.router)
     v1.include_router(notification_prefs.router)
     v1.include_router(push.router)
+    v1.include_router(outreach_routes.router)
     app.include_router(v1)
     app.include_router(internal.router, include_in_schema=False)
     app.include_router(graphql_router(), prefix="/graphql", include_in_schema=False)

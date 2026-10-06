@@ -7,7 +7,7 @@
 const NOT_SUBDIVISIONS = new Set([
   "app", "q", "api", "v1", "graphql", "internal", "serwist", "icons", "static", "admin",
   "auth", "login", "logout", "signin", "signup", "account", "settings", "about", "help",
-  "terms", "privacy", "offline", "_next", "maplibre",
+  "terms", "privacy", "offline", "unsubscribe", "_next", "maplibre",
 ]); // prettier-ignore
 
 const SLUG = "[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?";

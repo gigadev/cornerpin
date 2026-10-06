@@ -14,6 +14,7 @@ stays switched off until a Google client id exists.
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
 | Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
+| Unsubscribe from an owner's outreach | The "Stop these emails" link in an outreach email (`/unsubscribe?token=…`) |
 | Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
 | Public page for a lot | http://localhost:3300/juniper-bench/lots/2-5 |
@@ -74,6 +75,7 @@ Use `'staff'` instead of `'owner'` for a staff member. Right now both have the s
 | Someone sends a question from a lot page | Every owner and staff member of the lot's organization | New question about Lot 2-5 at Juniper Bench |
 | A signed-in buyer asks to hold a lot | Every owner and staff member | Hold request for Lot 2-5 at Juniper Bench |
 | An owner changes a published lot's status or price (or approves a hold) | Each buyer who saved the lot and kept email alerts on | Lot 2-5 at Juniper Bench is now on hold |
+| Outreach to a buyer who allowed email (nothing sends it until the agent, P2-05) | That buyer, between 9:00 and 20:00 their time | Set by the sender; ends with a "Stop these emails" link |
 
 To try the last one: sign in as a new buyer, save a lot, then sign in as the owner (another
 browser or a private window) and change that lot's status. Owner emails go to

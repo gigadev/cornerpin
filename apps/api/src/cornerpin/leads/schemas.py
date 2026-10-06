@@ -137,6 +137,8 @@ LeadEventKind = Literal[
     "note",
     "handoff",
     "handoff_resolved",
+    "message_sent",
+    "message_refused",
 ]
 NoteText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
 
@@ -191,7 +193,8 @@ class LeadEvent(BaseModel):
     consent_source: str | None
     from_stage: LeadStage | None
     to_stage: LeadStage | None
-    reason: str | None
+    reason: str | None = Field(description="A handoff's reason, or why a message wasn't sent")
+    subject: str | None = Field(description="A sent or refused message's subject")
 
 
 class LeadDetail(LeadSummary):

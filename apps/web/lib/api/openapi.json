@@ -1209,7 +1209,9 @@
               "stage_changed",
               "note",
               "handoff",
-              "handoff_resolved"
+              "handoff_resolved",
+              "message_sent",
+              "message_refused"
             ],
             "title": "Kind",
             "type": "string"
@@ -1255,7 +1257,20 @@
                 "type": "null"
               }
             ],
+            "description": "A handoff's reason, or why a message wasn't sent",
             "title": "Reason"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A sent or refused message's subject",
+            "title": "Subject"
           },
           "to_stage": {
             "anyOf": [
@@ -1297,7 +1312,8 @@
           "consent_source",
           "from_stage",
           "to_stage",
-          "reason"
+          "reason",
+          "subject"
         ],
         "title": "LeadEvent",
         "type": "object"
@@ -3064,6 +3080,34 @@
           "role"
         ],
         "title": "Tenant",
+        "type": "object"
+      },
+      "Unsubscribe": {
+        "properties": {
+          "allowed": {
+            "title": "Allowed",
+            "type": "boolean"
+          },
+          "channel": {
+            "enum": [
+              "email",
+              "sms",
+              "voice"
+            ],
+            "title": "Channel",
+            "type": "string"
+          },
+          "tenant_name": {
+            "title": "Tenant Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tenant_name",
+          "channel",
+          "allowed"
+        ],
+        "title": "Unsubscribe",
         "type": "object"
       },
       "ValidationError": {
@@ -7300,6 +7344,96 @@
         "summary": "Create Phase",
         "tags": [
           "listings"
+        ]
+      }
+    },
+    "/v1/unsubscribe": {
+      "get": {
+        "description": "What the link would stop, without changing anything (mail scanners open links).",
+        "operationId": "unsubscribe_page_v1_unsubscribe_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unsubscribe"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "The link was altered or no longer works"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsubscribe Page",
+        "tags": [
+          "outreach"
+        ]
+      },
+      "post": {
+        "description": "Stop this owner contacting this buyer on this channel. Also the one-click target\n(RFC 8058); its form body is ignored.",
+        "operationId": "unsubscribe_v1_unsubscribe_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "required": true,
+            "schema": {
+              "title": "Token",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Unsubscribe"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "400": {
+            "description": "The link was altered or no longer works"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsubscribe",
+        "tags": [
+          "outreach"
         ]
       }
     }
