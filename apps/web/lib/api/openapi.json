@@ -979,6 +979,93 @@
         "title": "InquiryOut",
         "type": "object"
       },
+      "Integration": {
+        "properties": {
+          "available": {
+            "description": "Set up on this Cornerpin, so it can be connected",
+            "title": "Available",
+            "type": "boolean"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "enabled": {
+            "description": "Alerts are on",
+            "title": "Enabled",
+            "type": "boolean"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Why a connection failed, for the owner",
+            "title": "Error"
+          },
+          "provider": {
+            "const": "slack",
+            "title": "Provider",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "not_connected",
+              "connecting",
+              "connected",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "workspace": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Workspace"
+          }
+        },
+        "required": [
+          "provider",
+          "available",
+          "status",
+          "enabled",
+          "workspace",
+          "channel",
+          "error"
+        ],
+        "title": "Integration",
+        "type": "object"
+      },
+      "IntegrationUpdate": {
+        "properties": {
+          "enabled": {
+            "title": "Enabled",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "enabled"
+        ],
+        "title": "IntegrationUpdate",
+        "type": "object"
+      },
       "JsonValue": {},
       "LeadDetail": {
         "properties": {
@@ -4775,6 +4862,260 @@
         "summary": "List Inquiries",
         "tags": [
           "leads"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/integrations": {
+      "get": {
+        "operationId": "list_integrations_v1_tenants__tenant_id__integrations_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/Integration"
+                  },
+                  "title": "Response List Integrations V1 Tenants  Tenant Id  Integrations Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Integrations",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/integrations/slack": {
+      "delete": {
+        "description": "Forget the connection and its webhook. Removing the app from the workspace is done in\nSlack.",
+        "operationId": "remove_slack_v1_tenants__tenant_id__integrations_slack_delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Slack",
+        "tags": [
+          "integrations"
+        ]
+      },
+      "patch": {
+        "description": "Switch alerts on or off; the connection stays.",
+        "operationId": "update_slack_v1_tenants__tenant_id__integrations_slack_patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntegrationUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Integration"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Slack",
+        "tags": [
+          "integrations"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/integrations/slack/install": {
+      "get": {
+        "description": "Send the owner to Slack to add Cornerpin's app and pick a channel.",
+        "operationId": "install_slack_v1_tenants__tenant_id__integrations_slack_install_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "303": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Install Slack",
+        "tags": [
+          "integrations"
         ]
       }
     },

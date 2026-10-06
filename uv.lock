@@ -408,6 +408,7 @@ source = { editable = "apps/api" }
 dependencies = [
     { name = "alembic" },
     { name = "anthropic" },
+    { name = "cryptography" },
     { name = "email-validator" },
     { name = "fastapi" },
     { name = "geoalchemy2" },
@@ -428,6 +429,7 @@ dependencies = [
 requires-dist = [
     { name = "alembic", specifier = ">=1.16" },
     { name = "anthropic", specifier = ">=1.11.0" },
+    { name = "cryptography", specifier = ">=45" },
     { name = "email-validator", specifier = ">=2.2" },
     { name = "fastapi", specifier = ">=0.116" },
     { name = "geoalchemy2", specifier = ">=0.17" },

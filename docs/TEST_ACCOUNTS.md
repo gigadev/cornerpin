@@ -16,6 +16,7 @@ stays switched off until a Google client id exists.
 | Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
 | Unsubscribe from an owner's outreach | The "Stop these emails" link in an outreach email (`/unsubscribe?token=…`) |
 | Play a buyer replying to outreach (local only) | `POST http://localhost:8000/v1/dev/inbound-email` with `to` set to the email's Reply-To (needs `INBOUND_EMAIL_DOMAIN=reply.cornerpin.test` in `.env`) |
+| Send a tenant's Slack alerts to a real channel (local only) | `POST http://localhost:8000/v1/dev/integrations/slack` with `{"tenant_id": "957ccd5e-b6d1-531f-a102-ddef309c396e", "webhook_url": "<an incoming webhook made in the Slack app>"}`; Integrations in the portal then shows it. New leads, hold requests and handoffs post there |
 | Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
 | Public page for a lot | http://localhost:3300/juniper-bench/lots/2-5 |

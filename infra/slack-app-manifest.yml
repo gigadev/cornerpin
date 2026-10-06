@@ -1,0 +1,29 @@
+# Cornerpin's Slack app (P2-07, ADR-040). Create it at https://api.slack.com/apps ->
+# Create New App -> From a manifest, and paste this. Then copy its Client ID, Client Secret and
+# Signing Secret (Basic Information) into the API's settings (.env locally, Secret Manager in
+# the cloud). Distribution must be switched on for owners outside the app's own workspace.
+display_information:
+  name: Cornerpin
+  description: New leads, hold requests and handoffs from Cornerpin, and /lot lookups.
+  background_color: "#3f5b4a"
+features:
+  bot_user:
+    display_name: Cornerpin
+    always_online: false
+  slash_commands:
+    - command: /lot
+      url: https://cornerpin.app/v1/integrations/slack/commands
+      description: A lot's status and price
+      usage_hint: "<subdivision> <lot number>"
+      should_escape: false
+oauth_config:
+  redirect_urls:
+    - https://cornerpin.app/v1/integrations/slack/callback
+  scopes:
+    bot:
+      - commands
+      - incoming-webhook
+settings:
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

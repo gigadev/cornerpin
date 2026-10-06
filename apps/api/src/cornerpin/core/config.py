@@ -12,6 +12,8 @@ REPO_ROOT = Path(__file__).resolve().parents[5]
 TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA"
 TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA"  # noqa: S105 -- public test key
 LOCAL_SECRET_KEY = "local-development-only-not-a-secret"  # noqa: S105 -- refused outside local
+# "local-integrations-key-32-bytes!", base64: seals local integration credentials only.
+LOCAL_INTEGRATIONS_KEY = "bG9jYWwtaW50ZWdyYXRpb25zLWtleS0zMi1ieXRlcyE="
 
 
 class Settings(BaseSettings):
@@ -67,6 +69,14 @@ class Settings(BaseSettings):
     # How long after a consented inquiry the first follow-up is written.
     agent_follow_up_minutes: int = 15
 
+    # Per-tenant integrations (ADR-040). Their credentials are sealed with this key (32 bytes,
+    # base64) in the database; the local default is refused elsewhere.
+    integrations_key: str = LOCAL_INTEGRATIONS_KEY
+    # Cornerpin's Slack app (P2-07). Slack stays dormant until all three are set.
+    slack_client_id: str | None = None
+    slack_client_secret: str | None = None
+    slack_signing_secret: str | None = None
+
     # Uploaded photos and documents (ADR-025). "local" writes under storage_dir; "gcs" uses a
     # Cloud Storage bucket and stays dormant until storage_bucket is set.
     storage_backend: Literal["local", "gcs"] = "local"
@@ -103,6 +113,10 @@ class Settings(BaseSettings):
         return bool(self.anthropic_api_key)
 
     @property
+    def slack_enabled(self) -> bool:
+        return bool(self.slack_client_id and self.slack_client_secret and self.slack_signing_secret)
+
+    @property
     def google_enabled(self) -> bool:
         return bool(self.google_client_id and self.google_client_secret)
 
@@ -115,6 +129,8 @@ class Settings(BaseSettings):
             problems.append("SECRET_KEY must be set")
         if TURNSTILE_TEST_SECRET_KEY in (self.turnstile_secret_key, self.turnstile_site_key):
             problems.append("Turnstile test keys are for local use only")
+        if self.slack_enabled and self.integrations_key == LOCAL_INTEGRATIONS_KEY:
+            problems.append("INTEGRATIONS_KEY must be set to connect integrations")
         if self.storage_backend == "gcs" and not self.storage_bucket:
             problems.append("STORAGE_BUCKET must be set for the gcs storage backend")
         if self.email_backend == "resend" and not self.resend_api_key:

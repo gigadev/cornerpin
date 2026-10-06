@@ -30,6 +30,16 @@ describe("forwardRequestHeaders", () => {
     expect(forwarded.get("svix-signature")).toBe("v1,abc=");
   });
 
+  it("passes Slack's signature headers too", () => {
+    const incoming = new Headers({
+      "x-slack-request-timestamp": "1790000000",
+      "x-slack-signature": "v0=abc",
+    });
+    const forwarded = forwardRequestHeaders(incoming, null);
+    expect(forwarded.get("x-slack-request-timestamp")).toBe("1790000000");
+    expect(forwarded.get("x-slack-signature")).toBe("v0=abc");
+  });
+
   it("keeps an existing x-forwarded-for, else uses the client address", () => {
     expect(
       forwardRequestHeaders(new Headers({ "x-forwarded-for": "1.2.3.4" }), "5.6.7.8").get(

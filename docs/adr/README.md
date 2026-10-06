@@ -50,6 +50,7 @@ not started yet is still binding: it describes how that part will be built.
 | [037](037-receiving-replies.md) | Receiving replies to outreach | P2-04 | Accepted |
 | [038](038-outreach-agent.md) | The outreach agent: model, tools, cadence and guardrails | P2-05 | Accepted |
 | [039](039-agent-evals.md) | Agent evals: recorded on a live run, replayed on every push | P2-06 | Accepted |
+| [040](040-integration-credentials-and-slack.md) | Integration credentials live sealed in the database; Slack connects by OAuth | P2-07 | Accepted |
 
 ## Adding a decision
 

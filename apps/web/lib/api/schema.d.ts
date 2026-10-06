@@ -461,6 +461,68 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Integrations */
+        get: operations["list_integrations_v1_tenants__tenant_id__integrations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/integrations/slack": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Slack
+         * @description Forget the connection and its webhook. Removing the app from the workspace is done in
+         *     Slack.
+         */
+        delete: operations["remove_slack_v1_tenants__tenant_id__integrations_slack_delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Slack
+         * @description Switch alerts on or off; the connection stays.
+         */
+        patch: operations["update_slack_v1_tenants__tenant_id__integrations_slack_patch"];
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/integrations/slack/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Install Slack
+         * @description Send the owner to Slack to add Cornerpin's app and pick a channel.
+         */
+        get: operations["install_slack_v1_tenants__tenant_id__integrations_slack_install_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/leads": {
         parameters: {
             query?: never;
@@ -1290,6 +1352,43 @@ export interface components {
             signed_in: boolean;
             /** Subdivision Name */
             subdivision_name: string;
+        };
+        /** Integration */
+        Integration: {
+            /**
+             * Available
+             * @description Set up on this Cornerpin, so it can be connected
+             */
+            available: boolean;
+            /** Channel */
+            channel: string | null;
+            /**
+             * Enabled
+             * @description Alerts are on
+             */
+            enabled: boolean;
+            /**
+             * Error
+             * @description Why a connection failed, for the owner
+             */
+            error: string | null;
+            /**
+             * Provider
+             * @constant
+             */
+            provider: "slack";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_connected" | "connecting" | "connected" | "failed";
+            /** Workspace */
+            workspace: string | null;
+        };
+        /** IntegrationUpdate */
+        IntegrationUpdate: {
+            /** Enabled */
+            enabled: boolean;
         };
         JsonValue: unknown;
         /** LeadDetail */
@@ -3132,6 +3231,168 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InquiryOut"][];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_integrations_v1_tenants__tenant_id__integrations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"][];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_slack_v1_tenants__tenant_id__integrations_slack_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_slack_v1_tenants__tenant_id__integrations_slack_patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntegrationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    install_slack_v1_tenants__tenant_id__integrations_slack_install_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
                 };
             };
             /** @description Not found, or not your tenant */
