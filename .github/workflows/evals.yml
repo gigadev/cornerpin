@@ -1,0 +1,46 @@
+# The outreach agent's evals against the real model (ADR-039). They cost money (about 20 cents
+# a run), so they run only when asked: from the Actions tab, or by adding the `live-evals`
+# label to a pull request. Every push already replays the recorded replies for free, in CI's
+# pytest run.
+name: Live evals
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live:
+    if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'live-evals'
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: cornerpin
+          POSTGRES_USER: cornerpin
+          POSTGRES_PASSWORD: cornerpin
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U cornerpin -d cornerpin"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      DATABASE_URL: postgresql+psycopg://cornerpin:cornerpin@localhost:5434/cornerpin
+      API_DATABASE_URL: postgresql+psycopg://cornerpin_api:cornerpin_api@localhost:5434/cornerpin
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      # The results and their cost go to the run's summary page.
+      - run: uv run python -m evals --live --budget 1

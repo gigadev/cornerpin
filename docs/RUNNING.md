@@ -74,3 +74,4 @@ uv run python -m cornerpin.seed
 | No sign-in email | Check Mailpit at http://localhost:8025; `pnpm mail` starts it |
 | Errors about missing tables after pulling new code | Run `uv run alembic upgrade head` |
 | Demo data looks wrong | `uv run python -m cornerpin.seed` puts it back |
+| pytest's evals test says a recording is "recorded under another prompt, tools or model" | The agent's prompt or tools changed: `uv run python -m evals --live --record` (about 16 cents) and commit `evals/recordings/` (ADR-039) |

@@ -1,0 +1,63 @@
+{
+  "model": "claude-sonnet-5-5",
+  "fingerprint": "4f9a8cc2128fdf67",
+  "replies": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01Day4vUBgMmQpVWE6LnQpyg",
+          "name": "lookup_lot",
+          "input": {
+            "number": "2-8",
+            "subdivision": "Juniper Bench"
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 82,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2032
+      }
+    },
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_017yfZ6kPaD9q9H2agaXSBao",
+          "name": "check_availability",
+          "input": {
+            "subdivision": "Juniper Bench"
+          }
+        },
+        {
+          "id": "toolu_017WSLdKPgobE5RKP15xDw2R",
+          "name": "handoff_to_human",
+          "input": {
+            "reason": "Buyer wanted to make an offer on Lot 2-8, which is sold; they may want other lots or to discuss offers."
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 171,
+        "cache_read_tokens": 2032,
+        "cache_write_tokens": 269
+      }
+    },
+    {
+      "text": "Hi Casey,\n\nThank you for asking about Lot 2-8. It has already sold, so I'm sorry to say it isn't available.\n\nLot 2-11 is a similar lot in the same block. It's land only, 0.173 acres, listed at $112,000. Details are here: http://localhost:3300/juniper-bench/lots/2-11\n\nI've passed your interest in making an offer to Demo Land Co. Someone there will reply to you personally.\n\nIs Lot 2-11 close to what you wanted, or were you looking for something different?",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 177,
+        "cache_read_tokens": 2301,
+        "cache_write_tokens": 1746
+      }
+    }
+  ]
+}

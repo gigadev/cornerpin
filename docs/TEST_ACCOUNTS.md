@@ -153,6 +153,12 @@ Its uploads go to `var/e2e-storage`, emptied at the start of each run.
 run, and a temporary folder for uploads. It has two tenants, `alpha` and `bravo`, each with `owner@<tenant>.test` and
 `buyer@<tenant>.test`.
 
+**Agent evals** (`uv run python -m evals`, also run by pytest) use `cornerpin_evals`, rebuilt on
+every run with the demo seed. Each scenario signs in a new buyer,
+`<scenario>-<random>@buyers.cornerpin.test`. Its email is captured in memory and never reaches
+Mailpit. By default the model's replies come from `evals/recordings/`, which costs nothing.
+`--live` calls Claude with your `ANTHROPIC_API_KEY`, about 16 cents a run.
+
 ## Production
 
 Production (https://cornerpin.app) has no test accounts and refuses `.test` addresses. How it's

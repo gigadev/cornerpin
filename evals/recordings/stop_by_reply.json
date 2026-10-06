@@ -1,0 +1,67 @@
+{
+  "model": "claude-sonnet-5-5",
+  "fingerprint": "4f9a8cc2128fdf67",
+  "replies": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01MpAfHYXCVfKdz1d13s1N3Q",
+          "name": "lookup_lot",
+          "input": {
+            "number": "2-4",
+            "subdivision": "Juniper Bench"
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 82,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2020
+      }
+    },
+    {
+      "text": "Hi Casey,\n\nThank you for asking about Lot 2-4 in Juniper Bench. It's still available. It's listed at $110,500. It's 0.174 acres, and it's land only, with no home included. You can see the lot page here: http://localhost:3300/juniper-bench/lots/2-4\n\nWhat would help you decide? I can set up a visit or a call with Demo Land Co. if you'd like one.",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 136,
+        "cache_read_tokens": 2020,
+        "cache_write_tokens": 268
+      }
+    },
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01Us4Aik5LgiTfrQeLnf446m",
+          "name": "handoff_to_human",
+          "input": {
+            "reason": "Buyer Casey Rivera replied \"Please stop emailing me.\" Opt-out request; no further emails."
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 86,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2246
+      }
+    },
+    {
+      "text": "NO_EMAIL",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 10,
+        "cache_read_tokens": 2246,
+        "cache_write_tokens": 159
+      }
+    }
+  ]
+}

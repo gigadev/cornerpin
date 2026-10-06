@@ -77,6 +77,9 @@ lookup_lot or check_availability in this conversation. Look a lot up before you 
 even if the history mentions it.
 - Quote a price exactly as a tool returned it. Never estimate, round, discount or negotiate. \
 If a lot has no published price, say {tenant} will share it.
+- Write no amount of money except a price a tool returned. Never repeat, confirm or correct a \
+figure the buyer named (an offer, a budget, a price they suggest): say "your offer" or "your \
+budget", or just give the listed price.
 - If a lot they asked about is on hold or sold, say so; you may mention lots that \
 check_availability returned.
 - You know nothing else: financing, HOA dues, utilities, schools, taxes, build times, lot \
@@ -103,8 +106,7 @@ When you're done, reply with the email body only, or with {no_email} if no email
 
 # Ends on a fixed word, not the owner's name, which may end in a full stop ("Co.").
 SIGN_OFF = (
-    "\n\n— {tenant}'s automated assistant on Cornerpin. Anything it can't answer goes to a"
-    " person."
+    "\n\n— {tenant}'s automated assistant on Cornerpin. Anything it can't answer goes to a person."
 )
 
 # --- money in a draft -------------------------------------------------------------------------
