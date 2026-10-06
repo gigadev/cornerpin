@@ -11,7 +11,7 @@ from cornerpin.core.config import get_settings
 from cornerpin.core.housekeeping import run_housekeeping
 from cornerpin.core.internal import cloud_tasks_dispatcher
 from cornerpin.core.outbox import InProcessRunner, set_dispatcher
-from cornerpin.leads import buyer_routes, owner_routes
+from cornerpin.leads import buyer_routes, lead_routes, owner_routes
 from cornerpin.listings import geometry_routes, media_routes, public_files, qr
 from cornerpin.listings import routes as listings_routes
 from cornerpin.listings.public_graphql import graphql_router
@@ -78,6 +78,7 @@ def create_app() -> FastAPI:
     v1.include_router(qr.router)
     v1.include_router(buyer_routes.router)
     v1.include_router(owner_routes.router)
+    v1.include_router(lead_routes.router)
     v1.include_router(notification_prefs.router)
     v1.include_router(push.router)
     app.include_router(v1)

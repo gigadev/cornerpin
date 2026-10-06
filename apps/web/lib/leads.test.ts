@@ -1,0 +1,78 @@
+import { describe, expect, it } from "vitest";
+import { describeEvent, eventActor, isLeadStage, leadStageLabel, type LeadEvent } from "./leads";
+
+const base: LeadEvent = {
+  id: "e1",
+  kind: "inquiry",
+  created_at: "2026-10-06T16:00:00Z",
+  by_buyer: true,
+  verified: true,
+  actor_email: "pat@example.test",
+  lot: { lot_id: "l1", number: "2-5", subdivision_name: "Juniper Bench" },
+  message: "Is the well shared?",
+  note: null,
+  channel: null,
+  granted: null,
+  consent_source: null,
+  from_stage: null,
+  to_stage: null,
+  reason: null,
+};
+
+describe("describeEvent", () => {
+  it("names the lot and keeps the buyer's words", () => {
+    expect(describeEvent(base)).toEqual({
+      title: "Asked about Lot 2-5, Juniper Bench",
+      body: "Is the well shared?",
+    });
+    expect(describeEvent({ ...base, kind: "hold_requested", message: "" })).toEqual({
+      title: "Asked to hold Lot 2-5, Juniper Bench",
+      body: null,
+    });
+  });
+
+  it("reads consent, stage changes, notes and handoffs", () => {
+    const consent = { ...base, kind: "consent_changed", lot: null } as const;
+    expect(describeEvent({ ...consent, channel: "sms", granted: true }).title).toBe(
+      "Allowed text messages",
+    );
+    expect(describeEvent({ ...consent, channel: "email", granted: false }).title).toBe(
+      "Stopped email",
+    );
+    expect(
+      describeEvent({ ...base, kind: "stage_changed", from_stage: "new", to_stage: "won" }).title,
+    ).toBe("Stage: New → Won");
+    expect(describeEvent({ ...base, kind: "note", note: "Call back Friday" })).toEqual({
+      title: "Note",
+      body: "Call back Friday",
+    });
+    expect(describeEvent({ ...base, kind: "handoff", reason: "Asked about financing" })).toEqual({
+      title: "Needs a person",
+      body: "Asked about financing",
+    });
+  });
+});
+
+describe("eventActor", () => {
+  it("is the buyer for their own actions, flagged when the email isn't proven", () => {
+    expect(eventActor(base, "Pat")).toBe("Pat");
+    expect(eventActor({ ...base, verified: false, actor_email: null }, "Pat")).toBe(
+      "Pat (email not verified)",
+    );
+  });
+
+  it("is whoever was signed in otherwise, or the system", () => {
+    const owner = { ...base, kind: "note", by_buyer: false, actor_email: "owner@x.test" } as const;
+    expect(eventActor(owner, "Pat")).toBe("owner@x.test");
+    expect(eventActor({ ...owner, actor_email: null }, "Pat")).toBe("Cornerpin");
+  });
+});
+
+describe("stages", () => {
+  it("labels and recognises them", () => {
+    expect(leadStageLabel("holding")).toBe("Holding");
+    expect(isLeadStage("won")).toBe(true);
+    expect(isLeadStage("maybe")).toBe(false);
+    expect(isLeadStage(undefined)).toBe(false);
+  });
+});

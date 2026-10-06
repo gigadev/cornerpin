@@ -461,6 +461,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Leads
+         * @description Newest activity first, optionally one stage or only those waiting for a person.
+         */
+        get: operations["list_leads_v1_tenants__tenant_id__leads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/leads/{lead_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lead */
+        get: operations["get_lead_v1_tenants__tenant_id__leads__lead_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Lead
+         * @description Change the stage. The change goes on the timeline with who made it.
+         */
+        patch: operations["update_lead_v1_tenants__tenant_id__leads__lead_id__patch"];
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/leads/{lead_id}/handoff/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve Handoff
+         * @description Mark a handoff handled; it leaves the "needs a human" inbox.
+         */
+        post: operations["resolve_handoff_v1_tenants__tenant_id__leads__lead_id__handoff_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/leads/{lead_id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Note */
+        post: operations["add_note_v1_tenants__tenant_id__leads__lead_id__notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/lots/{lot_id}": {
         parameters: {
             query?: never;
@@ -1189,6 +1267,211 @@ export interface components {
             subdivision_name: string;
         };
         JsonValue: unknown;
+        /** LeadDetail */
+        LeadDetail: {
+            /**
+             * Contact
+             * @description Channels the buyer currently allows
+             */
+            contact: ("email" | "sms" | "voice")[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /**
+             * Events
+             * @description Newest first
+             */
+            events: components["schemas"]["LeadEvent"][];
+            /**
+             * Handoff At
+             * @description Set while the lead needs a person
+             */
+            handoff_at: string | null;
+            /** Handoff Reason */
+            handoff_reason: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Last Activity At
+             * Format: date-time
+             */
+            last_activity_at: string;
+            /**
+             * Lots
+             * @description Lots the buyer has asked about or held
+             */
+            lots: components["schemas"]["LeadLot"][];
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /**
+             * Signed In
+             * @description Whether the buyer has signed in, so their email is proven
+             */
+            signed_in: boolean;
+            /**
+             * Source
+             * @description What first brought the buyer: inquiry, hold_request, ...
+             */
+            source: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
+        };
+        /**
+         * LeadEvent
+         * @description One timeline entry. Which optional fields are set depends on `kind`.
+         */
+        LeadEvent: {
+            /**
+             * Actor Email
+             * @description Who acted, if a person signed in did
+             */
+            actor_email: string | null;
+            /**
+             * By Buyer
+             * @description The buyer's own action (an inquiry, hold or consent)
+             */
+            by_buyer: boolean;
+            /** Channel */
+            channel: ("email" | "sms" | "voice") | null;
+            /** Consent Source */
+            consent_source: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** From Stage */
+            from_stage: ("new" | "contacted" | "engaged" | "holding" | "won" | "lost") | null;
+            /** Granted */
+            granted: boolean | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "inquiry" | "hold_requested" | "hold_approved" | "hold_declined" | "hold_withdrawn" | "consent_changed" | "stage_changed" | "note" | "handoff" | "handoff_resolved";
+            lot: components["schemas"]["LeadLot"] | null;
+            /** Message */
+            message: string | null;
+            /** Note */
+            note: string | null;
+            /** Reason */
+            reason: string | null;
+            /** To Stage */
+            to_stage: ("new" | "contacted" | "engaged" | "holding" | "won" | "lost") | null;
+            /**
+             * Verified
+             * @description False for an anonymous inquiry, whose email is unproven
+             */
+            verified: boolean;
+        };
+        /** LeadList */
+        LeadList: {
+            /** Leads */
+            leads: components["schemas"]["LeadSummary"][];
+            /**
+             * Needs Human
+             * @description Leads waiting for a person
+             */
+            needs_human: number;
+            /**
+             * Stages
+             * @description Every stage, with how many leads are in it
+             */
+            stages: components["schemas"]["StageCount"][];
+        };
+        /** LeadLot */
+        LeadLot: {
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /** Number */
+            number: string;
+            /** Subdivision Name */
+            subdivision_name: string;
+        };
+        /** LeadSummary */
+        LeadSummary: {
+            /**
+             * Contact
+             * @description Channels the buyer currently allows
+             */
+            contact: ("email" | "sms" | "voice")[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /**
+             * Handoff At
+             * @description Set while the lead needs a person
+             */
+            handoff_at: string | null;
+            /** Handoff Reason */
+            handoff_reason: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Last Activity At
+             * Format: date-time
+             */
+            last_activity_at: string;
+            /**
+             * Lots
+             * @description Lots the buyer has asked about or held
+             */
+            lots: components["schemas"]["LeadLot"][];
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /**
+             * Signed In
+             * @description Whether the buyer has signed in, so their email is proven
+             */
+            signed_in: boolean;
+            /**
+             * Source
+             * @description What first brought the buyer: inquiry, hold_request, ...
+             */
+            source: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
+        };
+        /** LeadUpdate */
+        LeadUpdate: {
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
+        };
         /**
          * ListingType
          * @enum {string}
@@ -1405,6 +1688,11 @@ export interface components {
              */
             type: "MultiPolygon";
         };
+        /** NoteCreate */
+        NoteCreate: {
+            /** Text */
+            text: string;
+        };
         /** NotificationPrefs */
         NotificationPrefs: {
             /**
@@ -1583,6 +1871,16 @@ export interface components {
         SignInResult: {
             /** Next */
             next: string;
+        };
+        /** StageCount */
+        StageCount: {
+            /** Count */
+            count: number;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
         };
         /** StatusChange */
         StatusChange: {
@@ -2784,6 +3082,228 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InquiryOut"][];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_leads_v1_tenants__tenant_id__leads_get: {
+        parameters: {
+            query?: {
+                stage?: ("new" | "contacted" | "engaged" | "holding" | "won" | "lost") | null;
+                needs_human?: boolean;
+            };
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadList"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lead_v1_tenants__tenant_id__leads__lead_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lead_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lead_v1_tenants__tenant_id__leads__lead_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lead_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeadUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_handoff_v1_tenants__tenant_id__leads__lead_id__handoff_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lead_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not waiting for a person */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_note_v1_tenants__tenant_id__leads__lead_id__notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lead_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetail"];
                 };
             };
             /** @description Not found, or not your tenant */

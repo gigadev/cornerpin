@@ -245,8 +245,8 @@ screens.
 | ![Organizations](../apps/web/public/walkthrough/20-portal-organizations.png) | ![Organization](../apps/web/public/walkthrough/21-portal-tenant.png) |
 
 The organizations you belong to, and your role in each (owner or staff; for now both have the
-same rights). The organization page lists its subdivisions and has **Inquiries and holds**,
-with a count of pending holds once there are any.
+same rights). The organization page lists its subdivisions and has **Leads** (with a count of
+those waiting for a person) and **Inquiries and holds** (with a count of pending holds).
 
 ### A subdivision
 
@@ -304,6 +304,29 @@ Shapes are stored in PostGIS; acreage follows the shape.
 Pending holds first, with **Approve** and **Decline**; then every question, newest first. Each
 shows how to reach the person and what they allow ("Allows: email", or "Reply only"). The
 owner also gets each one by email (next section).
+
+### Leads
+
+![Leads](../apps/web/public/walkthrough/32-portal-leads.png)
+
+**Leads** has one entry per person who has asked about a lot or asked to hold one, however
+many times, newest activity first. Filter by stage (new, contacted, engaged, holding, won,
+lost) or to **Needs a person**: leads the outreach agent hands back (Phase 2), until someone
+clicks **Mark handled**. Leads are built from activity by the database itself
+([ADR-035](adr/035-leads-and-their-timeline.md)); an anonymous question joins the lead for its
+address but is marked "email not verified".
+
+<details>
+<summary>A lead</summary>
+
+![A lead with its timeline](../apps/web/public/walkthrough/33-portal-lead.png)
+
+</details>
+
+A lead's page has everything that person did with this owner: questions, hold requests and
+decisions, contact permissions, stage changes and notes, each with who and when. Change the
+stage or add a note on the left; notes are seen only by your organization. Approving a hold
+moves the lead to **Holding** by itself.
 
 ---
 

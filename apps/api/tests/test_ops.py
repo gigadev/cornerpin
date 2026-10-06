@@ -6,6 +6,7 @@ from collections.abc import Iterator
 import pytest
 from alembic import command
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
@@ -123,7 +124,8 @@ def test_migrate_seed_and_create_a_tenant_as_a_plain_owner(
     ops.check()
     report = capsys.readouterr().out
     assert "owner bypasses RLS: False" in report
-    assert "migration: 0011" in report
+    head = ScriptDirectory.from_config(Config(str(REPO_ROOT / "alembic.ini"))).get_current_head()
+    assert f"migration: {head}" in report
 
     ops.seed_demo("demo-owner@example.test")
     tenant_id = ops.create_tenant("Ricky's Land Co.", "ricky@example.test", "Ricky")

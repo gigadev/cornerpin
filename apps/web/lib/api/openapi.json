@@ -980,6 +980,526 @@
         "type": "object"
       },
       "JsonValue": {},
+      "LeadDetail": {
+        "properties": {
+          "contact": {
+            "description": "Channels the buyer currently allows",
+            "items": {
+              "enum": [
+                "email",
+                "sms",
+                "voice"
+              ],
+              "type": "string"
+            },
+            "title": "Contact",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "events": {
+            "description": "Newest first",
+            "items": {
+              "$ref": "#/components/schemas/LeadEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "handoff_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set while the lead needs a person",
+            "title": "Handoff At"
+          },
+          "handoff_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handoff Reason"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_activity_at": {
+            "format": "date-time",
+            "title": "Last Activity At",
+            "type": "string"
+          },
+          "lots": {
+            "description": "Lots the buyer has asked about or held",
+            "items": {
+              "$ref": "#/components/schemas/LeadLot"
+            },
+            "title": "Lots",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "signed_in": {
+            "description": "Whether the buyer has signed in, so their email is proven",
+            "title": "Signed In",
+            "type": "boolean"
+          },
+          "source": {
+            "description": "What first brought the buyer: inquiry, hold_request, ...",
+            "title": "Source",
+            "type": "string"
+          },
+          "stage": {
+            "enum": [
+              "new",
+              "contacted",
+              "engaged",
+              "holding",
+              "won",
+              "lost"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "phone",
+          "stage",
+          "source",
+          "signed_in",
+          "contact",
+          "lots",
+          "handoff_at",
+          "handoff_reason",
+          "last_activity_at",
+          "created_at",
+          "events"
+        ],
+        "title": "LeadDetail",
+        "type": "object"
+      },
+      "LeadEvent": {
+        "description": "One timeline entry. Which optional fields are set depends on `kind`.",
+        "properties": {
+          "actor_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Who acted, if a person signed in did",
+            "title": "Actor Email"
+          },
+          "by_buyer": {
+            "description": "The buyer's own action (an inquiry, hold or consent)",
+            "title": "By Buyer",
+            "type": "boolean"
+          },
+          "channel": {
+            "anyOf": [
+              {
+                "enum": [
+                  "email",
+                  "sms",
+                  "voice"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Channel"
+          },
+          "consent_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consent Source"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "from_stage": {
+            "anyOf": [
+              {
+                "enum": [
+                  "new",
+                  "contacted",
+                  "engaged",
+                  "holding",
+                  "won",
+                  "lost"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "From Stage"
+          },
+          "granted": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Granted"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "inquiry",
+              "hold_requested",
+              "hold_approved",
+              "hold_declined",
+              "hold_withdrawn",
+              "consent_changed",
+              "stage_changed",
+              "note",
+              "handoff",
+              "handoff_resolved"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "lot": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadLot"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "note": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "to_stage": {
+            "anyOf": [
+              {
+                "enum": [
+                  "new",
+                  "contacted",
+                  "engaged",
+                  "holding",
+                  "won",
+                  "lost"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "To Stage"
+          },
+          "verified": {
+            "description": "False for an anonymous inquiry, whose email is unproven",
+            "title": "Verified",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "created_at",
+          "by_buyer",
+          "verified",
+          "actor_email",
+          "lot",
+          "message",
+          "note",
+          "channel",
+          "granted",
+          "consent_source",
+          "from_stage",
+          "to_stage",
+          "reason"
+        ],
+        "title": "LeadEvent",
+        "type": "object"
+      },
+      "LeadList": {
+        "properties": {
+          "leads": {
+            "items": {
+              "$ref": "#/components/schemas/LeadSummary"
+            },
+            "title": "Leads",
+            "type": "array"
+          },
+          "needs_human": {
+            "description": "Leads waiting for a person",
+            "title": "Needs Human",
+            "type": "integer"
+          },
+          "stages": {
+            "description": "Every stage, with how many leads are in it",
+            "items": {
+              "$ref": "#/components/schemas/StageCount"
+            },
+            "title": "Stages",
+            "type": "array"
+          }
+        },
+        "required": [
+          "leads",
+          "stages",
+          "needs_human"
+        ],
+        "title": "LeadList",
+        "type": "object"
+      },
+      "LeadLot": {
+        "properties": {
+          "lot_id": {
+            "format": "uuid",
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "string"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lot_id",
+          "number",
+          "subdivision_name"
+        ],
+        "title": "LeadLot",
+        "type": "object"
+      },
+      "LeadSummary": {
+        "properties": {
+          "contact": {
+            "description": "Channels the buyer currently allows",
+            "items": {
+              "enum": [
+                "email",
+                "sms",
+                "voice"
+              ],
+              "type": "string"
+            },
+            "title": "Contact",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "title": "Email",
+            "type": "string"
+          },
+          "handoff_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Set while the lead needs a person",
+            "title": "Handoff At"
+          },
+          "handoff_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Handoff Reason"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "last_activity_at": {
+            "format": "date-time",
+            "title": "Last Activity At",
+            "type": "string"
+          },
+          "lots": {
+            "description": "Lots the buyer has asked about or held",
+            "items": {
+              "$ref": "#/components/schemas/LeadLot"
+            },
+            "title": "Lots",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "signed_in": {
+            "description": "Whether the buyer has signed in, so their email is proven",
+            "title": "Signed In",
+            "type": "boolean"
+          },
+          "source": {
+            "description": "What first brought the buyer: inquiry, hold_request, ...",
+            "title": "Source",
+            "type": "string"
+          },
+          "stage": {
+            "enum": [
+              "new",
+              "contacted",
+              "engaged",
+              "holding",
+              "won",
+              "lost"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "email",
+          "phone",
+          "stage",
+          "source",
+          "signed_in",
+          "contact",
+          "lots",
+          "handoff_at",
+          "handoff_reason",
+          "last_activity_at",
+          "created_at"
+        ],
+        "title": "LeadSummary",
+        "type": "object"
+      },
+      "LeadUpdate": {
+        "properties": {
+          "stage": {
+            "enum": [
+              "new",
+              "contacted",
+              "engaged",
+              "holding",
+              "won",
+              "lost"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage"
+        ],
+        "title": "LeadUpdate",
+        "type": "object"
+      },
       "ListingType": {
         "enum": [
           "land_only",
@@ -1616,6 +2136,21 @@
         "title": "MultiPolygonGeometry",
         "type": "object"
       },
+      "NoteCreate": {
+        "properties": {
+          "text": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ],
+        "title": "NoteCreate",
+        "type": "object"
+      },
       "NotificationPrefs": {
         "properties": {
           "email_saved_lot_changes": {
@@ -2112,6 +2647,32 @@
           "next"
         ],
         "title": "SignInResult",
+        "type": "object"
+      },
+      "StageCount": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "stage": {
+            "enum": [
+              "new",
+              "contacted",
+              "engaged",
+              "holding",
+              "won",
+              "lost"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "count"
+        ],
+        "title": "StageCount",
         "type": "object"
       },
       "StatusChange": {
@@ -4147,6 +4708,414 @@
           }
         },
         "summary": "List Inquiries",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/leads": {
+      "get": {
+        "description": "Newest activity first, optionally one stage or only those waiting for a person.",
+        "operationId": "list_leads_v1_tenants__tenant_id__leads_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "stage",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "new",
+                    "contacted",
+                    "engaged",
+                    "holding",
+                    "won",
+                    "lost"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Stage"
+            }
+          },
+          {
+            "in": "query",
+            "name": "needs_human",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Needs Human",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadList"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Leads",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/leads/{lead_id}": {
+      "get": {
+        "operationId": "get_lead_v1_tenants__tenant_id__leads__lead_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Lead",
+        "tags": [
+          "leads"
+        ]
+      },
+      "patch": {
+        "description": "Change the stage. The change goes on the timeline with who made it.",
+        "operationId": "update_lead_v1_tenants__tenant_id__leads__lead_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LeadUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Lead",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/leads/{lead_id}/handoff/resolve": {
+      "post": {
+        "description": "Mark a handoff handled; it leaves the \"needs a human\" inbox.",
+        "operationId": "resolve_handoff_v1_tenants__tenant_id__leads__lead_id__handoff_resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "409": {
+            "description": "Not waiting for a person"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Handoff",
+        "tags": [
+          "leads"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/leads/{lead_id}/notes": {
+      "post": {
+        "operationId": "add_note_v1_tenants__tenant_id__leads__lead_id__notes_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "lead_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lead Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NoteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeadDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Note",
         "tags": [
           "leads"
         ]

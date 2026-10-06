@@ -264,6 +264,14 @@ export default function HelpPage() {
               name="26-portal-inquiries"
               alt="Inquiries and holds, with a pending hold request and two questions"
             />
+            <P>
+              Leads gathers each person into one place: every question, hold request and contact
+              permission, with a stage you set and notes only your organization sees.
+            </P>
+            <Shot
+              name="33-portal-lead"
+              alt="A lead's page with its stage, a note form and a timeline of what the buyer did"
+            />
           </Section>
 
           <p className="text-muted-foreground">

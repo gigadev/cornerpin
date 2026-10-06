@@ -2,6 +2,7 @@
 owner, with a timeline, written in the same transaction. Owners read them and add notes and
 stage changes; buyers and other tenants see nothing."""
 
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -11,7 +12,7 @@ from sqlalchemy.exc import ProgrammingError
 
 from cornerpin.core.db import user_session
 
-from .conftest import Databases, Listing
+from .conftest import Databases, Listing, TenantData
 
 Json = dict[str, Any]
 TURNSTILE: Json = {"turnstile_token": "t"}
@@ -175,3 +176,132 @@ def test_owners_change_stages_and_add_notes_but_never_rewrite_the_timeline(
             user_session(owner.owner_id, owner.tenant_id, engine=db.api) as session,
         ):
             session.execute(text(sql), {"t": owner.tenant_id, "l": lead.id, "o": owner.owner_id})
+
+
+# --- the portal API (P2-02) ----------------------------------------------------------------
+
+
+def leads_url(lot: Listing, suffix: str = "") -> str:
+    return f"/v1/tenants/{lot.tenant.tenant_id}/leads{suffix}"
+
+
+def asked(buyer: TestClient, lot: Listing, message: str = "Hello") -> str:
+    sent = buyer.post(
+        f"/v1/lots/{lot.available}/inquiries",
+        json={"name": "Pat Buyer", "message": message, "contact": {"email": True}},
+    )
+    assert sent.status_code == 201, sent.text
+    return email_of(buyer)
+
+
+def test_owners_list_leads_by_stage(
+    buyer: TestClient, alpha_owner: TestClient, listing: Listing
+) -> None:
+    email = asked(buyer, listing)
+    listed = alpha_owner.get(leads_url(listing))
+    assert listed.status_code == 200, listed.text
+    body = listed.json()
+    lead = next(lead for lead in body["leads"] if lead["email"] == email)
+    assert (lead["stage"], lead["signed_in"], lead["contact"]) == ("new", True, ["email"])
+    assert [(lot["number"], lot["subdivision_name"]) for lot in lead["lots"]] == [("1", "Buyers")]
+    assert [s["stage"] for s in body["stages"]] == [
+        "new", "contacted", "engaged", "holding", "won", "lost",
+    ]  # fmt: skip
+    assert next(s for s in body["stages"] if s["stage"] == "new")["count"] >= 1
+
+    def emails(**params: Any) -> list[str]:
+        found = alpha_owner.get(leads_url(listing), params=params).json()["leads"]
+        return [lead["email"] for lead in found]
+
+    assert email in emails(stage="new")
+    assert email not in emails(stage="won")
+    assert email not in emails(needs_human="true")
+    assert alpha_owner.get(leads_url(listing), params={"stage": "maybe"}).status_code == 422
+
+
+def test_owners_change_a_stage_and_add_notes_through_the_api(
+    buyer: TestClient, alpha_owner: TestClient, listing: Listing
+) -> None:
+    email = asked(buyer, listing)
+    lead_id = next(
+        lead["id"] for lead in alpha_owner.get(leads_url(listing)).json()["leads"]
+        if lead["email"] == email
+    )  # fmt: skip
+
+    changed = alpha_owner.patch(leads_url(listing, f"/{lead_id}"), json={"stage": "contacted"})
+    assert changed.status_code == 200, changed.text
+    latest = changed.json()["events"][0]
+    assert (latest["kind"], latest["from_stage"], latest["to_stage"], latest["actor_email"]) == (
+        "stage_changed", "new", "contacted", "owner@alpha.test",
+    )  # fmt: skip
+
+    noted = alpha_owner.post(
+        leads_url(listing, f"/{lead_id}/notes"), json={"text": "  Called; wants Friday  "}
+    )
+    assert noted.status_code == 201, noted.text
+    note = noted.json()["events"][0]
+    assert (note["kind"], note["note"], note["by_buyer"]) == ("note", "Called; wants Friday", False)
+    inquiry = next(e for e in noted.json()["events"] if e["kind"] == "inquiry")
+    assert (inquiry["by_buyer"], inquiry["message"], inquiry["lot"]["number"]) == (
+        True, "Hello", "1",
+    )  # fmt: skip
+
+    blank = alpha_owner.post(leads_url(listing, f"/{lead_id}/notes"), json={"text": "  "})
+    assert blank.status_code == 422
+
+
+def test_other_tenants_get_not_found(
+    buyer: TestClient,
+    alpha_owner: TestClient,
+    client_for: Callable[[str | None], TestClient],
+    listing: Listing,
+    tenants: tuple[TenantData, TenantData],
+) -> None:
+    email = asked(buyer, listing)
+    lead_id = next(
+        lead["id"] for lead in alpha_owner.get(leads_url(listing)).json()["leads"]
+        if lead["email"] == email
+    )  # fmt: skip
+    _, bravo = tenants
+    other = client_for("owner@bravo.test")
+    # Their own tenant's URL with alpha's lead, and alpha's URL.
+    assert other.get(f"/v1/tenants/{bravo.tenant_id}/leads/{lead_id}").status_code == 404
+    assert other.get(leads_url(listing, f"/{lead_id}")).status_code == 404
+    patched = other.patch(f"/v1/tenants/{bravo.tenant_id}/leads/{lead_id}", json={"stage": "lost"})
+    assert patched.status_code == 404
+    assert alpha_owner.get(leads_url(listing, f"/{lead_id}")).json()["stage"] == "new"
+    assert buyer.get(leads_url(listing)).status_code == 404  # buyers aren't members
+
+
+def test_the_needs_a_human_inbox(
+    buyer: TestClient, alpha_owner: TestClient, listing: Listing, db: Databases
+) -> None:
+    email = asked(buyer, listing)
+    # The outreach agent hands off in P2-05; until then, set it as it will.
+    with db.owner.begin() as conn:
+        conn.execute(
+            text(
+                "UPDATE leads SET handoff_at = now(), handoff_reason = 'Asked about financing'"
+                " WHERE email = :email AND tenant_id = :t"
+            ),
+            {"email": email, "t": listing.tenant.tenant_id},
+        )
+
+    waiting = alpha_owner.get(leads_url(listing), params={"needs_human": "true"}).json()
+    lead = next(lead for lead in waiting["leads"] if lead["email"] == email)
+    assert lead["handoff_reason"] == "Asked about financing"
+    assert waiting["needs_human"] >= 1
+    detail = alpha_owner.get(leads_url(listing, f"/{lead['id']}")).json()
+    assert (detail["events"][0]["kind"], detail["events"][0]["reason"]) == (
+        "handoff", "Asked about financing",
+    )  # fmt: skip
+
+    resolved = alpha_owner.post(leads_url(listing, f"/{lead['id']}/handoff/resolve"))
+    assert resolved.status_code == 200, resolved.text
+    assert (resolved.json()["handoff_at"], resolved.json()["handoff_reason"]) == (None, None)
+    latest = resolved.json()["events"][0]
+    assert (latest["kind"], latest["actor_email"]) == ("handoff_resolved", "owner@alpha.test")
+    again = alpha_owner.post(leads_url(listing, f"/{lead['id']}/handoff/resolve"))
+    assert again.status_code == 409
+    still = alpha_owner.get(leads_url(listing), params={"needs_human": "true"}).json()
+    assert email not in [lead["email"] for lead in still["leads"]]

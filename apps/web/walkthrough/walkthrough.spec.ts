@@ -264,6 +264,21 @@ test("walkthrough screenshots", async ({ browser, request }) => {
   await owner.goto(`/app/${DEMO_TENANT_ID}/inquiries`);
   await shot(owner, "26-portal-inquiries", true);
 
+  // Each buyer is one lead, with everything they did on a timeline (P2-02).
+  await owner.goto(`/app/${DEMO_TENANT_ID}/leads`);
+  await shot(owner, "32-portal-leads");
+  await owner.getByRole("link", { name: "Pat Buyer" }).click();
+  await expect(owner.getByRole("heading", { level: 1, name: "Pat Buyer" })).toBeVisible();
+  await owner.getByLabel("Stage", { exact: true }).click();
+  await owner.getByRole("option", { name: "Contacted", exact: true }).click();
+  await expect(owner.getByText("Stage: New → Contacted")).toBeVisible();
+  await owner.getByLabel("Add a note").fill("Called back; walking the lot Saturday at 10.");
+  await owner.getByRole("button", { name: "Add note" }).click();
+  const timeline = owner.getByRole("region", { name: "Timeline" });
+  await expect(timeline).toContainText("walking the lot Saturday");
+  await expect(owner.getByLabel("Add a note")).toHaveValue("");
+  await shot(owner, "33-portal-lead", true);
+
   // A price change emails the buyer who saved the lot.
   await owner.goto(lot8Url);
   await owner.getByLabel("Price (whole dollars)").fill("479000");

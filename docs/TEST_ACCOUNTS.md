@@ -13,6 +13,7 @@ stays switched off until a Google client id exists.
 | Help: a tour of the site for buyers and owners | http://localhost:3300/help |
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
+| Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
 | Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
 | Public page for a lot | http://localhost:3300/juniper-bench/lots/2-5 |
