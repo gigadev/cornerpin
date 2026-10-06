@@ -118,6 +118,7 @@ def _event(row: Row[Any]) -> LeadEvent:
         to_stage=detail.get("to"),
         reason=detail.get("reason") or None,
         subject=detail.get("subject"),
+        tool=detail.get("tool") if row.kind == "agent_action" else None,
     )
 
 

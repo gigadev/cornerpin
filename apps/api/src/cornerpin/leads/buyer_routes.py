@@ -6,12 +6,14 @@ inquiry. Everything else, including giving contact consent, needs a signed-in (s
 email address.
 
 Each inquiry and hold request queues an event in the same transaction; the owners' emails go
-out from the outbox (P1-09).
+out from the outbox (P1-09). A signed-in buyer's inquiry also queues the outreach agent's first
+follow-up, delayed, while the agent is enabled (ADR-038).
 """
 
 from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from typing import Annotated, Any
 from uuid import UUID, uuid4
 
@@ -22,6 +24,7 @@ from sqlalchemy.orm import Session
 
 from cornerpin.core.auth.deps import CurrentUser, MaybeUser, SignedInUser
 from cornerpin.core.auth.turnstile import TurnstileVerifier, client_ip, get_turnstile
+from cornerpin.core.config import get_settings
 from cornerpin.core.db import public_session, user_session
 from cornerpin.core.outbox import enqueue
 from cornerpin.leads import consent
@@ -37,6 +40,7 @@ from cornerpin.leads.schemas import (
     SavedLot,
 )
 from cornerpin.listings.models import LotStatus
+from cornerpin.outreach.events import FollowUpDue
 
 router = APIRouter(tags=["buyers"])
 
@@ -264,6 +268,15 @@ def create_inquiry(
         session.execute(insert, {**params, "u": user.id, "email": profile.email})
         _record_contact(session, lot, user, profile, body.contact, "inquiry")
         enqueue(session, InquiryReceived(inquiry_id=inquiry_id))
+        # The agent's first follow-up, a little later; it checks consent when it runs.
+        settings = get_settings()
+        if settings.agent_enabled:
+            enqueue(
+                session,
+                FollowUpDue(inquiry_id=inquiry_id),
+                available_at=datetime.now(UTC)
+                + timedelta(minutes=settings.agent_follow_up_minutes),
+            )
     return Created(id=inquiry_id)
 
 

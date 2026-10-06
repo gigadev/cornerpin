@@ -35,6 +35,8 @@ TEST_API_URL = make_url(_dev.api_database_url).set(database=TEST_DATABASE)
 os.environ["DATABASE_URL"] = TEST_OWNER_URL.render_as_string(hide_password=False)
 os.environ["API_DATABASE_URL"] = TEST_API_URL.render_as_string(hide_password=False)
 os.environ["OUTBOX_RUNNER"] = "off"
+# Never the real model, even with a key in .env: agent tests install a scripted one.
+os.environ["ANTHROPIC_API_KEY"] = ""
 # Uploaded files go to a throwaway folder, not the developer's var/storage.
 os.environ["STORAGE_DIR"] = tempfile.mkdtemp(prefix="cornerpin-test-storage-")
 get_settings.cache_clear()

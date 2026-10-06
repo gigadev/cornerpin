@@ -27,8 +27,17 @@ class InboundEmailReceived(Event):
 
 
 class ReplyReceived(Event):
-    """A buyer replied to outreach; the agent answers it (P2-05)."""
+    """A buyer replied to outreach (the inbound message); the agent answers it (ADR-038)."""
 
     event_type: ClassVar[str] = "outreach.reply_received"
 
     message_id: UUID
+
+
+class FollowUpDue(Event):
+    """Time for the agent's first follow-up to a signed-in buyer's inquiry (ADR-038). Queued
+    with a delay, and only while the agent is enabled."""
+
+    event_type: ClassVar[str] = "outreach.follow_up_due"
+
+    inquiry_id: UUID

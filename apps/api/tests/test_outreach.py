@@ -78,8 +78,10 @@ def test_a_consented_email_is_sent_logged_and_says_how_to_stop(
     assert mail.headers["List-Unsubscribe"].startswith("<http://localhost:3300/v1/unsubscribe?")
     assert mail.headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
     assert mail.reply_to == "owner@alpha.test"
-    outcome = timeline(db, lead_id)[-1]
-    assert (outcome.kind, outcome.detail["subject"]) == ("message_sent", "Lot 1 at Buyers")
+    events = {event.kind: event.detail for event in timeline(db, lead_id)}
+    assert events["message_sent"]["subject"] == "Lot 1 at Buyers"
+    assert events["message_sent"]["message"] == "Happy to walk the lot with you Saturday."
+    assert events["stage_changed"] == {"from": "new", "to": "contacted"}  # the first send
 
     # A retried event never sends twice.
     with worker_session(engine=db.api) as session:

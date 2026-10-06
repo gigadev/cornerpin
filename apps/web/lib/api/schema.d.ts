@@ -1390,7 +1390,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "inquiry" | "hold_requested" | "hold_approved" | "hold_declined" | "hold_withdrawn" | "consent_changed" | "stage_changed" | "note" | "handoff" | "handoff_resolved" | "message_sent" | "message_refused" | "message_received";
+            kind: "inquiry" | "hold_requested" | "hold_approved" | "hold_declined" | "hold_withdrawn" | "consent_changed" | "stage_changed" | "note" | "handoff" | "handoff_resolved" | "message_sent" | "message_refused" | "message_received" | "agent_action";
             lot: components["schemas"]["LeadLot"] | null;
             /** Message */
             message: string | null;
@@ -1408,6 +1408,11 @@ export interface components {
             subject: string | null;
             /** To Stage */
             to_stage: ("new" | "contacted" | "engaged" | "holding" | "won" | "lost") | null;
+            /**
+             * Tool
+             * @description Which tool the outreach agent used, for an agent_action
+             */
+            tool?: ("lookup_lot" | "check_availability" | "request_tour" | "log_timeline" | "handoff_to_human") | null;
             /**
              * Verified
              * @description False for an anonymous inquiry, whose email is unproven

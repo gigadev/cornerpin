@@ -48,6 +48,7 @@ not started yet is still binding: it describes how that part will be built.
 | [035](035-leads-and-their-timeline.md) | Leads, their stages, and what creates them | P2-01 | Accepted |
 | [036](036-outreach-sending-rules.md) | Outreach sending rules: consent, quiet hours, caps and unsubscribing | P2-03 | Accepted |
 | [037](037-receiving-replies.md) | Receiving replies to outreach | P2-04 | Accepted |
+| [038](038-outreach-agent.md) | The outreach agent: model, tools, cadence and guardrails | P2-05 | Accepted |
 
 ## Adding a decision
 

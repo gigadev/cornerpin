@@ -18,6 +18,7 @@ const base: LeadEvent = {
   to_stage: null,
   reason: null,
   subject: null,
+  tool: null,
 };
 
 describe("describeEvent", () => {
@@ -56,7 +57,13 @@ describe("describeEvent", () => {
 
 describe("outreach messages", () => {
   it("say what was sent, or why not", () => {
-    const sent = { ...base, kind: "message_sent", by_buyer: false, lot: null } as const;
+    const sent = {
+      ...base,
+      kind: "message_sent",
+      by_buyer: false,
+      lot: null,
+      message: null,
+    } as const;
     expect(describeEvent({ ...sent, channel: "email", subject: "Saturday?" })).toEqual({
       title: "Email sent",
       body: "Saturday?",
@@ -66,6 +73,28 @@ describe("outreach messages", () => {
     ).toEqual({ title: "Not sent: they opted out", body: "Hi" });
     const reply = { ...sent, kind: "message_received", by_buyer: true, message: "Yes, 10?" };
     expect(describeEvent(reply as LeadEvent)).toEqual({ title: "Replied", body: "Yes, 10?" });
+  });
+});
+
+describe("the assistant", () => {
+  it("shows its tool calls, and the text of what it sent", () => {
+    const action = { ...base, kind: "agent_action", by_buyer: false, message: null } as const;
+    expect(describeEvent({ ...action, tool: "lookup_lot", note: "Available, $90,000" })).toEqual({
+      title: "Assistant looked up Lot 2-5, Juniper Bench",
+      body: "Available, $90,000",
+    });
+    expect(
+      describeEvent({ ...action, tool: "check_availability", lot: null, note: "3 available" }),
+    ).toEqual({ title: "Assistant checked what's available", body: "3 available" });
+    expect(describeEvent({ ...action, tool: "log_timeline", note: "Budget $100k" }).title).toBe(
+      "Assistant's note",
+    );
+    expect(eventActor({ ...action, tool: "log_timeline" }, "Pat")).toBe("Cornerpin assistant");
+
+    const sent = { ...base, kind: "message_sent", by_buyer: false, lot: null } as const;
+    expect(
+      describeEvent({ ...sent, channel: "email", subject: "About Lot 1", message: "Hi Pat" }),
+    ).toEqual({ title: "Email sent", body: "About Lot 1\n\nHi Pat" });
   });
 });
 

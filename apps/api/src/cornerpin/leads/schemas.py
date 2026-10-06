@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from cornerpin.core.fields import EmailAddress, Phone
 from cornerpin.listings.models import LotStatus
+from cornerpin.outreach.tools import AgentTool
 
 Channel = Literal["email", "sms", "voice"]
 HoldStatus = Literal["pending", "approved", "declined", "withdrawn"]
@@ -140,6 +141,7 @@ LeadEventKind = Literal[
     "message_sent",
     "message_refused",
     "message_received",
+    "agent_action",
 ]
 NoteText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
 
@@ -196,6 +198,9 @@ class LeadEvent(BaseModel):
     to_stage: LeadStage | None
     reason: str | None = Field(description="A handoff's reason, or why a message wasn't sent")
     subject: str | None = Field(description="A sent or refused message's subject")
+    tool: AgentTool | None = Field(
+        default=None, description="Which tool the outreach agent used, for an agent_action"
+    )
 
 
 class LeadDetail(LeadSummary):

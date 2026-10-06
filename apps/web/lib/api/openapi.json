@@ -1212,7 +1212,8 @@
               "handoff_resolved",
               "message_sent",
               "message_refused",
-              "message_received"
+              "message_received",
+              "agent_action"
             ],
             "title": "Kind",
             "type": "string"
@@ -1291,6 +1292,25 @@
               }
             ],
             "title": "To Stage"
+          },
+          "tool": {
+            "anyOf": [
+              {
+                "enum": [
+                  "lookup_lot",
+                  "check_availability",
+                  "request_tour",
+                  "log_timeline",
+                  "handoff_to_human"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Which tool the outreach agent used, for an agent_action",
+            "title": "Tool"
           },
           "verified": {
             "description": "False for an anonymous inquiry, whose email is unproven",

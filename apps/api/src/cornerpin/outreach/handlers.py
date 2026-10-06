@@ -1,13 +1,20 @@
-"""Outbox handlers for outreach (ADR-036, ADR-037). Importing this module registers them."""
+"""Outbox handlers for outreach (ADR-036, ADR-037, ADR-038). Importing this module registers
+them."""
 
 from email.utils import parseaddr
+from uuid import UUID
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from cornerpin.core.outbox import handler
-from cornerpin.outreach import policy
-from cornerpin.outreach.events import InboundEmailReceived, OutreachSend, ReplyReceived
+from cornerpin.outreach import agent, policy
+from cornerpin.outreach.events import (
+    FollowUpDue,
+    InboundEmailReceived,
+    OutreachSend,
+    ReplyReceived,
+)
 from cornerpin.outreach.inbound import Inbound, get_inbox, receive
 from cornerpin.outreach.service import deliver
 
@@ -36,11 +43,29 @@ def receive_email(event: InboundEmailReceived, session: Session) -> None:
 
 @handler(ReplyReceived)
 def reply_received(event: ReplyReceived, session: Session) -> None:
-    """A buyer who replies is engaged (ADR-035). The agent's answer comes with P2-05."""
+    """A buyer who replies is engaged (ADR-035), and the agent answers (ADR-038)."""
+    lead_id: UUID | None = session.execute(
+        text("SELECT lead_id FROM outreach_messages WHERE id = :id"), {"id": event.message_id}
+    ).scalar_one_or_none()
+    if lead_id is None:
+        return
     session.execute(
-        text(
-            "UPDATE leads SET stage = 'engaged' FROM outreach_messages m"
-            " WHERE m.id = :id AND leads.id = m.lead_id AND leads.stage IN ('new', 'contacted')"
-        ),
-        {"id": event.message_id},
+        text("UPDATE leads SET stage = 'engaged' WHERE id = :id AND stage IN ('new', 'contacted')"),
+        {"id": lead_id},
     )
+    agent.run_turn(session, lead_id, reply_id=event.message_id)
+
+
+@handler(FollowUpDue)
+def follow_up(event: FollowUpDue, session: Session) -> None:
+    """The agent's first follow-up to a signed-in buyer's inquiry (ADR-038)."""
+    lead_id: UUID | None = session.execute(
+        text(
+            "SELECT l.id FROM inquiries i"
+            " JOIN leads l ON l.tenant_id = i.tenant_id AND l.user_id = i.user_id"
+            " WHERE i.id = :id"
+        ),
+        {"id": event.inquiry_id},
+    ).scalar_one_or_none()
+    if lead_id is not None:
+        agent.run_turn(session, lead_id)

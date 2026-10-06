@@ -183,3 +183,8 @@ def deliver(session: Session, message_id: UUID, now: datetime) -> None:
             "provider_id": receipt.provider_message_id,
         },
     )
+    # The first message that goes makes a new lead contacted (ADR-035).
+    session.execute(
+        text("UPDATE leads SET stage = 'contacted' WHERE id = :id AND stage = 'new'"),
+        {"id": row.lead_id},
+    )

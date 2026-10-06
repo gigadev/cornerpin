@@ -60,6 +60,13 @@ class Settings(BaseSettings):
     inbound_email_domain: str | None = None
     resend_webhook_secret: str | None = None
 
+    # The outreach agent (P2-05, ADR-038) stays dormant until the key is set: no follow-ups are
+    # queued and no model is called. It's pay as you go, so the key goes in only after a yes.
+    anthropic_api_key: str | None = None
+    agent_model: str = "claude-sonnet-5-5"
+    # How long after a consented inquiry the first follow-up is written.
+    agent_follow_up_minutes: int = 15
+
     # Uploaded photos and documents (ADR-025). "local" writes under storage_dir; "gcs" uses a
     # Cloud Storage bucket and stays dormant until storage_bucket is set.
     storage_backend: Literal["local", "gcs"] = "local"
@@ -90,6 +97,10 @@ class Settings(BaseSettings):
     @property
     def push_enabled(self) -> bool:
         return bool(self.vapid_public_key and self.vapid_private_key)
+
+    @property
+    def agent_enabled(self) -> bool:
+        return bool(self.anthropic_api_key)
 
     @property
     def google_enabled(self) -> bool:

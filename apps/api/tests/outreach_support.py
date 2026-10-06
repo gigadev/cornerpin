@@ -1,17 +1,22 @@
-"""Helpers for the outreach tests (P2-03, P2-04): a fake mailbox and clock, and shortcuts to a
-lead with consent and a queued message. The fixtures that install them are in conftest.py."""
+"""Helpers for the outreach tests (P2-03 to P2-05): a fake mailbox, clock and model, and
+shortcuts to a lead with consent and a queued message. The fixtures that install them are in
+conftest.py."""
 
+import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
+from anthropic.types import MessageParam, ToolParam
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
 from cornerpin.core.db import worker_session
 from cornerpin.notifications.email import Email
+from cornerpin.outreach.model import ModelReply, ToolCall, Usage
 from cornerpin.outreach.service import request_send
 
 from .conftest import Databases, Listing
@@ -96,6 +101,50 @@ def timeline(db: Databases, lead_id: UUID) -> list[Any]:
                 {"l": lead_id},
             )
         )
+
+
+Step = ModelReply | Callable[[list[MessageParam]], ModelReply]
+
+
+@dataclass
+class ScriptedModel:
+    """Stands in for Claude (P2-05): each call takes the next step, a reply or a function of the
+    conversation so far. Running out of steps fails the test's turn."""
+
+    steps: list[Step] = field(default_factory=lambda: list[Step]())
+    calls: list[tuple[str, list[MessageParam]]] = field(default_factory=lambda: [])
+    name: str = "scripted"
+
+    def reply(
+        self, *, system: str, messages: list[MessageParam], tools: list[ToolParam]
+    ) -> ModelReply:
+        self.calls.append((system, list(messages)))
+        if not self.steps:
+            raise AssertionError("the model was called more often than scripted")
+        step = self.steps.pop(0)
+        return step(messages) if callable(step) else step
+
+
+def use(name: str, **arguments: Any) -> ModelReply:
+    """A reply that calls one tool."""
+    return ModelReply(
+        text="",
+        tool_calls=(ToolCall(id=f"call_{uuid4().hex[:8]}", name=name, input=arguments),),
+        stop_reason="tool_use",
+    )
+
+
+def write(body: str) -> ModelReply:
+    return ModelReply(text=body, usage=Usage(input_tokens=1000, output_tokens=100))
+
+
+def last_result(messages: list[MessageParam]) -> dict[str, Any]:
+    """The JSON the last tool call returned."""
+    content = messages[-1]["content"]
+    assert not isinstance(content, str)
+    block: Any = list(content)[-1]
+    result: dict[str, Any] = json.loads(block["content"])
+    return result
 
 
 def email_of(client: TestClient) -> str:

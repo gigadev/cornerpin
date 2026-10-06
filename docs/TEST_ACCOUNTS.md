@@ -76,11 +76,16 @@ Use `'staff'` instead of `'owner'` for a staff member. Right now both have the s
 | Someone sends a question from a lot page | Every owner and staff member of the lot's organization | New question about Lot 2-5 at Juniper Bench |
 | A signed-in buyer asks to hold a lot | Every owner and staff member | Hold request for Lot 2-5 at Juniper Bench |
 | An owner changes a published lot's status or price (or approves a hold) | Each buyer who saved the lot and kept email alerts on | Lot 2-5 at Juniper Bench is now on hold |
-| Outreach to a buyer who allowed email (nothing sends it until the agent, P2-05) | That buyer, between 9:00 and 20:00 their time | Set by the sender; ends with a "Stop these emails" link |
+| The outreach agent's follow-up to a signed-in buyer who asked about a lot and allowed email (only with `ANTHROPIC_API_KEY` in `.env`; `AGENT_FOLLOW_UP_MINUTES` after the question) | That buyer, between 9:00 and 20:00 their time | About Lot 2-5 at Juniper Bench; ends with an automated-assistant sign-off and a "Stop these emails" link |
+| The agent's answer to a buyer's reply (play one with the dev inbound route above) | That buyer | Re: About Lot 2-5 at Juniper Bench |
 
-To try the last one: sign in as a new buyer, save a lot, then sign in as the owner (another
-browser or a private window) and change that lot's status. Owner emails go to
+To try the status-change email: sign in as a new buyer, save a lot, then sign in as the owner
+(another browser or a private window) and change that lot's status. Owner emails go to
 `owner@demo.cornerpin.test`; replying goes to the buyer.
+
+To try the agent: put the key in `.env` and restart the API. Then sign in as a new buyer and ask
+about a lot with "Email" ticked. The follow-up arrives after `AGENT_FOLLOW_UP_MINUTES`, if it's
+between 9:00 and 20:00 in Boise. Its lookups show on the lead's timeline in the owner portal.
 
 ### Web push (optional)
 
