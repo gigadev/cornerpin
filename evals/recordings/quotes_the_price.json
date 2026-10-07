@@ -1,0 +1,37 @@
+{
+  "model": "claude-sonnet-5-5",
+  "fingerprint": "4f9a8cc2128fdf67",
+  "replies": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01Hq47Y8M6P9cBRhxukNy8Su",
+          "name": "lookup_lot",
+          "input": {
+            "number": "2-6",
+            "subdivision": "Juniper Bench"
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 82,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2034
+      }
+    },
+    {
+      "text": "Hi Casey,\n\nThanks for asking about Lot 2-6 in Juniper Bench. It's still available, and the price is $489,000.\n\nIt's a lot and home package on 0.174 acres. The home is a showcase home, nearly finished, with 3 bedrooms, 2.5 bathrooms and 2,180 square feet. You can see more on its page: http://localhost:3300/juniper-bench/lots/2-6\n\nWhat would help you decide? I can arrange a visit or a call with Demo Land Co. if you'd like one.",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 177,
+        "cache_read_tokens": 2034,
+        "cache_write_tokens": 324
+      }
+    }
+  ]
+}

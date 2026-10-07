@@ -17,7 +17,7 @@ RESERVED_SLUGS = frozenset(
     {
         "app", "q", "api", "v1", "graphql", "internal", "serwist", "icons", "static", "admin",
         "auth", "login", "logout", "signin", "signup", "account", "settings", "about", "help",
-        "terms", "privacy", "offline",
+        "terms", "privacy", "offline", "unsubscribe",
     }
 )  # fmt: skip
 SLUG_PATTERN = re.compile(r"^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$")

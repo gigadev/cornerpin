@@ -11,16 +11,21 @@ from cornerpin.core.config import get_settings
 from cornerpin.core.housekeeping import run_housekeeping
 from cornerpin.core.internal import cloud_tasks_dispatcher
 from cornerpin.core.outbox import InProcessRunner, set_dispatcher
-from cornerpin.leads import buyer_routes, owner_routes
+from cornerpin.integrations import handlers as integration_handlers
+from cornerpin.integrations import routes as integration_routes
+from cornerpin.leads import buyer_routes, lead_routes, owner_routes
 from cornerpin.listings import geometry_routes, media_routes, public_files, qr
 from cornerpin.listings import routes as listings_routes
 from cornerpin.listings.public_graphql import graphql_router
 from cornerpin.notifications import handlers as notification_handlers
 from cornerpin.notifications import prefs as notification_prefs
 from cornerpin.notifications import push
+from cornerpin.outreach import handlers as outreach_handlers
+from cornerpin.outreach import routes as outreach_routes
+from cornerpin.outreach import webhooks as outreach_webhooks
 
 # Importing a module that defines outbox handlers registers them.
-OUTBOX_HANDLER_MODULES = (notification_handlers, storage)
+OUTBOX_HANDLER_MODULES = (notification_handlers, storage, outreach_handlers, integration_handlers)
 
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
@@ -78,8 +83,13 @@ def create_app() -> FastAPI:
     v1.include_router(qr.router)
     v1.include_router(buyer_routes.router)
     v1.include_router(owner_routes.router)
+    v1.include_router(lead_routes.router)
     v1.include_router(notification_prefs.router)
     v1.include_router(push.router)
+    v1.include_router(outreach_routes.router)
+    v1.include_router(outreach_webhooks.router)
+    v1.include_router(integration_routes.router)
+    v1.include_router(integration_routes.hidden)
     app.include_router(v1)
     app.include_router(internal.router, include_in_schema=False)
     app.include_router(graphql_router(), prefix="/graphql", include_in_schema=False)

@@ -1,11 +1,12 @@
 import { Breadcrumbs } from "@/components/portal/breadcrumbs";
+import { ContactLine } from "@/components/portal/contact-line";
 import { HoldDecision } from "@/components/portal/hold-decision";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { getTenant, loadOr404 } from "@/lib/api/portal";
 import type { components } from "@/lib/api/schema";
 import { getMe, serverApi } from "@/lib/api/server";
-import { channelLabel, formatWhen, holdStatusLabel, type Channel } from "@/lib/format";
+import { formatWhen, holdStatusLabel } from "@/lib/format";
 
 // Buyers' inquiries and hold requests for one tenant (P1-08). Email alerts for new ones come
 // with P1-09; until then this page is where they reach the owner.
@@ -14,37 +15,6 @@ type Inquiry = components["schemas"]["InquiryOut"];
 type HoldRequest = components["schemas"]["HoldRequestOut"];
 
 const DEFAULT_TIME_ZONE = "America/Boise";
-
-function ContactLine({
-  email,
-  phone,
-  signedIn,
-  contact,
-}: {
-  email: string;
-  phone: string | null;
-  signedIn: boolean;
-  contact: Channel[];
-}) {
-  return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
-      <a href={`mailto:${email}`} className="underline">
-        {email}
-      </a>
-      {phone ? (
-        <a href={`tel:${phone}`} className="underline">
-          {phone}
-        </a>
-      ) : null}
-      {signedIn ? null : <span className="text-muted-foreground">Email not verified</span>}
-      <span className="text-muted-foreground">
-        {contact.length > 0
-          ? `Allows: ${contact.map(channelLabel).join(", ").toLowerCase()}`
-          : "Reply only"}
-      </span>
-    </div>
-  );
-}
 
 function HoldCard({
   tenantId,

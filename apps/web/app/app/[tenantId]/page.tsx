@@ -24,9 +24,15 @@ export default async function TenantPortal({
   const tenant = await getTenant(tenantId);
   const api = await serverApi();
   const options = { params: { path: { tenant_id: tenantId } } };
-  const [subdivisions, holds] = await Promise.all([
+  const [subdivisions, holds, waiting] = await Promise.all([
     loadOr404(api.GET("/v1/tenants/{tenant_id}/subdivisions", options), `/app/${tenantId}`),
     loadOr404(api.GET("/v1/tenants/{tenant_id}/hold-requests", options), `/app/${tenantId}`),
+    loadOr404(
+      api.GET("/v1/tenants/{tenant_id}/leads", {
+        params: { ...options.params, query: { needs_human: true } },
+      }),
+      `/app/${tenantId}`,
+    ),
   ]);
   const pendingHolds = holds.filter((hold) => hold.status === "pending").length;
 
@@ -36,6 +42,15 @@ export default async function TenantPortal({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold tracking-tight">{tenant.name}</h1>
         <div className="flex flex-wrap gap-2">
+          <Button asChild variant="outline">
+            <Link href={`/app/${tenantId}/leads`}>
+              Leads
+              {waiting.needs_human > 0 ? ` (${waiting.needs_human} need a person)` : ""}
+            </Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href={`/app/${tenantId}/integrations`}>Integrations</Link>
+          </Button>
           <Button asChild variant="outline">
             <Link href={`/app/${tenantId}/inquiries`}>
               Inquiries and holds

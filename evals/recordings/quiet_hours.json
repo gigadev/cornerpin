@@ -1,0 +1,56 @@
+{
+  "model": "claude-sonnet-5-5",
+  "fingerprint": "4f9a8cc2128fdf67",
+  "replies": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01U699C8fk9Zbo7dRybYCjFQ",
+          "name": "lookup_lot",
+          "input": {
+            "number": "3-3",
+            "subdivision": "Juniper Bench"
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 82,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2022
+      }
+    },
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01T4naZeMjAC3dNqucefEyjX",
+          "name": "handoff_to_human",
+          "input": {
+            "reason": "Buyer Casey Rivera asks whether Lot 3-3, Juniper Bench is flat; lot data has no topography/grade info."
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 121,
+        "cache_read_tokens": 2022,
+        "cache_write_tokens": 268
+      }
+    },
+    {
+      "text": "Hi Casey,\n\nThank you for asking about Lot 3-3 in Juniper Bench. It's available. It's listed as land only, at $115,000, on 0.191 acres.\n\nI don't have any information on how flat the lot is, so I've passed your question to Demo Land Co. They'll reply to you personally.\n\nIs there anything else that would help you decide, like what you plan to build?",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 126,
+        "cache_read_tokens": 2290,
+        "cache_write_tokens": 168
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "model": "claude-sonnet-5-5",
+  "fingerprint": "4f9a8cc2128fdf67",
+  "replies": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01XQMv8BYdEK8hQU8tvzZkXu",
+          "name": "lookup_lot",
+          "input": {
+            "number": "2-10",
+            "subdivision": "Juniper Bench"
+          }
+        },
+        {
+          "id": "toolu_01VsXxALfuJ3frgkDFWK9RuQ",
+          "name": "handoff_to_human",
+          "input": {
+            "reason": "Casey Rivera asked about HOA dues and whether utilities are stubbed to Lot 2-10, Juniper Bench; I can't answer these."
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 180,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2037
+      }
+    },
+    {
+      "text": "Hi Casey,\n\nThank you for asking about Lot 2-10 in Juniper Bench. It's available and listed at $110,500. It's 0.173 acres, land only.\n\nI don't have details on HOA dues or whether utilities are stubbed to the lot. I've passed your questions to Demo Land Co., and they'll reply to you personally.\n\nIs there anything else that would help you decide about this lot?",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 133,
+        "cache_read_tokens": 2037,
+        "cache_write_tokens": 490
+      }
+    }
+  ]
+}

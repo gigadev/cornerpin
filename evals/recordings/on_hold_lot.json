@@ -1,0 +1,56 @@
+{
+  "model": "claude-sonnet-5-5",
+  "fingerprint": "4f9a8cc2128fdf67",
+  "replies": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01BTWafPTjRmhtg1ir9m5bR1",
+          "name": "lookup_lot",
+          "input": {
+            "number": "2-3",
+            "subdivision": "Juniper Bench"
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 82,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2023
+      }
+    },
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_011jMtNbqvSN4a94SWAuGfoM",
+          "name": "check_availability",
+          "input": {
+            "subdivision": "Juniper Bench"
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 85,
+        "cache_read_tokens": 2023,
+        "cache_write_tokens": 270
+      }
+    },
+    {
+      "text": "Hi Casey, thanks for asking about Lot 2-3 at Juniper Bench.\n\nLot 2-3 is on hold right now, so it isn't available to buy at the moment. It's a land-only lot of 0.174 acres, listed at $109,000.\n\nA few similar land-only lots are available. Lot 2-4 is 0.174 acres at $110,500. Lot 2-12 is 0.173 acres at $109,000. You can see Lot 2-4 here: http://localhost:3300/juniper-bench/lots/2-4\n\nWhat matters most to you in a lot, such as size, location in the neighborhood, or price? That will help me point you to the right one.",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 219,
+        "cache_read_tokens": 2293,
+        "cache_write_tokens": 1536
+      }
+    }
+  ]
+}

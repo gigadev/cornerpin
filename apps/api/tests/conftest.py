@@ -8,7 +8,7 @@ import os
 import tempfile
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 import pytest
@@ -24,6 +24,9 @@ from cornerpin.core.config import get_settings
 from cornerpin.devtools import recreate_database
 from cornerpin.main import create_app
 
+if TYPE_CHECKING:  # imported lazily below: outreach_support imports this module
+    from .outreach_support import Clock, Mailbox
+
 TEST_DATABASE = "cornerpin_test"
 
 _dev = get_settings()
@@ -32,6 +35,8 @@ TEST_API_URL = make_url(_dev.api_database_url).set(database=TEST_DATABASE)
 os.environ["DATABASE_URL"] = TEST_OWNER_URL.render_as_string(hide_password=False)
 os.environ["API_DATABASE_URL"] = TEST_API_URL.render_as_string(hide_password=False)
 os.environ["OUTBOX_RUNNER"] = "off"
+# Never the real model, even with a key in .env: agent tests install a scripted one.
+os.environ["ANTHROPIC_API_KEY"] = ""
 # Uploaded files go to a throwaway folder, not the developer's var/storage.
 os.environ["STORAGE_DIR"] = tempfile.mkdtemp(prefix="cornerpin-test-storage-")
 get_settings.cache_clear()
@@ -152,10 +157,31 @@ def build_tenant(conn: Connection, label: str) -> TenantData:
     )
 
 
+def add_outreach_rows(conn: Connection, tenant: TenantData) -> None:
+    """Rows for the Phase 2 tables a tenant's activity doesn't fill (the inquiry above makes the
+    lead and its events). Separate from build_tenant, which also builds pre-0011 databases."""
+    params = {"t": tenant.tenant_id, "b": tenant.buyer_id}
+    conn.execute(
+        text(
+            "INSERT INTO outreach_messages (tenant_id, lead_id, channel, direction, status, body)"
+            " SELECT tenant_id, id, 'email', 'outbound', 'sent', 'Hello' FROM leads"
+            " WHERE tenant_id = :t AND user_id = :b"
+        ),
+        params,
+    )
+    conn.execute(
+        text("INSERT INTO integration_connections (tenant_id, provider) VALUES (:t, 'slack')"),
+        params,
+    )
+
+
 @pytest.fixture(scope="session")
 def tenants(db: Databases) -> tuple[TenantData, TenantData]:
     with db.owner.begin() as conn:
-        return build_tenant(conn, "alpha"), build_tenant(conn, "bravo")
+        built = build_tenant(conn, "alpha"), build_tenant(conn, "bravo")
+        for tenant in built:
+            add_outreach_rows(conn, tenant)
+        return built
 
 
 @pytest.fixture
@@ -256,3 +282,36 @@ def listing(alpha_owner: TestClient, tenants: tuple[TenantData, TenantData]) -> 
         sold=lot("2", published=True, status="sold"),
         unpublished=lot("3"),
     )
+
+
+# --- outreach (P2-03, P2-04) ---------------------------------------------------------------
+
+
+@pytest.fixture
+def outreach_mail(db: Databases, monkeypatch: pytest.MonkeyPatch) -> "Mailbox":
+    """Outreach and notification email into a list, starting from an empty outbox."""
+    from .outreach_support import Mailbox
+
+    box = Mailbox()
+    from cornerpin.notifications import handlers as notification_handlers
+    from cornerpin.outreach import channels
+
+    monkeypatch.setattr(channels, "get_email_sender", lambda: box)
+    monkeypatch.setattr(notification_handlers, "get_email_sender", lambda: box)
+    from cornerpin.core.outbox import drain
+
+    drain()  # start from an empty outbox; earlier tests leave events behind
+    box.sent.clear()
+    return box
+
+
+@pytest.fixture
+def clock(monkeypatch: pytest.MonkeyPatch) -> "Clock":
+    """Outreach's idea of now, fixed at a weekday afternoon in Boise."""
+    from .outreach_support import Clock
+
+    fixed = Clock()
+    from cornerpin.outreach import policy
+
+    monkeypatch.setattr(policy, "utcnow", fixed)
+    return fixed

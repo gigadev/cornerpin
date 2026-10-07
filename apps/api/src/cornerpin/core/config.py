@@ -12,6 +12,8 @@ REPO_ROOT = Path(__file__).resolve().parents[5]
 TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA"
 TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA"  # noqa: S105 -- public test key
 LOCAL_SECRET_KEY = "local-development-only-not-a-secret"  # noqa: S105 -- refused outside local
+# "local-integrations-key-32-bytes!", base64: seals local integration credentials only.
+LOCAL_INTEGRATIONS_KEY = "bG9jYWwtaW50ZWdyYXRpb25zLWtleS0zMi1ieXRlcyE="
 
 
 class Settings(BaseSettings):
@@ -53,6 +55,27 @@ class Settings(BaseSettings):
     smtp_host: str = "localhost"
     smtp_port: int = 1025
     resend_api_key: str | None = None
+    # Replies to outreach (P2-04, ADR-037): the subdomain whose mail Resend receives, and the
+    # signing secret of the Resend webhook that reports it. Without a domain, outreach replies
+    # go to the owner's own address. Locally a domain alone lets /v1/dev/inbound-email play
+    # the provider.
+    inbound_email_domain: str | None = None
+    resend_webhook_secret: str | None = None
+
+    # The outreach agent (P2-05, ADR-038) stays dormant until the key is set: no follow-ups are
+    # queued and no model is called. It's pay as you go, so the key goes in only after a yes.
+    anthropic_api_key: str | None = None
+    agent_model: str = "claude-sonnet-5-5"
+    # How long after a consented inquiry the first follow-up is written.
+    agent_follow_up_minutes: int = 15
+
+    # Per-tenant integrations (ADR-040). Their credentials are sealed with this key (32 bytes,
+    # base64) in the database; the local default is refused elsewhere.
+    integrations_key: str = LOCAL_INTEGRATIONS_KEY
+    # Cornerpin's Slack app (P2-07). Slack stays dormant until all three are set.
+    slack_client_id: str | None = None
+    slack_client_secret: str | None = None
+    slack_signing_secret: str | None = None
 
     # Uploaded photos and documents (ADR-025). "local" writes under storage_dir; "gcs" uses a
     # Cloud Storage bucket and stays dormant until storage_bucket is set.
@@ -86,6 +109,14 @@ class Settings(BaseSettings):
         return bool(self.vapid_public_key and self.vapid_private_key)
 
     @property
+    def agent_enabled(self) -> bool:
+        return bool(self.anthropic_api_key)
+
+    @property
+    def slack_enabled(self) -> bool:
+        return bool(self.slack_client_id and self.slack_client_secret and self.slack_signing_secret)
+
+    @property
     def google_enabled(self) -> bool:
         return bool(self.google_client_id and self.google_client_secret)
 
@@ -98,10 +129,19 @@ class Settings(BaseSettings):
             problems.append("SECRET_KEY must be set")
         if TURNSTILE_TEST_SECRET_KEY in (self.turnstile_secret_key, self.turnstile_site_key):
             problems.append("Turnstile test keys are for local use only")
+        # Salesforce can be connected without any app-level setting, so the key is required
+        # whenever the app runs outside local, not only once Slack is configured.
+        if self.integrations_key == LOCAL_INTEGRATIONS_KEY:
+            problems.append("INTEGRATIONS_KEY must be set")
         if self.storage_backend == "gcs" and not self.storage_bucket:
             problems.append("STORAGE_BUCKET must be set for the gcs storage backend")
         if self.email_backend == "resend" and not self.resend_api_key:
             problems.append("RESEND_API_KEY must be set for the resend email backend")
+        if self.inbound_email_domain and not (self.resend_webhook_secret and self.resend_api_key):
+            problems.append(
+                "RESEND_WEBHOOK_SECRET and RESEND_API_KEY must be set to receive email"
+                " at INBOUND_EMAIL_DOMAIN"
+            )
         if self.outbox_runner == "cloudtasks" and not (
             self.cloud_tasks_queue and self.internal_base_url and self.tasks_service_account
         ):

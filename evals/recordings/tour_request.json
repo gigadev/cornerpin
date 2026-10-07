@@ -1,0 +1,77 @@
+{
+  "model": "claude-sonnet-5-5",
+  "fingerprint": "4f9a8cc2128fdf67",
+  "replies": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01MyKHBMEHkv892kCseQnQuk",
+          "name": "lookup_lot",
+          "input": {
+            "number": "2-6",
+            "subdivision": "Juniper Bench"
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 82,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2026
+      }
+    },
+    {
+      "text": "Hi Casey,\n\nThank you for asking about Lot 2-6 in Juniper Bench. The home has 2.5 bathrooms. It's a 3-bedroom, 2,180 square foot showcase home that's nearly finished. The lot is 0.174 acres, and it's currently available at $489,000.\n\nYou can see more on the listing page: http://localhost:3300/juniper-bench/lots/2-6\n\nWhat would help you most in deciding? I can answer questions about the home, or Demo Land Co. can set up a visit or a call.",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 177,
+        "cache_read_tokens": 2026,
+        "cache_write_tokens": 324
+      }
+    },
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01DoPaTtSGmoJsnM5BqgxEBR",
+          "name": "lookup_lot",
+          "input": {
+            "number": "2-6",
+            "subdivision": "Juniper Bench"
+          }
+        },
+        {
+          "id": "toolu_01LffP4ih71c6MnEaTmzzqwM",
+          "name": "request_tour",
+          "input": {
+            "lot_number": "2-6",
+            "subdivision": "Juniper Bench",
+            "preferred_times": "This Saturday morning (buyer asked to walk through the home)"
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 206,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2299
+      }
+    },
+    {
+      "text": "Hi Casey,\n\nI'd be glad to help with a walk-through of Lot 2-6. I've passed your request for Saturday morning to Demo Land Co. They'll reply to you personally to arrange it. I can't confirm a time myself.\n\nLot 2-6 is still available. Is there anything else about the home you'd like to know before you visit?",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 114,
+        "cache_read_tokens": 2299,
+        "cache_write_tokens": 552
+      }
+    }
+  ]
+}

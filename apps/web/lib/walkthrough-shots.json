@@ -118,5 +118,17 @@
   "31-email-saved-lot": {
     "width": 1280,
     "height": 800
+  },
+  "32-portal-leads": {
+    "width": 1280,
+    "height": 800
+  },
+  "33-portal-lead": {
+    "width": 1280,
+    "height": 800
+  },
+  "34-portal-integrations": {
+    "width": 1280,
+    "height": 860
   }
 }

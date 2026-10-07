@@ -13,6 +13,11 @@ stays switched off until a Google client id exists.
 | Help: a tour of the site for buyers and owners | http://localhost:3300/help |
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
+| Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
+| Unsubscribe from an owner's outreach | The "Stop these emails" link in an outreach email (`/unsubscribe?token=…`) |
+| Play a buyer replying to outreach (local only) | `POST http://localhost:8000/v1/dev/inbound-email` with `to` set to the email's Reply-To (needs `INBOUND_EMAIL_DOMAIN=reply.cornerpin.test` in `.env`) |
+| Send a tenant's Slack alerts to a real channel (local only) | `POST http://localhost:8000/v1/dev/integrations/slack` with `{"tenant_id": "957ccd5e-b6d1-531f-a102-ddef309c396e", "webhook_url": "<an incoming webhook made in the Slack app>"}`; Integrations in the portal then shows it. New leads, hold requests and handoffs post there |
+| Sync a tenant to a real Salesforce org (works locally) | Integrations → Salesforce in the owner portal, with a Developer Edition org's My Domain and an External Client App's consumer key and secret; [INTEGRATIONS.md](INTEGRATIONS.md) has the steps. Leads, approved holds and lots then appear in the org |
 | Buyer account (saved lots, alerts, contact permissions) | http://localhost:3300/account |
 | Public page for the demo subdivision | http://localhost:3300/juniper-bench |
 | Public page for a lot | http://localhost:3300/juniper-bench/lots/2-5 |
@@ -73,10 +78,16 @@ Use `'staff'` instead of `'owner'` for a staff member. Right now both have the s
 | Someone sends a question from a lot page | Every owner and staff member of the lot's organization | New question about Lot 2-5 at Juniper Bench |
 | A signed-in buyer asks to hold a lot | Every owner and staff member | Hold request for Lot 2-5 at Juniper Bench |
 | An owner changes a published lot's status or price (or approves a hold) | Each buyer who saved the lot and kept email alerts on | Lot 2-5 at Juniper Bench is now on hold |
+| The outreach agent's follow-up to a signed-in buyer who asked about a lot and allowed email (only with `ANTHROPIC_API_KEY` in `.env`; `AGENT_FOLLOW_UP_MINUTES` after the question) | That buyer, between 9:00 and 20:00 their time | About Lot 2-5 at Juniper Bench; ends with an automated-assistant sign-off and a "Stop these emails" link |
+| The agent's answer to a buyer's reply (play one with the dev inbound route above) | That buyer | Re: About Lot 2-5 at Juniper Bench |
 
-To try the last one: sign in as a new buyer, save a lot, then sign in as the owner (another
-browser or a private window) and change that lot's status. Owner emails go to
+To try the status-change email: sign in as a new buyer, save a lot, then sign in as the owner
+(another browser or a private window) and change that lot's status. Owner emails go to
 `owner@demo.cornerpin.test`; replying goes to the buyer.
+
+To try the agent: put the key in `.env` and restart the API. Then sign in as a new buyer and ask
+about a lot with "Email" ticked. The follow-up arrives after `AGENT_FOLLOW_UP_MINUTES`, if it's
+between 9:00 and 20:00 in Boise. Its lookups show on the lead's timeline in the owner portal.
 
 ### Web push (optional)
 
@@ -144,11 +155,18 @@ Its uploads go to `var/e2e-storage`, emptied at the start of each run.
 run, and a temporary folder for uploads. It has two tenants, `alpha` and `bravo`, each with `owner@<tenant>.test` and
 `buyer@<tenant>.test`.
 
+**Agent evals** (`uv run python -m evals`, also run by pytest) use `cornerpin_evals`, rebuilt on
+every run with the demo seed. Each scenario signs in a new buyer,
+`<scenario>-<random>@buyers.cornerpin.test`. Its email is captured in memory and never reaches
+Mailpit. By default the model's replies come from `evals/recordings/`, which costs nothing.
+`--live` calls Claude with your `ANTHROPIC_API_KEY`, about 16 cents a run.
+
 ## Production
 
 Production (https://cornerpin.app) has no test accounts and refuses `.test` addresses. How it's
 set up, and the commands for seeding the demo and creating tenants, are in
-[DEPLOY.md](DEPLOY.md).
+[DEPLOY.md](DEPLOY.md). Its Phase 2 gate uses a buyer address of your own; the dev-only routes
+(`/v1/dev/inbound-email`, `/v1/dev/integrations/slack`) don't exist there.
 
 ## Keys and settings that are test-only
 

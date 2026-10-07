@@ -26,7 +26,7 @@ cornerpin-api = { workspace = true }
 [tool.ruff]
 line-length = 100
 target-version = "py313"
-src = ["apps/api/src", "apps/api/tests"]
+src = ["apps/api/src", "apps/api/tests", "evals"]
 extend-exclude = ["apps/web"]
 
 [tool.ruff.lint]
@@ -37,7 +37,7 @@ ignore = []
 "apps/api/tests/**" = ["S101"]
 
 [tool.pyright]
-include = ["apps/api/src", "apps/api/tests", "apps/api/migrations"]
+include = ["apps/api/src", "apps/api/tests", "apps/api/migrations", "evals"]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 extraPaths = ["apps/api/src"]

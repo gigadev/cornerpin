@@ -335,6 +335,7 @@ def create_lot(
         session.add(lot)
         with constraint_errors(MESSAGES):
             session.flush()
+        expect_events(session)  # the lots trigger queues it for integrations (ADR-041)
         return _lot_detail(session, lot.id)
 
 
@@ -360,8 +361,10 @@ def update_lot(tenant_id: UUID, lot_id: UUID, body: LotUpdate, user: SignedInUse
             lot.price = Decimal(body.price) if body.price is not None else None
         if body.status is not None:
             lot.status = body.status
-        if "price" in sent or body.status is not None:
-            expect_events(session)  # the lots trigger queues listings.lot_changed (ADR-029)
+        # The lots triggers queue listings.lot_changed (ADR-029) and, for a tenant with
+        # Salesforce, integrations.lot_changed (ADR-041), when these change.
+        if sent & {"number", "price", "status", "published", "listing_type"}:
+            expect_events(session)
         if body.listing_type is not None:
             lot.listing_type = body.listing_type
         if lot.listing_type == ListingType.LAND_ONLY:

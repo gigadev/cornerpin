@@ -20,6 +20,7 @@ import threading
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import ClassVar, Protocol
 
 from pydantic import BaseModel
@@ -71,10 +72,14 @@ def handler[E: Event](
     return register
 
 
-def enqueue(session: Session, event: Event) -> None:
+def enqueue(session: Session, event: Event, *, available_at: datetime | None = None) -> None:
+    """Queue `event` in this transaction; with `available_at`, not before then."""
     session.execute(
-        text("INSERT INTO outbox (event_type, payload) VALUES (:type, CAST(:payload AS jsonb))"),
-        {"type": event.event_type, "payload": event.model_dump_json()},
+        text(
+            "INSERT INTO outbox (event_type, payload, available_at)"
+            " VALUES (:type, CAST(:payload AS jsonb), coalesce(:at, now()))"
+        ),
+        {"type": event.event_type, "payload": event.model_dump_json(), "at": available_at},
     )
     expect_events(session)
 

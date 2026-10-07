@@ -461,6 +461,167 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/integrations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Integrations */
+        get: operations["list_integrations_v1_tenants__tenant_id__integrations_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/integrations/salesforce": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Connect Salesforce
+         * @description Store the org's credentials, sealed, and queue the connection: the worker signs in, sets
+         *     the org up and sends the lots. Replaces an earlier connection's credentials.
+         */
+        post: operations["connect_salesforce_v1_tenants__tenant_id__integrations_salesforce_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/integrations/slack/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Install Slack
+         * @description Send the owner to Slack to add Cornerpin's app and pick a channel.
+         */
+        get: operations["install_slack_v1_tenants__tenant_id__integrations_slack_install_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/integrations/{provider}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Integration
+         * @description Forget the connection and its credentials. Removing Cornerpin's app from the Slack
+         *     workspace or the Salesforce org is done there.
+         */
+        delete: operations["remove_integration_v1_tenants__tenant_id__integrations__provider__delete"];
+        options?: never;
+        head?: never;
+        /**
+         * Update Integration
+         * @description Switch alerts or syncing on or off; the connection stays.
+         */
+        patch: operations["update_integration_v1_tenants__tenant_id__integrations__provider__patch"];
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/leads": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Leads
+         * @description Newest activity first, optionally one stage or only those waiting for a person.
+         */
+        get: operations["list_leads_v1_tenants__tenant_id__leads_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/leads/{lead_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Lead */
+        get: operations["get_lead_v1_tenants__tenant_id__leads__lead_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update Lead
+         * @description Change the stage. The change goes on the timeline with who made it.
+         */
+        patch: operations["update_lead_v1_tenants__tenant_id__leads__lead_id__patch"];
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/leads/{lead_id}/handoff/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve Handoff
+         * @description Mark a handoff handled; it leaves the "needs a human" inbox.
+         */
+        post: operations["resolve_handoff_v1_tenants__tenant_id__leads__lead_id__handoff_resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/leads/{lead_id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add Note */
+        post: operations["add_note_v1_tenants__tenant_id__leads__lead_id__notes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/lots/{lot_id}": {
         parameters: {
             query?: never;
@@ -785,6 +946,31 @@ export interface paths {
         put?: never;
         /** Create Phase */
         post: operations["create_phase_v1_tenants__tenant_id__subdivisions__subdivision_id__phases_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/unsubscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Unsubscribe Page
+         * @description What the link would stop, without changing anything (mail scanners open links).
+         */
+        get: operations["unsubscribe_page_v1_unsubscribe_get"];
+        put?: never;
+        /**
+         * Unsubscribe
+         * @description Stop this owner contacting this buyer on this channel. Also the one-click target
+         *     (RFC 8058); its form body is ignored.
+         */
+        post: operations["unsubscribe_v1_unsubscribe_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1188,7 +1374,268 @@ export interface components {
             /** Subdivision Name */
             subdivision_name: string;
         };
+        /** Integration */
+        Integration: {
+            /**
+             * Account
+             * @description The Slack workspace, or the Salesforce org's domain
+             */
+            account: string | null;
+            /**
+             * Available
+             * @description Set up on this Cornerpin, so it can be connected
+             */
+            available: boolean;
+            /**
+             * Channel
+             * @description Where Slack alerts go
+             */
+            channel: string | null;
+            /**
+             * Enabled
+             * @description Alerts (Slack) or syncing (Salesforce) are on
+             */
+            enabled: boolean;
+            /**
+             * Error
+             * @description Why a connection failed, for the owner
+             */
+            error: string | null;
+            /**
+             * Provider
+             * @enum {string}
+             */
+            provider: "slack" | "salesforce";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_connected" | "connecting" | "connected" | "failed";
+        };
+        /** IntegrationUpdate */
+        IntegrationUpdate: {
+            /** Enabled */
+            enabled: boolean;
+        };
         JsonValue: unknown;
+        /** LeadDetail */
+        LeadDetail: {
+            /**
+             * Contact
+             * @description Channels the buyer currently allows
+             */
+            contact: ("email" | "sms" | "voice")[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /**
+             * Events
+             * @description Newest first
+             */
+            events: components["schemas"]["LeadEvent"][];
+            /**
+             * Handoff At
+             * @description Set while the lead needs a person
+             */
+            handoff_at: string | null;
+            /** Handoff Reason */
+            handoff_reason: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Last Activity At
+             * Format: date-time
+             */
+            last_activity_at: string;
+            /**
+             * Lots
+             * @description Lots the buyer has asked about or held
+             */
+            lots: components["schemas"]["LeadLot"][];
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /**
+             * Signed In
+             * @description Whether the buyer has signed in, so their email is proven
+             */
+            signed_in: boolean;
+            /**
+             * Source
+             * @description What first brought the buyer: inquiry, hold_request, ...
+             */
+            source: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
+        };
+        /**
+         * LeadEvent
+         * @description One timeline entry. Which optional fields are set depends on `kind`.
+         */
+        LeadEvent: {
+            /**
+             * Actor Email
+             * @description Who acted, if a person signed in did
+             */
+            actor_email: string | null;
+            /**
+             * By Buyer
+             * @description The buyer's own action (an inquiry, hold or consent)
+             */
+            by_buyer: boolean;
+            /** Channel */
+            channel: ("email" | "sms" | "voice") | null;
+            /** Consent Source */
+            consent_source: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** From Stage */
+            from_stage: ("new" | "contacted" | "engaged" | "holding" | "won" | "lost") | null;
+            /** Granted */
+            granted: boolean | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "inquiry" | "hold_requested" | "hold_approved" | "hold_declined" | "hold_withdrawn" | "consent_changed" | "stage_changed" | "note" | "handoff" | "handoff_resolved" | "message_sent" | "message_refused" | "message_received" | "agent_action";
+            lot: components["schemas"]["LeadLot"] | null;
+            /** Message */
+            message: string | null;
+            /** Note */
+            note: string | null;
+            /**
+             * Reason
+             * @description A handoff's reason, or why a message wasn't sent
+             */
+            reason: string | null;
+            /**
+             * Subject
+             * @description A sent or refused message's subject
+             */
+            subject: string | null;
+            /** To Stage */
+            to_stage: ("new" | "contacted" | "engaged" | "holding" | "won" | "lost") | null;
+            /**
+             * Tool
+             * @description Which tool the outreach agent used, for an agent_action
+             */
+            tool?: ("lookup_lot" | "check_availability" | "request_tour" | "log_timeline" | "handoff_to_human") | null;
+            /**
+             * Verified
+             * @description False for an anonymous inquiry, whose email is unproven
+             */
+            verified: boolean;
+        };
+        /** LeadList */
+        LeadList: {
+            /** Leads */
+            leads: components["schemas"]["LeadSummary"][];
+            /**
+             * Needs Human
+             * @description Leads waiting for a person
+             */
+            needs_human: number;
+            /**
+             * Stages
+             * @description Every stage, with how many leads are in it
+             */
+            stages: components["schemas"]["StageCount"][];
+        };
+        /** LeadLot */
+        LeadLot: {
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /** Number */
+            number: string;
+            /** Subdivision Name */
+            subdivision_name: string;
+        };
+        /** LeadSummary */
+        LeadSummary: {
+            /**
+             * Contact
+             * @description Channels the buyer currently allows
+             */
+            contact: ("email" | "sms" | "voice")[];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string;
+            /**
+             * Handoff At
+             * @description Set while the lead needs a person
+             */
+            handoff_at: string | null;
+            /** Handoff Reason */
+            handoff_reason: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Last Activity At
+             * Format: date-time
+             */
+            last_activity_at: string;
+            /**
+             * Lots
+             * @description Lots the buyer has asked about or held
+             */
+            lots: components["schemas"]["LeadLot"][];
+            /** Name */
+            name: string;
+            /** Phone */
+            phone: string | null;
+            /**
+             * Signed In
+             * @description Whether the buyer has signed in, so their email is proven
+             */
+            signed_in: boolean;
+            /**
+             * Source
+             * @description What first brought the buyer: inquiry, hold_request, ...
+             */
+            source: string;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
+        };
+        /** LeadUpdate */
+        LeadUpdate: {
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
+        };
         /**
          * ListingType
          * @enum {string}
@@ -1405,6 +1852,11 @@ export interface components {
              */
             type: "MultiPolygon";
         };
+        /** NoteCreate */
+        NoteCreate: {
+            /** Text */
+            text: string;
+        };
         /** NotificationPrefs */
         NotificationPrefs: {
             /**
@@ -1557,6 +2009,19 @@ export interface components {
          * @enum {string}
          */
         ReleaseStatus: "upcoming" | "released";
+        /**
+         * SalesforceCredentials
+         * @description From the owner's External Client App: its consumer key and secret, and the org's My
+         *     Domain.
+         */
+        SalesforceCredentials: {
+            /** Client Id */
+            client_id: string;
+            /** Client Secret */
+            client_secret: string;
+            /** Domain */
+            domain: string;
+        };
         /** SavedLot */
         SavedLot: {
             /**
@@ -1583,6 +2048,16 @@ export interface components {
         SignInResult: {
             /** Next */
             next: string;
+        };
+        /** StageCount */
+        StageCount: {
+            /** Count */
+            count: number;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
         };
         /** StatusChange */
         StatusChange: {
@@ -1721,6 +2196,18 @@ export interface components {
              * @enum {string}
              */
             role: "owner" | "staff";
+        };
+        /** Unsubscribe */
+        Unsubscribe: {
+            /** Allowed */
+            allowed: boolean;
+            /**
+             * Channel
+             * @enum {string}
+             */
+            channel: "email" | "sms" | "voice";
+            /** Tenant Name */
+            tenant_name: string;
         };
         /** ValidationError */
         ValidationError: {
@@ -2784,6 +3271,436 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InquiryOut"][];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_integrations_v1_tenants__tenant_id__integrations_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"][];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    connect_salesforce_v1_tenants__tenant_id__integrations_salesforce_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SalesforceCredentials"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    install_slack_v1_tenants__tenant_id__integrations_slack_install_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            303: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_integration_v1_tenants__tenant_id__integrations__provider__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                provider: "slack" | "salesforce";
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_integration_v1_tenants__tenant_id__integrations__provider__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                provider: "slack" | "salesforce";
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IntegrationUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Integration"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_leads_v1_tenants__tenant_id__leads_get: {
+        parameters: {
+            query?: {
+                stage?: ("new" | "contacted" | "engaged" | "holding" | "won" | "lost") | null;
+                needs_human?: boolean;
+            };
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadList"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_lead_v1_tenants__tenant_id__leads__lead_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lead_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_lead_v1_tenants__tenant_id__leads__lead_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lead_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeadUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_handoff_v1_tenants__tenant_id__leads__lead_id__handoff_resolve_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lead_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetail"];
+                };
+            };
+            /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Not waiting for a person */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_note_v1_tenants__tenant_id__leads__lead_id__notes_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                lead_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NoteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeadDetail"];
                 };
             };
             /** @description Not found, or not your tenant */
@@ -4087,6 +5004,82 @@ export interface operations {
             };
             /** @description Not found, or not your tenant */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_page_v1_unsubscribe_get: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Unsubscribe"];
+                };
+            };
+            /** @description The link was altered or no longer works */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unsubscribe_v1_unsubscribe_post: {
+        parameters: {
+            query: {
+                token: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Unsubscribe"];
+                };
+            };
+            /** @description The link was altered or no longer works */
+            400: {
                 headers: {
                     [name: string]: unknown;
                 };

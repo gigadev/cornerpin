@@ -88,9 +88,42 @@ Cloud accounts (Google Cloud, Neon, Resend, Twilio, Salesforce Developer Edition
 
 Twilio SMS registration is started during Phase 1 because approval takes days to weeks; it has fees, so ADR-016 applies.
 
-## Phases 2–4 (outline; tasks are written when each phase starts)
+## Phase 2 tasks
 
-**Phase 2** — lead pipeline and timeline; outreach agent with tools and consent checks, email first; eval suite in CI; Slack alerts and `/lot`; Salesforce lead and status sync; SMS once registration clears.
+Written 2026-10-02, when Phase 1 reached production. Phase 2 starts once the Phase 1 gate has
+been walked on cornerpin.app.
+
+| Task | Scope | Acceptance |
+| --- | --- | --- |
+| P2-01 Leads schema | `leads` (one per tenant and buyer: stage, source, notes), `lead_events` (the timeline: inquiry, hold, consent change, message, stage change, handoff), `outreach_messages` (every send and reply, with channel and provider id), `integration_connections` (per-tenant adapter settings); RLS forced with policies in the same migration; an inquiry or hold request creates or updates the lead and its event in the same transaction; an ops command backfills production's existing inquiries and holds | cross-tenant read returns 0 rows for every new table; an inquiry from a consented buyer shows as a lead with a timeline event |
+| P2-02 Leads in the portal | "Leads" list by stage with filters; a lead page with the timeline, consent per channel, notes and stage changes; a "needs a human" inbox for handoffs | Playwright: an inquiry appears as a lead; the owner changes its stage and sees it on the timeline |
+| P2-03 Outreach core | `outreach` module: a channel adapter interface, email first (the Phase 1 backend); before every send: current consent for that channel, opt-out, quiet hours in the recipient's time zone (the subdivision's when unknown), and per-lead and per-tenant daily caps; every send written to `outreach_messages`; an unsubscribe link that appends an opt-out consent row; sends happen only in outbox handlers | tests: no send without consent; a send in quiet hours waits for the next window; after an opt-out the next send is refused and logged as refused; every send has a row |
+| P2-04 Replies on the timeline | inbound email from buyers lands on the lead timeline: a signed provider webhook under `/webhooks`, matched to the lead by a token in the reply address; outreach email carries that reply-to; locally a dev route feeds the same handler | a signed webhook appends the reply to the right lead; an unsigned or unknown one is rejected and logged; a reply triggers the agent (P2-05) |
+| P2-05 Outreach agent | the Claude agent in `outreach`, with tools `lookup_lot`, `check_availability`, `request_tour` (logs and hands off until Zoom arrives in Phase 4), `log_timeline` and `handoff_to_human`; runs only in outbox handlers, never during a request; first follow-up to a consented lead after a delay, then one turn per reply; stops on opt-out, handoff, won or lost, or a touch cap; the prompt states only facts read through tools and hands off when unsure; dormant until `ANTHROPIC_API_KEY` is set | on the demo tenant a consented inquiry produces a follow-up in Mailpit quoting the lot's real price; every tool call is on the timeline; with no key, nothing runs |
+| P2-06 Eval suite | `evals/`: scripted conversations with checks for lot facts, invented prices, opt-out handling, handoff and quiet hours; a runner that reports cost; CI runs it on every PR (how, without spending on every push, is an ADR) | a planted regression (an invented price) fails the suite; the real-model run passes locally; CI is green on main |
+| P2-07 Slack | `integrations.slack` adapter behind the ADR-012 interface, enabled per tenant from the portal; alerts for a new lead, a hold request and a handoff; `/lot <subdivision> <number>` answering status and price; request signatures checked | on the demo tenant a new inquiry posts to the channel; `/lot` answers with the current price; a bad signature is rejected; a tenant without Slack sends nothing |
+| P2-08 Salesforce | `integrations.salesforce` adapter on Developer Edition with server-to-server auth; a lead becomes a Salesforce Lead on creation, stage changes set its status, an approved hold opens an Opportunity; lot status and price sync; idempotent through external ids, retried from the outbox | on the demo tenant a new lead appears in Salesforce after one drain; a stage change syncs; a failed call retries without a duplicate |
+| P2-09 SMS | Twilio adapter for the outreach channel: sends only with SMS consent and a phone on the profile; STOP, START and HELP handled by a signed webhook that appends consent rows; quiet hours apply; starts after 10DLC registration clears (ADR-016) | with Twilio's test credentials an SMS follow-up is logged; STOP appends an opt-out row and blocks the next send; a buyer without a phone gets email only |
+| P2-10 Live + gate | Terraform and `set-secrets.sh` for the new secrets; the demo tenant connected to Slack and Salesforce; budget check; docs (TEST_ACCOUNTS, WALKTHROUGH, DEPLOY, `/help`); the gate walked on cornerpin.app | opt in on the demo tenant and be followed up by the agent, with the lead showing in Slack and Salesforce |
+
+**Order.** P2-01 → P2-02. P2-03 → P2-04 → P2-05 → P2-06. P2-07 and P2-08 need only P2-01 and
+can be slotted in anywhere. P2-09 waits for Twilio and can land whenever registration clears.
+On 2026-10-06 Scott deferred P2-09 to avoid Twilio's fees for now: Phase 2 ships email-only
+outreach, and P2-10 goes ahead without it.
+P2-10 is last.
+
+**Costs (ADR-016).** Slack and Salesforce Developer Edition are free. The Claude API is pay as
+you go, likely a few dollars a month at demo volume; the key goes in only after a yes, before
+P2-05. Twilio registration (one-time, roughly $20–60) plus about $5–15 a month needs a yes
+before it starts, and it takes weeks to clear, so it should start at the beginning of the phase
+if SMS is wanted in it. Whether inbound email is on Resend's free tier is checked in P2-04.
+
+**Decisions this phase will need (one ADR each).** What creates a lead and its stages; the
+follow-up cadence and caps; the model, prompt and tool contract; how evals run in CI without
+spending on every push; the inbound email path; where per-tenant integration credentials live;
+the 10DLC campaign details.
+
+## Phases 3–4 (outline; tasks are written when each phase starts)
 
 **Phase 3** — outbox events exported to Snowflake; SQL models for funnel and sales pace; lead/deal score with reason codes and a decision log; decisioning split into its own service; financing demo module on synthetic data; owner dashboard. The Snowflake trial starts here, not before.
 

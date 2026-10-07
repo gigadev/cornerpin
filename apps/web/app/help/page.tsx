@@ -264,6 +264,29 @@ export default function HelpPage() {
               name="26-portal-inquiries"
               alt="Inquiries and holds, with a pending hold request and two questions"
             />
+            <P>
+              Leads gathers each person into one place: every question, hold request and contact
+              permission, with a stage you set and notes only your organization sees.
+            </P>
+            <Shot
+              name="33-portal-lead"
+              alt="A lead's page with its stage, a note form and a timeline of what the buyer did"
+            />
+            <P>
+              When a buyer lets you email them, Cornerpin&apos;s assistant can follow up for you.
+              It quotes only what your listings say, passes anything else to you (financing,
+              offers, visits), and stops when they ask it to. Their replies land on the lead&apos;s
+              timeline, and so does everything the assistant looked up or sent.
+            </P>
+            <P>
+              Integrations sends new leads, hold requests and anything that needs you to a Slack
+              channel, answers <code>/lot</code> in Slack, and keeps Salesforce in step with your
+              leads, holds and lots.
+            </P>
+            <Shot
+              name="34-portal-integrations"
+              alt="Integrations, with Slack connected to a channel and Salesforce ready to connect"
+            />
           </Section>
 
           <p className="text-muted-foreground">

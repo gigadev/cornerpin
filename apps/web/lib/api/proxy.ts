@@ -2,7 +2,20 @@
 // service; the browser only ever talks to the web origin, so the session cookie is first-party
 // (ADR-006, ADR-023).
 
-const REQUEST_HEADERS = ["accept", "content-type", "cookie", "origin", "user-agent"] as const;
+// svix-* sign inbound-email webhooks (ADR-037) and x-slack-* Slack's commands (ADR-040); the
+// API checks them against the raw body.
+const REQUEST_HEADERS = [
+  "accept",
+  "content-type",
+  "cookie",
+  "origin",
+  "user-agent",
+  "svix-id",
+  "svix-timestamp",
+  "svix-signature",
+  "x-slack-request-timestamp",
+  "x-slack-signature",
+] as const;
 const RESPONSE_HEADERS = [
   "cache-control",
   "content-disposition",

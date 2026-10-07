@@ -1,0 +1,44 @@
+{
+  "model": "claude-sonnet-5-5",
+  "fingerprint": "4f9a8cc2128fdf67",
+  "replies": [
+    {
+      "text": "",
+      "tool_calls": [
+        {
+          "id": "toolu_01LUYnfvRedfYNKpddzs3eSB",
+          "name": "lookup_lot",
+          "input": {
+            "number": "2-4",
+            "subdivision": "Juniper Bench"
+          }
+        },
+        {
+          "id": "toolu_018AfVhAUfJnhWSuJB8VLzVC",
+          "name": "handoff_to_human",
+          "input": {
+            "reason": "Casey Rivera asks about owner financing and monthly payment for Lot 2-4, Juniper Bench; tools can't answer financing."
+          }
+        }
+      ],
+      "stop_reason": "tool_use",
+      "usage": {
+        "input_tokens": 4,
+        "output_tokens": 205,
+        "cache_read_tokens": 0,
+        "cache_write_tokens": 2034
+      }
+    },
+    {
+      "text": "Hi Casey,\n\nThank you for asking about Lot 2-4 in Juniper Bench. It's available now. It's listed at $110,500, and it's 0.174 acres, land only.\n\nI can't speak to owner financing or what a monthly payment would be. I've passed your question to Demo Land Co., and they'll reply to you personally.\n\nWhat would help you most in deciding on this lot?",
+      "tool_calls": [],
+      "stop_reason": "end_turn",
+      "usage": {
+        "input_tokens": 2,
+        "output_tokens": 127,
+        "cache_read_tokens": 2034,
+        "cache_write_tokens": 486
+      }
+    }
+  ]
+}

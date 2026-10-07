@@ -15,6 +15,10 @@ locals {
     INTERNAL_BASE_URL     = local.api_url
     TASKS_SERVICE_ACCOUNT = google_service_account.tasks.email
     VAPID_PUBLIC_KEY      = var.vapid_public_key
+    # Phase 2 (ADR-042): each stays dormant while its terraform.tfvars switch is off.
+    AGENT_MODEL          = var.agent_model
+    INBOUND_EMAIL_DOMAIN = var.inbound_email_domain
+    SLACK_CLIENT_ID      = var.slack_client_id
   }
 }
 
@@ -43,7 +47,7 @@ resource "google_cloud_run_v2_service" "api" {
         }
       }
       dynamic "env" {
-        for_each = merge(local.api_secrets, local.push_secrets)
+        for_each = merge(local.api_secrets, local.optional_secrets)
         content {
           name = env.key
           value_source {
@@ -130,7 +134,8 @@ resource "google_cloud_run_v2_job" "ops" {
           }
         }
         dynamic "env" {
-          for_each = merge(local.api_secrets, local.job_secrets)
+          # The same settings as the API, so they pass the same checks at start-up.
+          for_each = merge(local.api_secrets, local.optional_secrets, local.job_secrets)
           content {
             name = env.key
             value_source {
