@@ -44,7 +44,7 @@ connected whenever the API runs.
   Applying first is safe because the running Phase 1 code ignores settings it doesn't know.
 - **Budget.** The Google Cloud budget stays $5. Phase 2 adds about $0.36 a month there:
   Secret Manager bills $0.06 per active version beyond six free, and Phase 2 adds up to five
-  versions to about seven. The Claude API is billed by Anthropic, capped in its Console, and is
+  versions to about seven. Scott approved that on 2026-10-06. The Claude API is billed by Anthropic, capped in its Console, and is
   about $2–5 a month at demo volume. Scott approved it on 2026-10-06. Resend's receiving, Slack
   and Salesforce Developer Edition are free.
 

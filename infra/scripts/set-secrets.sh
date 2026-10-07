@@ -46,9 +46,14 @@ if [ "$mode" = "phase2" ]; then
     put integrations-key "$(openssl rand -base64 32 | tr -d '\n')"
   fi
 
+  echo "Paste with right-click or Shift+Insert: in Git Bash, Ctrl+V types a control character."
   echo "Anthropic: platform.claude.com -> API Keys -> Create key (e.g. cornerpin-production)."
   value="$(maybe 'Anthropic API key')"
-  [ -z "$value" ] || { put anthropic-api-key "$value"; echo "    then: agent_enabled = true"; }
+  if [ -n "$value" ]; then
+    case "$value" in sk-ant-*) ;; *) echo "that isn't an Anthropic key (sk-ant-...)" >&2; exit 1 ;; esac
+    put anthropic-api-key "$value"
+    echo "    then: agent_enabled = true"
+  fi
 
   echo "Resend: Webhooks -> the cornerpin.app/v1/webhooks/resend endpoint -> Signing secret."
   value="$(maybe 'Resend webhook signing secret (whsec_...)')"
