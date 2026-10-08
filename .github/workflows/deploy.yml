@@ -90,6 +90,11 @@ jobs:
       - name: Deploy the API
         run: gcloud run deploy api --region "$REGION" --image "$REGISTRY/api:$SHA" --quiet
 
+      # Events a migration queued have had no drain to book their wake-up (ADR-043); one drain
+      # now handles those due and books the rest.
+      - name: Drain the outbox once
+        run: gcloud scheduler jobs run drain-outbox --location "$REGION" --quiet
+
       - name: Deploy the web app
         run: gcloud run deploy web --region "$REGION" --image "$REGISTRY/web:$SHA" --quiet
 

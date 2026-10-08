@@ -35,6 +35,12 @@ buyer's question waited for the next hourly drain and went out at 12:07.
 - Each drain makes one more Cloud Tasks call, well inside the free million a month.
 - An event that keeps failing stops after eight attempts, as before, so bookings stop too.
 
+## Later
+
+- **2026-10-08:** events a migration queues (migration 0018's backfill) have no drain after
+  them to book their wake-up, so they waited for the hourly sweep. The deploy now runs one drain
+  after the new API is live. The deployer holds `roles/cloudscheduler.jobRunner` for that.
+
 ## Related
 
 ADR-010 (outbox), ADR-023 (local runner), ADR-029 (Cloud Tasks), ADR-032, ADR-038

@@ -15,7 +15,9 @@ from pydantic import BaseModel, ConfigDict
 from cornerpin.core.config import get_settings
 from cornerpin.decisioning.features import LeadFeatures
 
-SERVICE_TIMEOUT = 15.0  # seconds; covers the service waking from zero and loading the model
+# Seconds. A cold start (the service waking from zero and loading the model) measured 10.6 s on
+# Cloud Run; a slower one still gets a retry from the outbox.
+SERVICE_TIMEOUT = 30.0
 
 
 class Reason(BaseModel):

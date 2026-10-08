@@ -55,7 +55,7 @@ then. Four things needed deciding:
   model it doesn't have. To try the real HTTP path locally, run the service on port 8200 and set
   the URL.
 - **Failures are retried by the outbox.** The handler stores a score only after the service
-  answers. A timeout, a 5xx or a cold start that runs past 15 seconds raises, and the outbox
+  answers. A timeout, a 5xx or a cold start that runs past 30 seconds raises, and the outbox
   retries with back-off (ADR-043). A score is never half-written, and the inputs check (ADR-045)
   stops a retry from adding a duplicate.
 - **Deploys:**
@@ -69,8 +69,10 @@ then. Four things needed deciding:
 
 - The API image is lighter and starts faster. A model change ships as a new decisioning image
   without touching the API.
-- The first score after a quiet spell waits for the service to start and load the model, a few
-  seconds. That's acceptable because scoring runs in the background.
+- The first score after a quiet spell waits for the service to start and load the model: 10.6
+  seconds on Cloud Run on 2026-10-08, about 2 to start and 8 to load LightGBM and the model.
+  That's why the API waits 30 seconds, and it's acceptable because scoring runs in the
+  background.
 - Scoring now crosses the network. If the service is down, scores lag until it's back; nothing
   else in the API depends on them.
 - Costs: Cloud Run stays in the free tier at this volume. The extra image may take Artifact

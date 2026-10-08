@@ -74,10 +74,15 @@ resource "google_service_account_iam_member" "api_acts_as_tasks" {
 
 # Deploys: push images, update services and jobs that run as the api and web accounts.
 resource "google_project_iam_member" "deployer" {
-  for_each = toset(["roles/run.developer", "roles/artifactregistry.writer"])
-  project  = var.project_id
-  role     = each.value
-  member   = "serviceAccount:${google_service_account.deployer.email}"
+  # jobRunner: the deploy runs the outbox drain once after the new API is live (ADR-043).
+  for_each = toset([
+    "roles/run.developer",
+    "roles/artifactregistry.writer",
+    "roles/cloudscheduler.jobRunner",
+  ])
+  project = var.project_id
+  role    = each.value
+  member  = "serviceAccount:${google_service_account.deployer.email}"
 }
 
 resource "google_service_account_iam_member" "deployer_acts_as" {
