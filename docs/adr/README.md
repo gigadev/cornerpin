@@ -53,6 +53,7 @@ not started yet is still binding: it describes how that part will be built.
 | [040](040-integration-credentials-and-slack.md) | Integration credentials live sealed in the database; Slack connects by OAuth | P2-07 | Accepted |
 | [041](041-salesforce-sync.md) | Salesforce sync: client credentials, upserts on Cornerpin IDs, fields made on connect | P2-08 | Accepted |
 | [042](042-phase-2-in-production.md) | Phase 2 in production: each feature switched on by its secret | P2-10 | Accepted |
+| [043](043-drain-booked-for-the-next-due-event.md) | Each drain books the next one for when the next event is due | Phase 2 fixes | Accepted |
 
 ## Adding a decision
 

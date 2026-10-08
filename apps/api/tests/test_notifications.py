@@ -3,6 +3,7 @@ about inquiries and hold requests; web push for devices that ask for it."""
 
 from collections.abc import Callable, Iterator, Mapping
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -15,7 +16,7 @@ from sqlalchemy import text
 from cornerpin.core import internal
 from cornerpin.core.db import user_session
 from cornerpin.core.housekeeping import run_housekeeping
-from cornerpin.core.outbox import drain, enqueue, set_dispatcher
+from cornerpin.core.outbox import drain, enqueue, schedule_next, set_dispatcher
 from cornerpin.devtools import vapid_keys
 from cornerpin.listings.events import LotChanged
 from cornerpin.listings.models import LotStatus
@@ -366,9 +367,13 @@ def test_only_status_and_price_changes_queue_an_event(
 @dataclass
 class CountingDispatcher:
     calls: int = 0
+    booked: list[datetime] = field(default_factory=lambda: [])
 
     def notify(self) -> None:
         self.calls += 1
+
+    def notify_at(self, when: datetime) -> None:
+        self.booked.append(when)
 
 
 @pytest.fixture
@@ -423,6 +428,37 @@ def test_cloud_tasks_dispatcher_creates_an_authenticated_task() -> None:
     ]
 
 
+def test_cloud_tasks_dispatcher_books_a_named_task_for_later() -> None:
+    posted: list[tuple[str, Json]] = []
+    tasks = internal.CloudTasksDispatcher(
+        queue="projects/p/locations/us-west1/queues/outbox",
+        base_url="https://api.example.test",
+        service_account="tasks@p.iam.gserviceaccount.com",
+        post=lambda url, body: posted.append((url, body)),
+    )
+    tasks.notify_at(datetime(2030, 1, 2, 3, 4, 5, 600_000, tzinfo=UTC))
+    [(_url, body)] = posted
+    task = body["task"]
+    assert task["scheduleTime"] == "2030-01-02T03:04:07Z"
+    stamp = int(datetime(2030, 1, 2, 3, 4, 7, tzinfo=UTC).timestamp())
+    assert task["name"] == f"projects/p/locations/us-west1/queues/outbox/tasks/outbox-{stamp}"
+    assert task["httpRequest"]["url"] == "https://api.example.test/internal/outbox/drain"
+
+
+def test_a_past_due_time_is_booked_for_now() -> None:
+    posted: list[Json] = []
+    tasks = internal.CloudTasksDispatcher(
+        queue="q",
+        base_url="https://api.example.test",
+        service_account="s",
+        post=lambda _url, body: posted.append(body),
+    )
+    before = datetime.now(UTC)
+    tasks.notify_at(before - timedelta(hours=1))
+    at = datetime.strptime(posted[0]["task"]["scheduleTime"], "%Y-%m-%dT%H:%M:%SZ")
+    assert before < at.replace(tzinfo=UTC) <= before + timedelta(seconds=3)
+
+
 GOOD_TOKEN = "good"  # noqa: S105 -- what the fake verifier accepts
 
 
@@ -450,6 +486,37 @@ def test_internal_endpoints_need_the_tasks_token(db: Databases, mailbox: Mailbox
         kept = client.post("/internal/housekeeping", headers={"Authorization": "Bearer good"})
         assert kept.status_code == 200
         assert set(kept.json()) == {"login_tokens", "sessions", "outbox_events"}
+
+
+def test_a_drain_books_the_next_delayed_event(
+    db: Databases,
+    dispatcher: CountingDispatcher,
+    tenants: tuple[TenantData, TenantData],
+    mailbox: Mailbox,
+) -> None:
+    alpha, _ = tenants
+    event = SavedLotEmail.model_validate(
+        {"user_id": alpha.buyer_id, "change": change().model_dump()}
+    )
+    later = datetime.now(UTC) + timedelta(minutes=15)
+    with user_session(alpha.buyer_id) as session:
+        enqueue(session, event, available_at=later)
+    app = create_app()
+    app.dependency_overrides[internal.get_task_verifier] = TokenVerifier
+    with TestClient(app) as client:
+        drained = client.post("/internal/outbox/drain", headers={"Authorization": "Bearer good"})
+    assert drained.json() == {"processed": 0}
+    assert dispatcher.booked == [later]
+    assert mailbox.sent == []
+
+
+def test_a_drain_with_nothing_waiting_books_nothing(
+    db: Databases, dispatcher: CountingDispatcher
+) -> None:
+    with db.owner.begin() as conn:
+        conn.execute(text("DELETE FROM outbox"))
+    assert schedule_next() is None
+    assert dispatcher.booked == []
 
 
 def test_housekeeping_removes_only_what_has_expired(db: Databases) -> None:

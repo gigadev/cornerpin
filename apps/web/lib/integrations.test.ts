@@ -70,8 +70,13 @@ describe("salesforceSummary", () => {
 
 describe("installNotice", () => {
   it("reads what Slack sent back", () => {
-    expect(installNotice("cancelled")).toBe("Slack wasn't added.");
-    expect(installNotice("connecting")).toMatch(/^Slack sent you back/);
-    expect(installNotice(undefined)).toBeNull();
+    expect(installNotice("cancelled", "not_connected")).toBe("Slack wasn't added.");
+    expect(installNotice("connecting", "connecting")).toMatch(/^Slack sent you back/);
+    expect(installNotice(undefined, "connected")).toBeNull();
+  });
+
+  it("drops the connecting notice once the connection is made or has failed", () => {
+    expect(installNotice("connecting", "connected")).toBeNull();
+    expect(installNotice("connecting", "failed")).toBeNull();
   });
 });

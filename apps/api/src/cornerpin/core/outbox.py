@@ -11,8 +11,10 @@ read what it needs and queue follow-up events: one event per recipient, so a ret
 repeats a send that already succeeded. A handler that fails leaves nothing behind.
 
 After a commit that queued events, the dispatcher is told: locally the in-process runner wakes;
-in the cloud a Cloud Task calls /internal/outbox/drain. A scheduled drain catches anything a
-notification missed and retries; code that may fire a queuing trigger calls `expect_events`.
+in the cloud a Cloud Task calls /internal/outbox/drain. Each cloud drain then books the next
+one for when the next waiting event is due (a delayed send, a retry), ADR-043. A scheduled
+drain catches anything a notification missed; code that may fire a queuing trigger calls
+`expect_events`.
 """
 
 import logging
@@ -140,6 +142,31 @@ def drain(*, max_batches: int = 50, engine: Engine | None = None) -> int:
     return total
 
 
+def next_due(*, engine: Engine | None = None) -> datetime | None:
+    """When the earliest event still waiting is due: in the future for a delayed send or a
+    retry's back-off, in the past if a drain stopped with work left. None if nothing waits."""
+    with worker_session(engine=engine) as session:
+        return session.execute(
+            text(
+                "SELECT min(available_at) FROM outbox"
+                " WHERE processed_at IS NULL AND attempts < :max"
+            ),
+            {"max": MAX_ATTEMPTS},
+        ).scalar_one()
+
+
+def schedule_next(*, engine: Engine | None = None) -> datetime | None:
+    """Ask the dispatcher to come back when the next waiting event is due. Returns that time."""
+    when = next_due(engine=engine)
+    if when is not None:
+        try:
+            _dispatcher.notify_at(when)
+        except Exception:
+            # The scheduled drain will pick it up instead, just later.
+            log.exception("could not schedule the next outbox drain")
+    return when
+
+
 def purge_processed(*, engine: Engine | None = None) -> int:
     """Delete events processed more than PROCESSED_KEEP_DAYS ago. Failed events stay, so
     they can be looked at."""
@@ -162,9 +189,16 @@ class Dispatcher(Protocol):
         """Events were committed; arrange for them to be processed soon."""
         ...
 
+    def notify_at(self, when: datetime) -> None:
+        """An event waits until `when`; arrange for it to be processed then."""
+        ...
+
 
 class _NoDispatch:
     def notify(self) -> None:
+        pass
+
+    def notify_at(self, when: datetime) -> None:
         pass
 
 
@@ -216,6 +250,9 @@ class InProcessRunner:
 
     def notify(self) -> None:
         self._wake.set()
+
+    def notify_at(self, when: datetime) -> None:
+        pass  # it polls every interval anyway
 
     def _run(self) -> None:
         while not self._stop.is_set():

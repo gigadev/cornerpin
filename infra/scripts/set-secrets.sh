@@ -55,6 +55,13 @@ if [ "$mode" = "phase2" ]; then
     echo "    then: agent_enabled = true"
   fi
 
+  echo "Resend: replies are fetched with the API key, so it needs Full access, not sending only."
+  value="$(maybe 'A new Resend API key, Full access (re_...; Enter keeps the current one)')"
+  if [ -n "$value" ]; then
+    case "$value" in re_*) ;; *) echo "that isn't a Resend key (re_...)" >&2; exit 1 ;; esac
+    put resend-api-key "$value"
+  fi
+
   echo "Resend: Webhooks -> the cornerpin.app/v1/webhooks/resend endpoint -> Signing secret."
   value="$(maybe 'Resend webhook signing secret (whsec_...)')"
   if [ -n "$value" ]; then
@@ -92,7 +99,8 @@ put database-url "$owner_url"
 put api-database-url "$api_url"
 put secret-key "$(openssl rand -base64 48 | tr -d '\n')"
 put turnstile-secret-key "$(ask 'Cloudflare Turnstile secret key for cornerpin.app')"
-put resend-api-key "$(ask 'Resend API key (sending access)')"
+# Full access: Phase 2 fetches buyers' replies with it; a sending-only key gets a 401.
+put resend-api-key "$(ask 'Resend API key (Full access)')"
 
 read -rp "Turn on web push now? Generates a key pair. [y/N] " push
 if [[ "$push" =~ ^[Yy]$ ]]; then

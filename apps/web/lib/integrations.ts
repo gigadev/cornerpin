@@ -48,9 +48,15 @@ export function toggleLabel(provider: Provider, enabled: boolean): string {
   return enabled ? `Turn ${what} off` : `Turn ${what} on`;
 }
 
-/** What came back from Slack's install page, from the ?slack= query. */
-export function installNotice(value: string | undefined): string | null {
-  if (value === "connecting") return "Slack sent you back. Finishing the connection…";
+/** What came back from Slack's install page, from the ?slack= query. The query stays in the
+ * address after a refresh, so "connecting" shows only while Slack's status still says so. */
+export function installNotice(
+  value: string | undefined,
+  status: Integration["status"] | undefined,
+): string | null {
+  if (value === "connecting") {
+    return status === "connecting" ? "Slack sent you back. Finishing the connection…" : null;
+  }
   if (value === "cancelled") return "Slack wasn't added.";
   return null;
 }

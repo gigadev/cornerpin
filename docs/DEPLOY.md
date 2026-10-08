@@ -19,7 +19,8 @@ once you've done those, with your go-ahead before anything is created.
    Postgres 17. In the branch's compute settings, set the maximum size to 0.25 CU so the free
    plan's 100 CU-hours a month go a long way.
 3. **Scott — Resend.** Add the domain `cornerpin.app` and the DNS records it shows, then create
-   an API key with sending access. Sign-in emails come from `hello@cornerpin.app` unless you
+   an API key. Sending access is enough for Phase 1; Phase 2 reads buyers' replies, which needs
+   **Full access** (a sending-only key gets a 401 on received mail). Sign-in emails come from `hello@cornerpin.app` unless you
    choose another sender (`email_from` in `terraform.tfvars`).
 4. **Scott — Cloudflare Turnstile.** Add a widget for `cornerpin.app` (Managed mode). Keep the
    site key (public) and the secret key.
@@ -139,6 +140,10 @@ Leave a switch off, and that feature stays dormant, until its secret is in.
         Resend drops mail for a domain whose receiving record isn't verified.
      4. On Webhooks, add `https://cornerpin.app/v1/webhooks/resend` for the `email.received`
         event, and keep its signing secret (`whsec_...`).
+     5. Check the API key is **Full access**. The webhook only says a reply arrived; the API
+        then fetches it with the key, and a sending-only key gets a 401. If it's
+        sending-only, create a Full access key and enter it at the script's Resend API key
+        prompt in step 4.
    - **Slack:**
      1. At api.slack.com/apps, choose **Create New App → From a manifest**, and paste
         [`infra/slack-app-manifest.yml`](../infra/slack-app-manifest.yml).
