@@ -1,4 +1,4 @@
-"""P3-01: risk scores and decisions (ADR-013, ADR-045)."""
+"""P3-01 and P3-02: risk scores, the lead model and decisions (ADR-013, ADR-045, ADR-046)."""
 
 from typing import Any
 from uuid import UUID
@@ -12,7 +12,17 @@ from cornerpin.core.db import user_session, worker_session
 from cornerpin.core.outbox import drain, enqueue
 from cornerpin.decisioning.events import ScoreLead
 from cornerpin.decisioning.features import LeadFeatures, price_band
-from cornerpin.decisioning.scoring import RulesBaseline
+from cornerpin.decisioning.model import (
+    MIN_REASONS,
+    Artifact,
+    ModelScorer,
+    describe,
+    encode,
+    explain,
+    read_artifact,
+)
+from cornerpin.decisioning.scoring import RulesBaseline, get_scorer
+from cornerpin.decisioning.training import generate, train
 
 from .conftest import Databases, Listing, TenantData
 from .outreach_support import email_of, inquire, lead_of
@@ -44,6 +54,12 @@ PERSONAL = (
 
 def looks_personal(feature: str) -> bool:
     return any(part.startswith(PERSONAL) for part in feature.split("_"))
+
+
+def assert_allowed(features: list[str] | tuple[str, ...]) -> None:
+    """The feature test: exactly the allowed list, and nothing that looks personal."""
+    assert set(features) == ALLOWED_FEATURES
+    assert [f for f in features if looks_personal(f)] == []
 
 
 def scores(db: Databases, lead_id: UUID) -> list[Any]:
@@ -83,8 +99,28 @@ def features(**changes: Any) -> LeadFeatures:
 
 
 def test_a_score_sees_only_the_allowed_features() -> None:
-    assert set(LeadFeatures.model_fields) == ALLOWED_FEATURES
-    assert [f for f in LeadFeatures.model_fields if looks_personal(f)] == []
+    assert_allowed(tuple(LeadFeatures.model_fields))
+    assert_allowed(read_artifact().metadata["features"])
+
+
+def test_a_model_trained_with_a_planted_personal_attribute_fails_the_feature_test() -> None:
+    planted = train(rows=1500, rounds=20, plant="buyer_age")
+    with pytest.raises(AssertionError):
+        assert_allowed(planted.features)
+    with pytest.raises(ValueError, match="buyer_age"):
+        ModelScorer(
+            Artifact(name="planted", model_text=planted.model_text, metadata=planted.metadata)
+        )
+
+
+def test_the_training_script_reproduces_the_artifact() -> None:
+    committed = read_artifact()
+    settings = committed.metadata["training"]
+    retrained = train(rows=settings["rows"], seed=settings["seed"], rounds=settings["rounds"])
+    assert retrained.metadata["metrics"] == committed.metadata["metrics"]
+    probe = [encode(f) for f in generate(300, seed=99)[0]]
+    again = ModelScorer(Artifact("retrained", retrained.model_text, retrained.metadata))
+    assert again.predict(probe) == pytest.approx(ModelScorer(committed).predict(probe), abs=1e-4)
 
 
 @pytest.mark.parametrize(
@@ -102,15 +138,16 @@ def test_a_new_lead_is_scored_with_reasons_within_one_drain(
     drain()
 
     [score] = scores(db, lead_id)
-    assert score.model_version == "rules-v1"
+    assert score.model_version == "lgbm-lead-v1"
     assert set(score.inputs) == ALLOWED_FEATURES
     assert score.inputs["stage"] == "new"
     assert score.inputs["listing_type"] == "land_only"
     assert score.inputs["phase_release"] == "upcoming"
     assert score.inputs["days_since_buyer_activity"] == 0
     assert 0 < score.score < 1
-    assert [r["code"] for r in score.reasons] == ["recent", "phase_upcoming"]
-    assert score.reasons[0]["text"] == "Active in the last week"
+    assert len(score.reasons) >= MIN_REASONS
+    assert {r["code"] for r in score.reasons} <= ALLOWED_FEATURES
+    assert all(r["text"] and r["weight"] != 0 for r in score.reasons)
 
 
 def test_the_same_history_is_scored_once(
@@ -136,7 +173,37 @@ def test_won_and_lost_leads_are_not_scored(
     assert scores(db, lead_id) == []
 
 
-def test_replying_and_asking_for_a_hold_scores_better_than_going_quiet() -> None:
+def test_the_model_scores_replying_and_asking_for_a_hold_better_than_going_quiet() -> None:
+    model = get_scorer()
+    keen = model.score(
+        features(stage="engaged", replies=1, hold_requests=1, days_since_buyer_activity=2)
+    )
+    quiet = model.score(
+        features(touches=3, days_since_buyer_activity=40, days_since_first_contact=45)
+    )
+    assert keen.score < 0.5 < quiet.score
+    assert keen.reasons[0].text == "Asked to hold a lot"
+    assert keen.reasons[0].weight < 0
+    assert {"touches", "replies", "days_since_buyer_activity"} <= {r.code for r in quiet.reasons}
+    assert all(r.weight > 0 for r in quiet.reasons[:3])
+
+
+def test_every_synthetic_lead_gets_at_least_three_reasons_in_words() -> None:
+    model = get_scorer()
+    for lead in generate(400, seed=5)[0]:
+        result = model.score(lead)
+        assert len(result.reasons) >= MIN_REASONS
+        assert all(r.text for r in result.reasons)
+
+
+def test_a_reply_that_raises_the_risk_says_only() -> None:
+    assert describe("replies", 1, 0.2) == "Replied only once"
+    assert describe("replies", 2, -0.2) == "Replied 2 times"
+    reasons = explain(features(replies=1), [0.0, 0.0, 0.3] + [0.0] * 8)
+    assert reasons[0].text == "Replied only once"
+
+
+def test_the_rules_baseline_scores_replying_and_asking_for_a_hold_better_than_going_quiet() -> None:
     rules = RulesBaseline()
     keen = rules.score(features(replies=1, hold_requests=1, days_since_buyer_activity=2))
     quiet = rules.score(features(touches=3, days_since_buyer_activity=40))

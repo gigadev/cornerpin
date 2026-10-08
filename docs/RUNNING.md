@@ -75,3 +75,4 @@ uv run python -m cornerpin.seed
 | Errors about missing tables after pulling new code | Run `uv run alembic upgrade head` |
 | Demo data looks wrong | `uv run python -m cornerpin.seed` puts it back |
 | pytest's evals test says a recording is "recorded under another prompt, tools or model" | The agent's prompt or tools changed: `uv run python -m evals --live --record` (about 16 cents) and commit `evals/recordings/` (ADR-039) |
+| pytest's decisioning test says the training script doesn't reproduce the artifact | The generator, its rules, the training parameters or LightGBM's version changed: `uv run python -m cornerpin.decisioning.training` and commit `apps/api/src/cornerpin/decisioning/models/` (ADR-046) |

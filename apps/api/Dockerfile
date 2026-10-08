@@ -16,6 +16,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --package cornerpin-api
 
 FROM python:3.13-slim-bookworm
+# LightGBM's wheel needs the OpenMP runtime (ADR-046), until scoring moves to its own service.
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
 ENV PATH=/repo/.venv/bin:$PATH PYTHONUNBUFFERED=1 PORT=8080
 WORKDIR /repo
 COPY --from=build /repo /repo

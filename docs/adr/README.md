@@ -56,6 +56,7 @@ not started yet is still binding: it describes how that part will be built.
 | [043](043-drain-booked-for-the-next-due-event.md) | Each drain books the next one for when the next event is due | Phase 2 fixes | Accepted |
 | [044](044-public-how-its-built-page.md) | A public page on how Cornerpin is built | after Phase 2 | Accepted |
 | [045](045-decisioning-schema-and-features.md) | Decisioning: what a score is, what it may look at, and where it's kept | P3-01 | Accepted |
+| [046](046-lead-model-on-synthetic-history.md) | The lead model: LightGBM on synthetic history, explained by its own contributions | P3-02 | Accepted |
 
 ## Adding a decision
 

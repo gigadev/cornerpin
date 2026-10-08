@@ -36,7 +36,8 @@ NO_REPLY_TOUCHES = 2
 
 
 class RulesBaseline:
-    """Hand-set weights in plain words, until the trained model replaces it (P3-02)."""
+    """Hand-set weights in plain words: the first scorer (P3-01), kept as the reference the
+    trained model is compared with (ADR-046)."""
 
     version = "rules-v1"
     base = 0.5
@@ -81,4 +82,7 @@ def _count(n: int, one: str, many: str) -> str:
 
 
 def get_scorer() -> Scorer:
-    return RulesBaseline()
+    """The trained model (ADR-046). The rules baseline stays as the documented reference."""
+    from cornerpin.decisioning.model import current_scorer
+
+    return current_scorer()
