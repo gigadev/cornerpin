@@ -11,6 +11,7 @@ stays switched off until a Google client id exists.
 | Web app | http://localhost:3300 |
 | Sign in | http://localhost:3300/signin |
 | Help: a tour of the site for buyers and owners | http://localhost:3300/help |
+| How Cornerpin is built (services, deploys, languages) | http://localhost:3300/about |
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
 | Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |

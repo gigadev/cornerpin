@@ -54,6 +54,7 @@ not started yet is still binding: it describes how that part will be built.
 | [041](041-salesforce-sync.md) | Salesforce sync: client credentials, upserts on Cornerpin IDs, fields made on connect | P2-08 | Accepted |
 | [042](042-phase-2-in-production.md) | Phase 2 in production: each feature switched on by its secret | P2-10 | Accepted |
 | [043](043-drain-booked-for-the-next-due-event.md) | Each drain books the next one for when the next event is due | Phase 2 fixes | Accepted |
+| [044](044-public-how-its-built-page.md) | A public page on how Cornerpin is built | after Phase 2 | Accepted |
 
 ## Adding a decision
 
