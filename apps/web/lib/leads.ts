@@ -1,5 +1,6 @@
 import type { components } from "@/lib/api/schema";
 import { channelLabel } from "./format";
+import { decisionTitle, shownScore } from "./scores";
 
 // Leads in the owner portal (P2-02, ADR-035): stage names and how timeline events read.
 
@@ -83,6 +84,11 @@ export function describeEvent(event: LeadEvent): { title: string; body: string |
       const why = event.reason ? (REFUSALS[event.reason] ?? event.reason) : null;
       return { title: why ? `Not sent: ${why}` : "Not sent", body: event.subject ?? null };
     }
+    case "decision":
+      return {
+        title: decisionTitle(event.decision?.kind, event.lot ? lotName(event) : null),
+        body: shownScore(event.decision?.score),
+      };
   }
 }
 

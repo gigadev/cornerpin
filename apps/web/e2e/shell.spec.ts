@@ -87,3 +87,15 @@ test("the guide is a click away from sign-in and from every page's header", asyn
   await page.getByRole("link", { name: "For owners" }).click();
   await expect(page.getByRole("heading", { name: "For owners" })).toBeInViewport();
 });
+
+test("how it's built is public and a click away from the guide", async ({ page }) => {
+  await page.goto("/help");
+  await page.getByRole("link", { name: "See how Cornerpin is built" }).click();
+  await expect(page).toHaveURL(/\/about$/);
+  await expect(
+    page.getByRole("heading", { level: 1, name: "How Cornerpin is built" }),
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "The services it runs on" })).toBeVisible();
+  const width = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(width).toBeLessThanOrEqual(page.viewportSize()?.width ?? width);
+});

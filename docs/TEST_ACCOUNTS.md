@@ -11,9 +11,11 @@ stays switched off until a Google client id exists.
 | Web app | http://localhost:3300 |
 | Sign in | http://localhost:3300/signin |
 | Help: a tour of the site for buyers and owners | http://localhost:3300/help |
+| How Cornerpin is built (services, deploys, languages) | http://localhost:3300/about |
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
 | Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
+| A lead's advisory risk score and its reasons (owner) | Owner portal → Demo Land Co. → Leads → a lead. Scores appear a moment after the buyer's activity |
 | Unsubscribe from an owner's outreach | The "Stop these emails" link in an outreach email (`/unsubscribe?token=…`) |
 | Play a buyer replying to outreach (local only) | `POST http://localhost:8000/v1/dev/inbound-email` with `to` set to the email's Reply-To (needs `INBOUND_EMAIL_DOMAIN=reply.cornerpin.test` in `.env`) |
 | Send a tenant's Slack alerts to a real channel (local only) | `POST http://localhost:8000/v1/dev/integrations/slack` with `{"tenant_id": "957ccd5e-b6d1-531f-a102-ddef309c396e", "webhook_url": "<an incoming webhook made in the Slack app>"}`; Integrations in the portal then shows it. New leads, hold requests and handoffs post there |
@@ -27,6 +29,7 @@ stays switched off until a Google client id exists.
 | Mailpit (all local email) | http://localhost:8025 |
 | API | http://localhost:8000 |
 | API docs (try requests here) | http://localhost:8000/docs |
+| Decisioning service (optional locally; the API scores in-process unless `DECISIONING_URL=http://localhost:8200` is in `.env`) | http://localhost:8200/docs, started with `uv run uvicorn cornerpin_decisioning.app:app --port 8200` |
 | Public GraphQL explorer (GraphiQL) | http://localhost:8000/graphql |
 | Postgres + PostGIS | `localhost:5434`, database `cornerpin` |
 | Uploaded photos and documents | the `var/storage` folder in the repo (gitignored) |
@@ -148,6 +151,7 @@ The sign test creates a subdivision called `Sign Ridge <viewport>` and renames i
 | `buyer+mobile@buyers.cornerpin.test`, `buyer+desktop@buyers.cornerpin.test` | Buyers; the buyer tests use them (they ask to hold lots 12 and 13, which the owner approves, and save lots 10 and 15, which the owner puts on hold) |
 | `walkin+mobile@example.test`, `walkin+desktop@example.test` | Not accounts: the email typed into a signed-out question |
 | `visitor+<project>-<time>@cornerpin.test` | Made up per run; a new buyer account |
+| `scored+<viewport>-<time>@buyers.cornerpin.test` | Made up per run; a new buyer who asks to hold lot 3-8 (mobile) or 3-10 (desktop), whose score the owner sees before approving (P3-03) |
 
 Its uploads go to `var/e2e-storage`, emptied at the start of each run.
 

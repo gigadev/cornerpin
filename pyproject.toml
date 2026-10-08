@@ -8,6 +8,8 @@ dependencies = ["cornerpin-api"]
 
 [dependency-groups]
 dev = [
+    # The decisioning service, so tests can score in-process (ADR-048); never in the API image.
+    "cornerpin-decisioning",
     "httpx2>=2.13.1",
     "pyright>=1.1.400",
     "pytest>=8.4",
@@ -18,15 +20,16 @@ dev = [
 package = false
 
 [tool.uv.workspace]
-members = ["apps/api"]
+members = ["apps/api", "apps/decisioning"]
 
 [tool.uv.sources]
 cornerpin-api = { workspace = true }
+cornerpin-decisioning = { workspace = true }
 
 [tool.ruff]
 line-length = 100
 target-version = "py313"
-src = ["apps/api/src", "apps/api/tests", "evals"]
+src = ["apps/api/src", "apps/api/tests", "apps/decisioning/src", "apps/decisioning/tests", "evals"]
 extend-exclude = ["apps/web"]
 
 [tool.ruff.lint]
@@ -35,15 +38,23 @@ ignore = []
 
 [tool.ruff.lint.per-file-ignores]
 "apps/api/tests/**" = ["S101"]
+"apps/decisioning/tests/**" = ["S101"]
 
 [tool.pyright]
-include = ["apps/api/src", "apps/api/tests", "apps/api/migrations", "evals"]
+include = [
+    "apps/api/src",
+    "apps/api/tests",
+    "apps/api/migrations",
+    "apps/decisioning/src",
+    "apps/decisioning/tests",
+    "evals",
+]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
-extraPaths = ["apps/api/src"]
+extraPaths = ["apps/api/src", "apps/decisioning/src"]
 venvPath = "."
 venv = ".venv"
 
 [tool.pytest.ini_options]
-testpaths = ["apps/api/tests"]
+testpaths = ["apps/api/tests", "apps/decisioning/tests"]
 addopts = "-ra"

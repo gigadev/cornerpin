@@ -3,6 +3,11 @@ output "api_url" {
   value       = google_cloud_run_v2_service.api.uri
 }
 
+output "decisioning_url" {
+  description = "The private decisioning service (only the API may call it)."
+  value       = google_cloud_run_v2_service.decisioning.uri
+}
+
 output "web_url" {
   value = google_cloud_run_v2_service.web.uri
 }

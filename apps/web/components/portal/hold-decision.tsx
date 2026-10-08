@@ -12,10 +12,13 @@ export function HoldDecision({
   tenantId,
   holdId,
   who,
+  scoreId,
 }: {
   tenantId: string;
   holdId: string;
   who: string;
+  /** The score shown beside the hold, logged with the decision (ADR-047). */
+  scoreId: string | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -25,7 +28,7 @@ export function HoldDecision({
     setBusy(true);
     const { error: failure } = await browserApi.POST(
       "/v1/tenants/{tenant_id}/hold-requests/{hold_id}/decision",
-      { params: { path: { tenant_id: tenantId, hold_id: holdId } }, body: { decision } },
+      { params: { path: { tenant_id: tenantId, hold_id: holdId } }, body: { decision, score_id: scoreId } },
     );
     setBusy(false);
     if (failure) setError(errorMessage(failure));

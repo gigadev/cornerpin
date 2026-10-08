@@ -1,2 +1,4 @@
 # Shell scripts keep LF endings on every checkout, Windows included: bash fails on CRLF.
 *.sh text eol=lf
+# A retrain rewrites the trained model exactly (ADR-046), so its line endings stay as written.
+apps/decisioning/src/cornerpin_decisioning/models/* text eol=lf

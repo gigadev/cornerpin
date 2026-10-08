@@ -153,9 +153,12 @@ test("nothing private is ever cached", async ({ page, browser }, testInfo) => {
     await owner.goto(path);
   }
   // Client-side navigation too, which the page cacher sees.
+  // Each click waits for its page: the breadcrumb page it leaves has the next link too.
   await owner.goto(`/app/${DEMO_TENANT_ID}/inquiries`);
   await owner.getByRole("link", { name: "Organizations" }).click();
+  await expect(owner).toHaveURL(/\/app$/);
   await owner.getByRole("link", { name: "Demo Land Co." }).click();
+  await expect(owner).toHaveURL(new RegExp(`/app/${DEMO_TENANT_ID}$`));
   await owner.getByRole("link", { name: "Juniper Bench" }).click();
   await expect(owner.getByRole("link", { name: "New lot" })).toBeVisible();
 

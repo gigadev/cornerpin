@@ -54,6 +54,16 @@ jobs:
           cache-from: type=gha,scope=api
           cache-to: type=gha,scope=api,mode=max
 
+      - name: Build and push the decisioning image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/decisioning/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/decisioning:${{ env.SHA }}
+          cache-from: type=gha,scope=decisioning
+          cache-to: type=gha,scope=decisioning,mode=max
+
       - name: Build and push the web image
         uses: docker/build-push-action@v6
         with:
@@ -72,6 +82,10 @@ jobs:
             gcloud run jobs update "$job" --region "$REGION" --image "$REGISTRY/api:$SHA" --quiet
           done
           gcloud run jobs execute migrate --region "$REGION" --wait
+
+      # Before the API, whose new code sends it scores to make (ADR-048).
+      - name: Deploy the decisioning service
+        run: gcloud run deploy decisioning --region "$REGION" --image "$REGISTRY/decisioning:$SHA" --quiet
 
       - name: Deploy the API
         run: gcloud run deploy api --region "$REGION" --image "$REGISTRY/api:$SHA" --quiet

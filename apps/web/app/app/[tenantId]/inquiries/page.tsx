@@ -1,6 +1,8 @@
 import { Breadcrumbs } from "@/components/portal/breadcrumbs";
 import { ContactLine } from "@/components/portal/contact-line";
+import Link from "next/link";
 import { HoldDecision } from "@/components/portal/hold-decision";
+import { RiskBadge } from "@/components/portal/risk-badge";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { Badge } from "@/components/ui/badge";
 import { getTenant, loadOr404 } from "@/lib/api/portal";
@@ -39,11 +41,24 @@ function HoldCard({
           {formatWhen(hold.created_at, timeZone)}
         </span>
       </div>
-      <p>{hold.name}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <span>{hold.name}</span>
+        {hold.status === "pending" && hold.score ? <RiskBadge score={hold.score.score} /> : null}
+        {hold.lead_id ? (
+          <Link href={`/app/${tenantId}/leads/${hold.lead_id}`} className="text-sm underline">
+            {hold.status === "pending" && hold.score ? "Why this risk?" : "Lead"}
+          </Link>
+        ) : null}
+      </div>
       <ContactLine email={hold.email} phone={hold.phone} signedIn contact={hold.contact} />
       {hold.message ? <p className="whitespace-pre-line">{hold.message}</p> : null}
       {hold.status === "pending" ? (
-        <HoldDecision tenantId={tenantId} holdId={hold.id} who={hold.name} />
+        <HoldDecision
+          tenantId={tenantId}
+          holdId={hold.id}
+          who={hold.name}
+          scoreId={hold.score?.id ?? null}
+        />
       ) : null}
     </li>
   );

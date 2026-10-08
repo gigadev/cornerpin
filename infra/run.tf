@@ -15,6 +15,8 @@ locals {
     INTERNAL_BASE_URL     = local.api_url
     TASKS_SERVICE_ACCOUNT = google_service_account.tasks.email
     VAPID_PUBLIC_KEY      = var.vapid_public_key
+    # The lead model lives in its own service (ADR-048); the API image has none.
+    DECISIONING_URL = local.decisioning_url
     # Phase 2 (ADR-042): each stays dormant while its terraform.tfvars switch is off.
     AGENT_MODEL          = var.agent_model
     INBOUND_EMAIL_DOMAIN = var.inbound_email_domain
@@ -96,6 +98,39 @@ resource "google_cloud_run_v2_service" "web" {
       env {
         name  = "SITE_URL"
         value = local.site
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [template[0].containers[0].image, client, client_version]
+  }
+
+  depends_on = [google_project_service.enabled]
+}
+
+# The lead model (ADR-048): private, called only by the API, holding no data and no secrets.
+resource "google_cloud_run_v2_service" "decisioning" {
+  name                = "decisioning"
+  location            = var.region
+  ingress             = "INGRESS_TRAFFIC_ALL"
+  deletion_protection = false
+
+  template {
+    service_account = google_service_account.decisioning.email
+    scaling {
+      min_instance_count = 0
+      max_instance_count = 2
+    }
+    containers {
+      image = var.placeholder_image
+      resources {
+        limits = { cpu = "1", memory = "512Mi" }
+      }
+      startup_probe {
+        http_get {
+          path = "/health"
+        }
       }
     }
   }

@@ -11,6 +11,7 @@ from cornerpin.core.config import get_settings
 from cornerpin.core.housekeeping import run_housekeeping
 from cornerpin.core.internal import cloud_tasks_dispatcher
 from cornerpin.core.outbox import InProcessRunner, set_dispatcher
+from cornerpin.decisioning import handlers as decisioning_handlers
 from cornerpin.integrations import handlers as integration_handlers
 from cornerpin.integrations import routes as integration_routes
 from cornerpin.leads import buyer_routes, lead_routes, owner_routes
@@ -25,7 +26,13 @@ from cornerpin.outreach import routes as outreach_routes
 from cornerpin.outreach import webhooks as outreach_webhooks
 
 # Importing a module that defines outbox handlers registers them.
-OUTBOX_HANDLER_MODULES = (notification_handlers, storage, outreach_handlers, integration_handlers)
+OUTBOX_HANDLER_MODULES = (
+    notification_handlers,
+    storage,
+    outreach_handlers,
+    integration_handlers,
+    decisioning_handlers,
+)
 
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 

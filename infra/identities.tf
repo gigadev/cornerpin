@@ -15,6 +15,11 @@ resource "google_service_account" "ops" {
   display_name = "Migrations and ops commands (Cloud Run jobs)"
 }
 
+resource "google_service_account" "decisioning" {
+  account_id   = "cornerpin-decisioning"
+  display_name = "Cornerpin decisioning service (Cloud Run); reads nothing"
+}
+
 resource "google_service_account" "tasks" {
   account_id   = "cornerpin-tasks"
   display_name = "Cloud Tasks and Scheduler calling the API"
@@ -35,6 +40,14 @@ resource "google_cloud_run_v2_service_iam_member" "api_invokers" {
   location = var.region
   role     = "roles/run.invoker"
   member   = "serviceAccount:${each.value}"
+}
+
+# The decisioning service is private: only the API may score (ADR-048).
+resource "google_cloud_run_v2_service_iam_member" "decisioning_invoker" {
+  name     = google_cloud_run_v2_service.decisioning.name
+  location = var.region
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${google_service_account.api.email}"
 }
 
 # The web app is public; Firebase Hosting forwards to it.
@@ -69,9 +82,10 @@ resource "google_project_iam_member" "deployer" {
 
 resource "google_service_account_iam_member" "deployer_acts_as" {
   for_each = {
-    api = google_service_account.api.name
-    web = google_service_account.web.name
-    ops = google_service_account.ops.name
+    api         = google_service_account.api.name
+    web         = google_service_account.web.name
+    ops         = google_service_account.ops.name
+    decisioning = google_service_account.decisioning.name
   }
   service_account_id = each.value
   role               = "roles/iam.serviceAccountUser"

@@ -8,6 +8,8 @@ WORKDIR /repo
 # Dependencies first, so code changes don't reinstall them.
 COPY pyproject.toml uv.lock ./
 COPY apps/api/pyproject.toml apps/api/
+# uv reads every workspace member's manifest to check the lock; only the API is installed.
+COPY apps/decisioning/pyproject.toml apps/decisioning/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-install-workspace --package cornerpin-api
 COPY alembic.ini ./

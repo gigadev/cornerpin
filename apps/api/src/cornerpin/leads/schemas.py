@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, StringConstraints
 
 from cornerpin.core.fields import EmailAddress, Phone
+from cornerpin.decisioning.decisions import DecisionKind, LeadScore
 from cornerpin.listings.models import LotStatus
 from cornerpin.outreach.tools import AgentTool
 
@@ -118,10 +119,15 @@ class HoldRequestOut(BaseModel):
     contact: list[Channel] = Field(description="Channels the buyer currently allows")
     created_at: datetime
     decided_at: datetime | None
+    lead_id: UUID | None = Field(description="The buyer's lead")
+    score: LeadScore | None = Field(description="The lead's latest score: advice, not a decision")
 
 
 class HoldDecision(BaseModel):
     decision: Literal["approve", "decline"]
+    score_id: UUID | None = Field(
+        default=None, description="The score the owner saw when deciding, if one was shown"
+    )
 
 
 # --- leads (P2-02, ADR-035) -----------------------------------------------------------------
@@ -142,6 +148,7 @@ LeadEventKind = Literal[
     "message_refused",
     "message_received",
     "agent_action",
+    "decision",
 ]
 NoteText = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
 
@@ -166,6 +173,7 @@ class LeadSummary(BaseModel):
     handoff_reason: str | None
     last_activity_at: datetime
     created_at: datetime
+    score: LeadScore | None = Field(description="The latest score: advice, not a decision")
 
 
 class StageCount(BaseModel):
@@ -177,6 +185,11 @@ class LeadList(BaseModel):
     leads: list[LeadSummary]
     stages: list[StageCount] = Field(description="Every stage, with how many leads are in it")
     needs_human: int = Field(description="Leads waiting for a person")
+
+
+class LeadDecision(BaseModel):
+    kind: DecisionKind
+    score: LeadScore | None = Field(description="The score the owner saw, if one was shown")
 
 
 class LeadEvent(BaseModel):
@@ -201,6 +214,9 @@ class LeadEvent(BaseModel):
     tool: AgentTool | None = Field(
         default=None, description="Which tool the outreach agent used, for an agent_action"
     )
+    decision: LeadDecision | None = Field(
+        default=None, description="What was decided and the score shown, for a decision"
+    )
 
 
 class LeadDetail(LeadSummary):
@@ -209,6 +225,9 @@ class LeadDetail(LeadSummary):
 
 class LeadUpdate(BaseModel):
     stage: LeadStage
+    score_id: UUID | None = Field(
+        default=None, description="The score the owner saw; logged when they mark won or lost"
+    )
 
 
 class NoteCreate(BaseModel):

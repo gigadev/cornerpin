@@ -7,6 +7,7 @@ from uuid import UUID
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from cornerpin.core.outbox import expect_events
 from cornerpin.leads.schemas import Channel, ContactChoices
 
 # The channels a form asks about; calls (voice) wait for Phase 4.
@@ -61,6 +62,7 @@ def record(
             "source": source,
         },
     )
+    expect_events(session)  # the lead's consent event queues a re-score by trigger (ADR-045)
 
 
 def record_choices(

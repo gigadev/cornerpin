@@ -63,6 +63,12 @@ export default async function HomePage() {
             </li>
           ))}
         </ul>
+        <p className="mx-auto max-w-5xl px-4 pb-12 text-sm text-muted-foreground">
+          <Link href="/about" className="underline underline-offset-4">
+            How Cornerpin is built
+          </Link>
+          : where it runs, the services it uses and the code behind it.
+        </p>
       </main>
     </>
   );

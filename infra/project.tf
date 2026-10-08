@@ -23,7 +23,9 @@ locals {
   # Cloud Run's deterministic URL. The API needs its own address (as the audience of the
   # OIDC tokens Cloud Tasks sends it) before Terraform could read it back from the service.
   api_url = "https://api-${data.google_project.this.number}.${var.region}.run.app"
-  site    = "https://${var.domain}"
+  # The decisioning service's, likewise: the API calls it and asks for ID tokens for it.
+  decisioning_url = "https://decisioning-${data.google_project.this.number}.${var.region}.run.app"
+  site            = "https://${var.domain}"
 }
 
 resource "google_project_service" "enabled" {

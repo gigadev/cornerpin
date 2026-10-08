@@ -294,6 +294,10 @@ export default function HelpPage() {
             <Link href="/juniper-bench" className="underline">
               Open the demo subdivision
             </Link>
+            . Curious what&apos;s under the hood?{" "}
+            <Link href="/about" className="underline">
+              See how Cornerpin is built
+            </Link>
             .
           </p>
         </div>
