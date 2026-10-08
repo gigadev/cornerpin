@@ -2,13 +2,15 @@
 "cloudtasks" and its settings exist; until then /internal/* is a 404.
 
 After a commit that queued events, the dispatcher creates a Cloud Task that calls
-/internal/outbox/drain on the API. Cloud Scheduler calls the same endpoint every minute, to pick
-up retries and trigger-queued events, and /internal/housekeeping daily. Every call carries a
+/internal/outbox/drain on the API. Each drain then books a task for when the next waiting event
+is due, such as a delayed follow-up or a retry (ADR-043). Cloud Scheduler calls the same
+endpoint hourly, as a safety net, and /internal/housekeeping daily. Every call carries a
 Google-signed OIDC token for the tasks service account, which is checked here.
 """
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from functools import lru_cache
 from typing import Annotated, Any, Protocol
 
@@ -19,7 +21,7 @@ from pydantic import BaseModel
 from cornerpin.core.auth.google import ISSUERS, JWKS_URL
 from cornerpin.core.config import get_settings
 from cornerpin.core.housekeeping import HousekeepingResult, run_housekeeping
-from cornerpin.core.outbox import drain
+from cornerpin.core.outbox import drain, schedule_next
 
 TASKS_API = "https://cloudtasks.googleapis.com/v2"
 DRAIN_PATH = "/internal/outbox/drain"
@@ -38,7 +40,10 @@ def _google_post() -> Post:
     session = AuthorizedSession(credentials)  # pyright: ignore[reportUnknownArgumentType]
 
     def post(url: str, body: dict[str, Any]) -> None:
-        session.post(url, json=body, timeout=5).raise_for_status()
+        response = session.post(url, json=body, timeout=5)
+        if response.status_code == 409:
+            return  # a named task that already exists: the wake-up is booked
+        response.raise_for_status()
 
     return post
 
@@ -54,12 +59,28 @@ class CloudTasksDispatcher:
     post: Post | None = None
 
     def notify(self) -> None:
+        self._create({})
+
+    def notify_at(self, when: datetime) -> None:
+        """A task for a second or two after an event is due, which allows for clock skew. It is
+        named after that second, so drains that ask for the same wake-up book it once."""
+        at = max(when, datetime.now(UTC)).replace(microsecond=0) + timedelta(seconds=2)
+        stamp = int(at.timestamp())
+        self._create(
+            {
+                "name": f"{self.queue}/tasks/outbox-{stamp}",
+                "scheduleTime": at.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
+        )
+
+    def _create(self, extra: dict[str, Any]) -> None:
         if self.post is None:
             self.post = _google_post()
         self.post(
             f"{TASKS_API}/{self.queue}/tasks",
             {
                 "task": {
+                    **extra,
                     "httpRequest": {
                         "httpMethod": "POST",
                         "url": f"{self.base_url}{DRAIN_PATH}",
@@ -67,7 +88,7 @@ class CloudTasksDispatcher:
                             "serviceAccountEmail": self.service_account,
                             "audience": self.base_url,
                         },
-                    }
+                    },
                 }
             },
         )
@@ -140,7 +161,9 @@ class DrainResult(BaseModel):
 
 @router.post("/outbox/drain")
 def drain_outbox() -> DrainResult:
-    return DrainResult(processed=drain())
+    processed = drain()
+    schedule_next()
+    return DrainResult(processed=processed)
 
 
 @router.post("/housekeeping")

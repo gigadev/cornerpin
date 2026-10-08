@@ -64,7 +64,7 @@ export default async function Integrations({
     integrations.find((integration) => integration.provider === provider);
   const slack = of("slack");
   const salesforce = of("salesforce");
-  const notice = installNotice(returned);
+  const notice = installNotice(returned, slack?.status);
 
   return (
     <div className="grid gap-6">

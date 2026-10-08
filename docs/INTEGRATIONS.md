@@ -46,6 +46,24 @@ Salesforce didn't accept the sign-in, wait, then enter the details again.
 
 Each record carries a **Cornerpin ID**; don't edit it.
 
+**Seeing Cornerpin's fields.** Cornerpin creates its fields and lets your user read them, but
+Salesforce doesn't add new fields to existing screens. The quickest place to see them is a list
+view:
+1. App Launcher → **Products** → a list view such as **All Products**.
+2. The gear by the list → **Select Fields to Display**.
+3. Add **Lot status**, **Lot price** and **Cornerpin ID**, and save.
+
+To show them on a Product's own page too:
+1. Setup → **Object Manager** → **Product** → **Page Layouts** → **Product Layout**.
+2. Drag the three fields into the Product Detail section and choose **Save**.
+3. If the record page was customized in the **Lightning App Builder**, its Details tab must use
+   the **Record Detail** component (which follows the layout). Save and **Activate** it as the
+   org default.
+
+On the production check (October 2026) the list view showed the fields at once, while the
+record page still hadn't shown them after both steps. The data is the same either way; Leads
+work the same way, under Object Manager → **Lead**.
+
 ## Slack
 
 Slack only finishes an install over HTTPS, so **Add to Slack** works on cornerpin.app, not
