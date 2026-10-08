@@ -126,7 +126,13 @@ the 10DLC campaign details.
 ## Phase 3 tasks
 
 Written 2026-10-07, when Phase 2 reached production. Phase 3 starts once the Phase 2 gate has
-been walked on cornerpin.app and Scott has answered the questions that came with this list.
+been walked on cornerpin.app.
+
+**Settled with Scott on 2026-10-07**, to be written up as this phase's ADRs: the model trains
+on synthetic history and the portal says so; Snowflake is platform-level, dropped after the
+gate unless wanted for interviews; dbt Core for the warehouse models; a signed-in buyer
+applies for financing from a lot page on the demo tenant; the dashboard figures as listed in
+P3-07; decisioning becomes its own Cloud Run service in P3-04.
 
 | Task | Scope | Acceptance |
 | --- | --- | --- |
@@ -138,7 +144,7 @@ been walked on cornerpin.app and Scott has answered the questions that came with
 | P3-06 Financing demo | on the demo tenant a signed-in buyer applies from a lot page (amount, term, down payment, a stated income band; no SSN, no credit pull, marked synthetic throughout); the owner sees the application with its score and reasons, records approve or decline with a reason (`financing_decisions`), and an approval creates the loan and its schedule; payments are posted from the portal; a delinquency list; a decline shows its reasons in adverse-action style, as a demonstration | Playwright: walk an application to a logged decision and see the schedule; a decline shows its reasons; nothing financing-related exists on any other tenant |
 | P3-07 Owner dashboard | a per-tenant dashboard in the portal, read from Postgres (ADR-002): funnel by stage with conversion between stages, sales pace (lots sold per month; median days from listing to sold, by phase), inventory by status and phase, lead sources, outreach activity (sent, replied, handed off), score distribution; SQL views in a migration; works for Ricky's tenant from day one | Playwright: the demo dashboard shows each figure and they match the tables; a tenant with no leads renders empty states, not errors |
 | P3-08 Snowflake export | `integrations.snowflake`, platform-level (one account, `tenant_id` on every row), dormant without credentials (ADR-012); outbox events, lead events, outreach messages, lot status and price history and scores land in raw tables, in batches from a scheduled outbox handler, idempotent on ids; credentials in Secret Manager; the trial starts in this task, after a yes (ADR-016) | after one scheduled run the demo tenant's rows are in Snowflake; a second run adds no duplicates; with no credentials nothing runs and nothing breaks |
-| P3-09 Warehouse models | `warehouse/`: versioned SQL models in Snowflake for the funnel and sales pace, run by a small script; a reconciliation check that the Snowflake funnel matches the Postgres dashboard for the demo tenant | the models run from a clean account; the reconciliation passes; the dashboard still reads only Postgres |
+| P3-09 Warehouse models | `warehouse/`: a dbt Core project against Snowflake, with staging models over the raw tables and marts for the funnel and sales pace; dbt tests (not null, unique, accepted values) on every model; generated docs with lineage; credentials from the same Secret Manager entry as the export; CI runs `dbt build` on a schedule or label, never on every push; a reconciliation check that the funnel mart matches the Postgres dashboard for the demo tenant | `dbt build` passes from a clean account; the reconciliation passes; `dbt docs` renders the lineage; the dashboard still reads only Postgres |
 | P3-10 Live + gate | Terraform and secrets for the decisioning service and Snowflake; docs (TEST_ACCOUNTS, WALKTHROUGH, DEPLOY, `/help`, `/about`); budget check; the gate walked on cornerpin.app | see a scored lead with reason codes, and walk a synthetic financing application to a logged decision |
 
 **Order.** P3-01 → P3-02 → P3-03 → P3-04. P3-05 → P3-06 need P3-01. P3-07 needs P3-01 and
@@ -146,7 +152,7 @@ can be slotted in anywhere. P3-08 → P3-09 go last before P3-10, so the Snowfla
 starts as late as possible. P3-10 is last.
 
 **Costs (ADR-016).** The decisioning service is a second Cloud Run service that scales to
-zero, inside the free tier. LightGBM is free. Snowflake's trial is 30 days with credits; after
+zero, inside the free tier. LightGBM and dbt Core are free; dbt Cloud isn't needed. Snowflake's trial is 30 days with credits; after
 it, an X-Small warehouse that suspends when idle costs roughly $10–30 a month if used lightly,
 and nothing if dropped. The trial starts only in P3-08, after a yes, and what happens when it
 ends is decided then.
@@ -155,7 +161,7 @@ ends is decided then.
 the synthetic training history is generated and how honest the portal is about it; the scoring
 service's contract and auth; the financing demo's scope and wording; the dashboard's figures;
 Snowflake's scope (platform-level, not per tenant), the export path, and what happens when the
-trial ends; plain SQL versus dbt for the warehouse models.
+trial ends; the dbt project's layout and how CI runs it without a warehouse on every push.
 
 ## Phase 4 (outline; tasks are written when the phase starts)
 
