@@ -1,5 +1,6 @@
 """Inquiries and hold requests in the owner portal (P1-08). Approving a hold puts an available
-lot on hold in the same transaction (ADR-028); the lots trigger records the change."""
+lot on hold in the same transaction (ADR-028); the lots trigger records the change. Each hold
+shows its lead's score, and deciding one is logged with the score the owner saw (ADR-047)."""
 
 from typing import Any
 from uuid import UUID
@@ -11,6 +12,8 @@ from sqlalchemy.orm import Session
 from cornerpin.core.auth.deps import SignedInUser
 from cornerpin.core.outbox import expect_events
 from cornerpin.core.tenancy import tenant_session
+from cornerpin.decisioning import decisions
+from cornerpin.decisioning.decisions import latest_score_sql
 from cornerpin.leads.consent import allowed_channels_sql
 from cornerpin.leads.schemas import HoldDecision, HoldRequestOut, InquiryOut
 
@@ -39,10 +42,13 @@ INQUIRIES = f"""
 HOLD_REQUESTS = f"""
     SELECT h.id, h.lot_id, l.number AS lot_number, l.status AS lot_status,
            s.name AS subdivision_name, h.name, h.email, h.phone, h.message, h.status,
-           h.created_at, h.decided_at, {allowed_channels_sql("h")} AS contact
+           h.created_at, h.decided_at, {allowed_channels_sql("h")} AS contact,
+           lead.id AS lead_id, {latest_score_sql("lead.id")} AS score
     FROM hold_requests h
     JOIN lots l ON l.id = h.lot_id
     JOIN subdivisions s ON s.id = l.subdivision_id
+    LEFT JOIN LATERAL (SELECT e.lead_id AS id FROM lead_events e
+                       WHERE e.hold_request_id = h.id LIMIT 1) lead ON true
     WHERE h.tenant_id = app_tenant_id() AND (CAST(:id AS uuid) IS NULL OR h.id = :id)
     ORDER BY h.status = 'pending' DESC, h.created_at DESC
     LIMIT :limit
@@ -74,6 +80,7 @@ def list_hold_requests(tenant_id: UUID, user: SignedInUser) -> list[HoldRequestO
     responses={
         **NOT_FOUND,
         status.HTTP_409_CONFLICT: {"description": "Already decided, or the lot is sold"},
+        status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "The score named isn't this lead's"},
     },
 )
 def decide_hold_request(
@@ -108,4 +115,18 @@ def decide_hold_request(
             ),
             {"id": hold_id, "status": "approved" if body.decision == "approve" else "declined"},
         )
-        return _hold_requests(session, hold_id)[0]
+        held = _hold_requests(session, hold_id)[0]
+        if held.lead_id is not None:
+            try:
+                decisions.record(
+                    session,
+                    lead_id=held.lead_id,
+                    kind="hold_approved" if body.decision == "approve" else "hold_declined",
+                    score_id=body.score_id,
+                    hold_request_id=hold_id,
+                )
+            except decisions.UnknownScore:
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT, "That score isn't this lead's"
+                ) from None
+        return held

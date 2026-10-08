@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/portal/breadcrumbs";
 import { ContactLine } from "@/components/portal/contact-line";
 import { LeadStageBadge } from "@/components/portal/lead-stage-badge";
+import { RiskBadge } from "@/components/portal/risk-badge";
 import { Badge } from "@/components/ui/badge";
 import { getTenant, loadOr404 } from "@/lib/api/portal";
 import type { components } from "@/lib/api/schema";
@@ -61,6 +62,9 @@ function LeadCard({ tenantId, lead, timeZone }: { tenantId: string; lead: Lead; 
           {lead.name || lead.email}
         </Link>
         <LeadStageBadge stage={lead.stage} />
+        {lead.score && lead.stage !== "won" && lead.stage !== "lost" ? (
+          <RiskBadge score={lead.score.score} />
+        ) : null}
         {lead.handoff_at ? <Badge variant="destructive">Needs a person</Badge> : null}
         <span className="text-sm text-muted-foreground sm:ml-auto">
           {formatWhen(lead.last_activity_at, timeZone)}

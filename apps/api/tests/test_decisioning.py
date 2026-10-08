@@ -274,3 +274,135 @@ def test_decisions_are_made_as_yourself_and_never_changed(
 def test_the_worker_scores_but_never_decides(db: Databases) -> None:
     with pytest.raises(ProgrammingError), worker_session() as session:
         session.execute(text("SELECT count(*) FROM decisions"))
+
+
+# --- P3-03: scores where owners decide, and the decisions they log (ADR-047) -----------------
+
+
+def _lead_page(owner: TestClient, listing: Listing, lead_id: UUID) -> dict[str, Any]:
+    found: dict[str, Any] = owner.get(
+        f"/v1/tenants/{listing.tenant.tenant_id}/leads/{lead_id}"
+    ).json()
+    return found
+
+
+def _held(owner: TestClient, buyer: TestClient, listing: Listing) -> dict[str, Any]:
+    """A buyer asks to hold the available lot; the owner's view of that hold, once scored."""
+    asked = buyer.post(f"/v1/lots/{listing.available}/hold-requests", json={"name": "Sky Buyer"})
+    assert asked.status_code == 201, asked.text
+    drain()
+    email = email_of(buyer)
+    holds: list[dict[str, Any]] = owner.get(
+        f"/v1/tenants/{listing.tenant.tenant_id}/hold-requests"
+    ).json()
+    return next(h for h in holds if h["email"] == email)
+
+
+def _decide_hold(
+    owner: TestClient, listing: Listing, hold: dict[str, Any], score_id: str | None, decision: str
+) -> Any:
+    return owner.post(
+        f"/v1/tenants/{listing.tenant.tenant_id}/hold-requests/{hold['id']}/decision",
+        json={"decision": decision, "score_id": score_id},
+    )
+
+
+def test_leads_and_holds_show_the_latest_score(
+    db: Databases,
+    listing: Listing,
+    buyer: TestClient,
+    alpha_owner: TestClient,
+    outreach_mail: object,
+) -> None:
+    hold = _held(alpha_owner, buyer, listing)
+    lead_id = UUID(hold["lead_id"])
+    leads = alpha_owner.get(f"/v1/tenants/{listing.tenant.tenant_id}/leads").json()["leads"]
+    [lead] = [lead for lead in leads if lead["id"] == str(lead_id)]
+    assert lead["score"]["model_version"] == "lgbm-lead-v1"
+    assert len(lead["score"]["reasons"]) >= MIN_REASONS
+    assert hold["score"]["id"] == lead["score"]["id"]
+    assert _lead_page(alpha_owner, listing, lead_id)["score"]["id"] == lead["score"]["id"]
+
+
+def test_deciding_a_hold_logs_who_decided_and_the_score_they_saw(
+    db: Databases,
+    listing: Listing,
+    buyer: TestClient,
+    alpha_owner: TestClient,
+    outreach_mail: object,
+) -> None:
+    hold = _held(alpha_owner, buyer, listing)
+    shown = hold["score"]
+    decided = _decide_hold(alpha_owner, listing, hold, shown["id"], "approve")
+    assert decided.status_code == 200, decided.text
+
+    events = _lead_page(alpha_owner, listing, UUID(hold["lead_id"]))["events"]
+    decision = events[0]
+    assert decision["kind"] == "decision"
+    assert decision["actor_email"] == "owner@alpha.test"
+    assert decision["decision"]["kind"] == "hold_approved"
+    assert decision["decision"]["score"] == shown
+    assert decision["lot"]["lot_id"] == listing.available
+    assert "hold_approved" in [e["kind"] for e in events]
+
+
+def test_a_hold_decided_without_a_score_says_none_was_shown(
+    db: Databases,
+    listing: Listing,
+    buyer: TestClient,
+    alpha_owner: TestClient,
+    outreach_mail: object,
+) -> None:
+    hold = _held(alpha_owner, buyer, listing)
+    assert _decide_hold(alpha_owner, listing, hold, None, "decline").status_code == 200
+    decision = _lead_page(alpha_owner, listing, UUID(hold["lead_id"]))["events"][0]
+    assert decision["decision"] == {"kind": "hold_declined", "score": None}
+
+
+def test_a_score_from_another_lead_is_refused_and_nothing_changes(
+    db: Databases,
+    tenants: tuple[TenantData, TenantData],
+    listing: Listing,
+    buyer: TestClient,
+    alpha_owner: TestClient,
+    outreach_mail: object,
+) -> None:
+    alpha, _ = tenants
+    with db.owner.connect() as conn:
+        other = conn.execute(
+            text(
+                "SELECT r.id FROM risk_scores r JOIN leads l ON l.id = r.lead_id"
+                " WHERE l.tenant_id = :t AND l.user_id = :b LIMIT 1"
+            ),
+            {"t": alpha.tenant_id, "b": alpha.buyer_id},
+        ).scalar_one()
+    hold = _held(alpha_owner, buyer, listing)
+    refused = _decide_hold(alpha_owner, listing, hold, str(other), "approve")
+    assert refused.status_code == 422
+    holds = alpha_owner.get(f"/v1/tenants/{listing.tenant.tenant_id}/hold-requests").json()
+    assert next(h for h in holds if h["id"] == hold["id"])["status"] == "pending"
+
+
+def test_marking_a_lead_won_or_lost_is_a_decision_and_other_stages_are_not(
+    db: Databases,
+    listing: Listing,
+    buyer: TestClient,
+    alpha_owner: TestClient,
+    outreach_mail: object,
+) -> None:
+    inquire(buyer, listing, allow_email=True)
+    lead_id = lead_of(db, listing, email_of(buyer))
+    drain()
+    url = f"/v1/tenants/{listing.tenant.tenant_id}/leads/{lead_id}"
+    shown = alpha_owner.get(url).json()["score"]
+
+    def decided() -> list[dict[str, Any]]:
+        events: list[dict[str, Any]] = alpha_owner.get(url).json()["events"]
+        return [e["decision"] for e in events if e["kind"] == "decision"]
+
+    alpha_owner.patch(url, json={"stage": "contacted", "score_id": shown["id"]})
+    assert decided() == []
+    won = alpha_owner.patch(url, json={"stage": "won", "score_id": shown["id"]})
+    assert won.status_code == 200, won.text
+    alpha_owner.patch(url, json={"stage": "won", "score_id": shown["id"]})
+    assert decided() == [{"kind": "lead_won", "score": shown}]

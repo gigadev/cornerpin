@@ -3,13 +3,14 @@ import { Breadcrumbs } from "@/components/portal/breadcrumbs";
 import { ContactLine } from "@/components/portal/contact-line";
 import { LeadNoteForm, LeadStageSelect, ResolveHandoff } from "@/components/portal/lead-actions";
 import { LeadStageBadge } from "@/components/portal/lead-stage-badge";
+import { ScorePanel } from "@/components/portal/score-panel";
 import { getTenant, loadOr404 } from "@/lib/api/portal";
 import { getMe, serverApi } from "@/lib/api/server";
 import { formatWhen } from "@/lib/format";
 import { describeEvent, eventActor } from "@/lib/leads";
 
-// One lead (P2-02, ADR-035): who they are, what they allow, everything that has happened, and
-// the owner's stage, notes and handoff.
+// One lead (P2-02, ADR-035): who they are, what they allow, everything that has happened, the
+// owner's stage, notes and handoff, and its advisory score (P3-03, ADR-047).
 
 export const metadata: Metadata = { title: "Lead · Cornerpin" };
 
@@ -89,9 +90,18 @@ export default async function LeadPage({
         </section>
       ) : null}
 
+      {lead.stage === "won" || lead.stage === "lost" ? null : (
+        <ScorePanel score={lead.score ?? null} timeZone={timeZone} />
+      )}
+
       <div className="grid gap-6 md:grid-cols-[16rem_1fr]">
         <div className="grid content-start gap-6">
-          <LeadStageSelect tenantId={tenantId} leadId={lead.id} stage={lead.stage} />
+          <LeadStageSelect
+            tenantId={tenantId}
+            leadId={lead.id}
+            stage={lead.stage}
+            scoreId={lead.score?.id ?? null}
+          />
           <LeadNoteForm tenantId={tenantId} leadId={lead.id} />
         </div>
 

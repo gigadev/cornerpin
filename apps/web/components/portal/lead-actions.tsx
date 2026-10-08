@@ -29,10 +29,13 @@ export function LeadStageSelect({
   tenantId,
   leadId,
   stage,
+  scoreId,
 }: {
   tenantId: string;
   leadId: string;
   stage: LeadStage;
+  /** The score on the page, logged when the owner marks the lead won or lost (ADR-047). */
+  scoreId: string | null;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -43,7 +46,7 @@ export function LeadStageSelect({
     setBusy(true);
     const { error: failure } = await browserApi.PATCH(
       "/v1/tenants/{tenant_id}/leads/{lead_id}",
-      { ...path(tenantId, leadId), body: { stage: value } },
+      { ...path(tenantId, leadId), body: { stage: value, score_id: scoreId } },
     );
     setBusy(false);
     if (failure) setError(errorMessage(failure));

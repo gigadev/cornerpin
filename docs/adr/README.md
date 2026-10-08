@@ -57,6 +57,7 @@ not started yet is still binding: it describes how that part will be built.
 | [044](044-public-how-its-built-page.md) | A public page on how Cornerpin is built | after Phase 2 | Accepted |
 | [045](045-decisioning-schema-and-features.md) | Decisioning: what a score is, what it may look at, and where it's kept | P3-01 | Accepted |
 | [046](046-lead-model-on-synthetic-history.md) | The lead model: LightGBM on synthetic history, explained by its own contributions | P3-02 | Accepted |
+| [047](047-scores-and-decisions-in-the-portal.md) | Scores in the portal, and decisions logged with the score the owner saw | P3-03 | Accepted |
 
 ## Adding a decision
 

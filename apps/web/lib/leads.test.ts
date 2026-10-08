@@ -98,6 +98,36 @@ describe("the assistant", () => {
   });
 });
 
+describe("decisions", () => {
+  it("say what the owner decided, on which lot, and the score they saw", () => {
+    const decided: LeadEvent = {
+      ...base,
+      kind: "decision",
+      by_buyer: false,
+      actor_email: "owner@demo.cornerpin.test",
+      message: null,
+      decision: {
+        kind: "hold_approved",
+        score: {
+          id: "s1",
+          score: 0.71,
+          model_version: "lgbm-lead-v1",
+          scored_at: "2026-10-06T15:00:00Z",
+          reasons: [{ code: "replies", text: "No replies yet", weight: 0.4 }],
+        },
+      },
+    };
+    expect(describeEvent(decided)).toEqual({
+      title: "Decision: approved the hold on Lot 2-5, Juniper Bench",
+      body: "Risk shown: 71%, high risk (No replies yet).",
+    });
+    expect(eventActor(decided, "Pat")).toBe("owner@demo.cornerpin.test");
+    expect(describeEvent({ ...decided, lot: null, decision: { kind: "lead_won", score: null } })).toEqual(
+      { title: "Decision: marked the lead won", body: "No score was shown." },
+    );
+  });
+});
+
 describe("eventActor", () => {
   it("is the buyer for their own actions, flagged when the email isn't proven", () => {
     expect(eventActor(base, "Pat")).toBe("Pat");

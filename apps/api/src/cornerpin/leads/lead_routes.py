@@ -12,8 +12,11 @@ from sqlalchemy.orm import Session
 from cornerpin.core.auth.deps import SignedInUser
 from cornerpin.core.outbox import expect_events
 from cornerpin.core.tenancy import tenant_session
+from cornerpin.decisioning import decisions
+from cornerpin.decisioning.decisions import Decision, DecisionKind, latest_score_sql
 from cornerpin.leads.consent import allowed_channels_sql
 from cornerpin.leads.schemas import (
+    LeadDecision,
     LeadDetail,
     LeadEvent,
     LeadList,
@@ -29,6 +32,11 @@ router = APIRouter(prefix="/tenants/{tenant_id}/leads", tags=["leads"])
 
 Responses = dict[int | str, dict[str, Any]]
 NOT_FOUND: Responses = {status.HTTP_404_NOT_FOUND: {"description": "Not found, or not your tenant"}}
+UNKNOWN_SCORE: Responses = {
+    status.HTTP_422_UNPROCESSABLE_CONTENT: {"description": "The score named isn't this lead's"}
+}
+# Marking a lead won or lost is a decision, logged with the score the owner saw (ADR-047).
+CLOSING: dict[str, DecisionKind] = {"won": "lead_won", "lost": "lead_lost"}
 LIST_LIMIT = 200
 STAGES: tuple[LeadStage, ...] = ("new", "contacted", "engaged", "holding", "won", "lost")
 # The buyer's own actions; everything else is the owner's or the system's.
@@ -54,7 +62,8 @@ LEADS = f"""
              JOIN lots lot ON lot.id = seen.lot_id
              JOIN subdivisions s ON s.id = lot.subdivision_id
            ), '[]'::jsonb) AS lots,
-           l.handoff_at, l.handoff_reason, l.last_activity_at, l.created_at
+           l.handoff_at, l.handoff_reason, l.last_activity_at, l.created_at,
+           {latest_score_sql("l.id")} AS score
     FROM leads l
     WHERE l.tenant_id = app_tenant_id()
       AND (CAST(:id AS uuid) IS NULL OR l.id = :id)
@@ -123,11 +132,45 @@ def _event(row: Row[Any]) -> LeadEvent:
     )
 
 
+def _decision_event(decision: Decision) -> LeadEvent:
+    lot = (
+        LeadLot(
+            lot_id=decision.lot_id,
+            number=decision.lot_number or "",
+            subdivision_name=decision.subdivision_name or "",
+        )
+        if decision.lot_id is not None
+        else None
+    )
+    return LeadEvent(
+        id=decision.id,
+        kind="decision",
+        created_at=decision.decided_at,
+        by_buyer=False,
+        verified=True,
+        actor_email=decision.decided_by_email,
+        lot=lot,
+        message=None,
+        note=None,
+        channel=None,
+        granted=None,
+        consent_source=None,
+        from_stage=None,
+        to_stage=None,
+        reason=None,
+        subject=None,
+        decision=LeadDecision(kind=decision.kind, score=decision.score),
+    )
+
+
 def _detail(session: Session, lead_id: UUID) -> LeadDetail:
     found = _summaries(session, lead_id=lead_id)
     if not found:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
     events = [_event(row) for row in session.execute(text(EVENTS), {"id": lead_id})]
+    events += [_decision_event(d) for d in decisions.decisions_of(session, lead_id)]
+    # Newest first; a decision sorts above the event it caused, which shares its time.
+    events.sort(key=lambda e: (e.created_at, e.kind == "decision"), reverse=True)
     return LeadDetail(**found[0].model_dump(), events=events)
 
 
@@ -155,20 +198,34 @@ def get_lead(tenant_id: UUID, lead_id: UUID, user: SignedInUser) -> LeadDetail:
         return _detail(session, lead_id)
 
 
-@router.patch("/{lead_id}", responses=NOT_FOUND)
+@router.patch("/{lead_id}", responses={**NOT_FOUND, **UNKNOWN_SCORE})
 def update_lead(tenant_id: UUID, lead_id: UUID, body: LeadUpdate, user: SignedInUser) -> LeadDetail:
-    """Change the stage. The change goes on the timeline with who made it."""
+    """Change the stage. The change goes on the timeline with who made it; marking the lead won
+    or lost is also logged as a decision, with the score the owner saw."""
     with tenant_session(user, tenant_id) as session:
-        changed = session.execute(
+        before = session.execute(
             text(
-                "UPDATE leads SET stage = CAST(:stage AS lead_stage)"
-                " WHERE id = :id AND tenant_id = app_tenant_id() RETURNING id"
+                "SELECT stage::text AS stage FROM leads"
+                " WHERE id = :id AND tenant_id = app_tenant_id() FOR UPDATE"
             ),
-            {"id": lead_id, "stage": body.stage},
+            {"id": lead_id},
         ).first()
-        if changed is None:
+        if before is None:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-        expect_events(session)  # the change is queued for integrations by trigger (ADR-041)
+        session.execute(
+            text("UPDATE leads SET stage = CAST(:stage AS lead_stage) WHERE id = :id"),
+            {"id": lead_id, "stage": body.stage},
+        )
+        closing = CLOSING.get(body.stage)
+        if closing is not None and before.stage != body.stage:
+            try:
+                decisions.record(session, lead_id=lead_id, kind=closing, score_id=body.score_id)
+            except decisions.UnknownScore:
+                raise HTTPException(
+                    status.HTTP_422_UNPROCESSABLE_CONTENT, "That score isn't this lead's"
+                ) from None
+        # Stage changes are queued for integrations and re-scoring by trigger (ADR-041, ADR-045).
+        expect_events(session)
         return _detail(session, lead_id)
 
 

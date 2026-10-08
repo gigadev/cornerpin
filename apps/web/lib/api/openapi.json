@@ -481,6 +481,19 @@
             ],
             "title": "Decision",
             "type": "string"
+          },
+          "score_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The score the owner saw when deciding, if one was shown",
+            "title": "Score Id"
           }
         },
         "required": [
@@ -574,6 +587,19 @@
             "title": "Id",
             "type": "string"
           },
+          "lead_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The buyer's lead",
+            "title": "Lead Id"
+          },
           "lot_id": {
             "format": "uuid",
             "title": "Lot Id",
@@ -605,6 +631,17 @@
             ],
             "title": "Phone"
           },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadScore"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The lead's latest score: advice, not a decision"
+          },
           "status": {
             "enum": [
               "pending",
@@ -633,7 +670,9 @@
           "status",
           "contact",
           "created_at",
-          "decided_at"
+          "decided_at",
+          "lead_id",
+          "score"
         ],
         "title": "HoldRequestOut",
         "type": "object"
@@ -1072,6 +1111,37 @@
         "type": "object"
       },
       "JsonValue": {},
+      "LeadDecision": {
+        "properties": {
+          "kind": {
+            "enum": [
+              "hold_approved",
+              "hold_declined",
+              "lead_won",
+              "lead_lost"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadScore"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The score the owner saw, if one was shown"
+          }
+        },
+        "required": [
+          "kind",
+          "score"
+        ],
+        "title": "LeadDecision",
+        "type": "object"
+      },
       "LeadDetail": {
         "properties": {
           "contact": {
@@ -1161,6 +1231,17 @@
             ],
             "title": "Phone"
           },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadScore"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The latest score: advice, not a decision"
+          },
           "signed_in": {
             "description": "Whether the buyer has signed in, so their email is proven",
             "title": "Signed In",
@@ -1198,6 +1279,7 @@
           "handoff_reason",
           "last_activity_at",
           "created_at",
+          "score",
           "events"
         ],
         "title": "LeadDetail",
@@ -1255,6 +1337,17 @@
             "title": "Created At",
             "type": "string"
           },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What was decided and the score shown, for a decision"
+          },
           "from_stage": {
             "anyOf": [
               {
@@ -1305,7 +1398,8 @@
               "message_sent",
               "message_refused",
               "message_received",
-              "agent_action"
+              "agent_action",
+              "decision"
             ],
             "title": "Kind",
             "type": "string"
@@ -1486,6 +1580,46 @@
         "title": "LeadLot",
         "type": "object"
       },
+      "LeadScore": {
+        "description": "A lead's risk of falling through, from 0 to 1. Advice for a person, never a decision.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "model_version": {
+            "title": "Model Version",
+            "type": "string"
+          },
+          "reasons": {
+            "description": "Biggest effect first",
+            "items": {
+              "$ref": "#/components/schemas/ScoreReason"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "scored_at": {
+            "format": "date-time",
+            "title": "Scored At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "score",
+          "model_version",
+          "reasons",
+          "scored_at"
+        ],
+        "title": "LeadScore",
+        "type": "object"
+      },
       "LeadSummary": {
         "properties": {
           "contact": {
@@ -1567,6 +1701,17 @@
             ],
             "title": "Phone"
           },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadScore"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The latest score: advice, not a decision"
+          },
           "signed_in": {
             "description": "Whether the buyer has signed in, so their email is proven",
             "title": "Signed In",
@@ -1603,13 +1748,27 @@
           "handoff_at",
           "handoff_reason",
           "last_activity_at",
-          "created_at"
+          "created_at",
+          "score"
         ],
         "title": "LeadSummary",
         "type": "object"
       },
       "LeadUpdate": {
         "properties": {
+          "score_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The score the owner saw; logged when they mark won or lost",
+            "title": "Score Id"
+          },
           "stage": {
             "enum": [
               "new",
@@ -2791,6 +2950,30 @@
           "saved_at"
         ],
         "title": "SavedLot",
+        "type": "object"
+      },
+      "ScoreReason": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "weight": {
+            "description": "How much it moved the risk: positive raised it",
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": [
+          "code",
+          "text",
+          "weight"
+        ],
+        "title": "ScoreReason",
         "type": "object"
       },
       "SignInResult": {
@@ -4815,14 +4998,7 @@
             "description": "Already decided, or the lot is sold"
           },
           "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
+            "description": "The score named isn't this lead's"
           }
         },
         "summary": "Decide Hold Request",
@@ -5420,7 +5596,7 @@
         ]
       },
       "patch": {
-        "description": "Change the stage. The change goes on the timeline with who made it.",
+        "description": "Change the stage. The change goes on the timeline with who made it; marking the lead won\nor lost is also logged as a decision, with the score the owner saw.",
         "operationId": "update_lead_v1_tenants__tenant_id__leads__lead_id__patch",
         "parameters": [
           {
@@ -5485,14 +5661,7 @@
             "description": "Not found, or not your tenant"
           },
           "422": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            },
-            "description": "Validation Error"
+            "description": "The score named isn't this lead's"
           }
         },
         "summary": "Update Lead",

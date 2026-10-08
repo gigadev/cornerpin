@@ -580,7 +580,8 @@ export interface paths {
         head?: never;
         /**
          * Update Lead
-         * @description Change the stage. The change goes on the timeline with who made it.
+         * @description Change the stage. The change goes on the timeline with who made it; marking the lead won
+         *     or lost is also logged as a decision, with the score the owner saw.
          */
         patch: operations["update_lead_v1_tenants__tenant_id__leads__lead_id__patch"];
         trace?: never;
@@ -1199,6 +1200,11 @@ export interface components {
              * @enum {string}
              */
             decision: "approve" | "decline";
+            /**
+             * Score Id
+             * @description The score the owner saw when deciding, if one was shown
+             */
+            score_id?: string | null;
         };
         /** HoldRequestCreate */
         HoldRequestCreate: {
@@ -1236,6 +1242,11 @@ export interface components {
              */
             id: string;
             /**
+             * Lead Id
+             * @description The buyer's lead
+             */
+            lead_id: string | null;
+            /**
              * Lot Id
              * Format: uuid
              */
@@ -1249,6 +1260,8 @@ export interface components {
             name: string;
             /** Phone */
             phone: string | null;
+            /** @description The lead's latest score: advice, not a decision */
+            score: components["schemas"]["LeadScore"] | null;
             /**
              * Status
              * @enum {string}
@@ -1418,6 +1431,16 @@ export interface components {
             enabled: boolean;
         };
         JsonValue: unknown;
+        /** LeadDecision */
+        LeadDecision: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "hold_approved" | "hold_declined" | "lead_won" | "lead_lost";
+            /** @description The score the owner saw, if one was shown */
+            score: components["schemas"]["LeadScore"] | null;
+        };
         /** LeadDetail */
         LeadDetail: {
             /**
@@ -1463,6 +1486,8 @@ export interface components {
             name: string;
             /** Phone */
             phone: string | null;
+            /** @description The latest score: advice, not a decision */
+            score: components["schemas"]["LeadScore"] | null;
             /**
              * Signed In
              * @description Whether the buyer has signed in, so their email is proven
@@ -1503,6 +1528,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** @description What was decided and the score shown, for a decision */
+            decision?: components["schemas"]["LeadDecision"] | null;
             /** From Stage */
             from_stage: ("new" | "contacted" | "engaged" | "holding" | "won" | "lost") | null;
             /** Granted */
@@ -1516,7 +1543,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "inquiry" | "hold_requested" | "hold_approved" | "hold_declined" | "hold_withdrawn" | "consent_changed" | "stage_changed" | "note" | "handoff" | "handoff_resolved" | "message_sent" | "message_refused" | "message_received" | "agent_action";
+            kind: "inquiry" | "hold_requested" | "hold_approved" | "hold_declined" | "hold_withdrawn" | "consent_changed" | "stage_changed" | "note" | "handoff" | "handoff_resolved" | "message_sent" | "message_refused" | "message_received" | "agent_action" | "decision";
             lot: components["schemas"]["LeadLot"] | null;
             /** Message */
             message: string | null;
@@ -1572,6 +1599,31 @@ export interface components {
             /** Subdivision Name */
             subdivision_name: string;
         };
+        /**
+         * LeadScore
+         * @description A lead's risk of falling through, from 0 to 1. Advice for a person, never a decision.
+         */
+        LeadScore: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Model Version */
+            model_version: string;
+            /**
+             * Reasons
+             * @description Biggest effect first
+             */
+            reasons: components["schemas"]["ScoreReason"][];
+            /** Score */
+            score: number;
+            /**
+             * Scored At
+             * Format: date-time
+             */
+            scored_at: string;
+        };
         /** LeadSummary */
         LeadSummary: {
             /**
@@ -1612,6 +1664,8 @@ export interface components {
             name: string;
             /** Phone */
             phone: string | null;
+            /** @description The latest score: advice, not a decision */
+            score: components["schemas"]["LeadScore"] | null;
             /**
              * Signed In
              * @description Whether the buyer has signed in, so their email is proven
@@ -1630,6 +1684,11 @@ export interface components {
         };
         /** LeadUpdate */
         LeadUpdate: {
+            /**
+             * Score Id
+             * @description The score the owner saw; logged when they mark won or lost
+             */
+            score_id?: string | null;
             /**
              * Stage
              * @enum {string}
@@ -2043,6 +2102,18 @@ export interface components {
             subdivision_name: string;
             /** Subdivision Slug */
             subdivision_slug: string;
+        };
+        /** ScoreReason */
+        ScoreReason: {
+            /** Code */
+            code: string;
+            /** Text */
+            text: string;
+            /**
+             * Weight
+             * @description How much it moved the risk: positive raised it
+             */
+            weight: number;
         };
         /** SignInResult */
         SignInResult: {
@@ -3240,14 +3311,12 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Validation Error */
+            /** @description The score named isn't this lead's */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
+                content?: never;
             };
         };
     };
@@ -3617,14 +3686,12 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Validation Error */
+            /** @description The score named isn't this lead's */
             422: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
+                content?: never;
             };
         };
     };
