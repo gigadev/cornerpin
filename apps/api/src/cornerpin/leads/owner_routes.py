@@ -99,7 +99,8 @@ def decide_hold_request(
                 text("UPDATE lots SET status = 'on_hold' WHERE id = :id AND status = 'available'"),
                 {"id": row.lot_id},
             )
-            expect_events(session)
+        # The lot change and the lead's hold event queue work by trigger (ADR-041, ADR-045).
+        expect_events(session)
         session.execute(
             text(
                 "UPDATE hold_requests SET status = CAST(:status AS hold_request_status),"

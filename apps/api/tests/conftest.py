@@ -175,12 +175,34 @@ def add_outreach_rows(conn: Connection, tenant: TenantData) -> None:
     )
 
 
+def add_decisioning_rows(conn: Connection, tenant: TenantData) -> None:
+    """A score and a decision on the tenant's lead (P3-01), so isolation is tested for both."""
+    params = {"t": tenant.tenant_id, "b": tenant.buyer_id, "o": tenant.owner_id}
+    conn.execute(
+        text(
+            "INSERT INTO risk_scores (tenant_id, lead_id, model_version, score, inputs, reasons)"
+            " SELECT tenant_id, id, 'fixture', 0.5, '{}', '[]' FROM leads"
+            " WHERE tenant_id = :t AND user_id = :b"
+        ),
+        params,
+    )
+    conn.execute(
+        text(
+            "INSERT INTO decisions (tenant_id, lead_id, kind, decided_by, decided_by_email)"
+            " SELECT l.tenant_id, l.id, 'lead_won', u.id, u.email FROM leads l, users u"
+            " WHERE l.tenant_id = :t AND l.user_id = :b AND u.id = :o"
+        ),
+        params,
+    )
+
+
 @pytest.fixture(scope="session")
 def tenants(db: Databases) -> tuple[TenantData, TenantData]:
     with db.owner.begin() as conn:
         built = build_tenant(conn, "alpha"), build_tenant(conn, "bravo")
         for tenant in built:
             add_outreach_rows(conn, tenant)
+            add_decisioning_rows(conn, tenant)
         return built
 
 
