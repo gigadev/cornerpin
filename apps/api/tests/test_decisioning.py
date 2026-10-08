@@ -1,28 +1,34 @@
-"""P3-01 and P3-02: risk scores, the lead model and decisions (ADR-013, ADR-045, ADR-046)."""
+"""P3-01 to P3-04: risk scores, decisions and the decisioning service (ADR-013, ADR-045 to
+ADR-048). The model's own tests live with the service, in apps/decisioning/tests."""
 
+import os
+import subprocess
+import sys
+import tomllib
+from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+import httpx
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.exc import ProgrammingError
 
+from cornerpin.core.config import get_settings
 from cornerpin.core.db import user_session, worker_session
 from cornerpin.core.outbox import drain, enqueue
+from cornerpin.decisioning import handlers
 from cornerpin.decisioning.events import ScoreLead
 from cornerpin.decisioning.features import LeadFeatures, price_band
-from cornerpin.decisioning.model import (
-    MIN_REASONS,
-    Artifact,
-    ModelScorer,
-    describe,
-    encode,
-    explain,
-    read_artifact,
+from cornerpin.decisioning.scoring import (
+    InProcessScorer,
+    RulesBaseline,
+    Score,
+    ServiceScorer,
+    get_scorer,
 )
-from cornerpin.decisioning.scoring import RulesBaseline, get_scorer
-from cornerpin.decisioning.training import generate, train
 
 from .conftest import Databases, Listing, TenantData
 from .outreach_support import email_of, inquire, lead_of
@@ -100,27 +106,18 @@ def features(**changes: Any) -> LeadFeatures:
 
 def test_a_score_sees_only_the_allowed_features() -> None:
     assert_allowed(tuple(LeadFeatures.model_fields))
+
+
+def test_the_service_and_its_model_take_exactly_the_api_features() -> None:
+    """The API and the decisioning service each keep their own copy of the contract
+    (ADR-048); this is what holds them together."""
+    from cornerpin_decisioning.contract import Features
+    from cornerpin_decisioning.model import read_artifact
+
+    ours, theirs = LeadFeatures.model_json_schema(), Features.model_json_schema()
+    assert ours["properties"] == theirs["properties"]
+    assert ours["required"] == theirs["required"]
     assert_allowed(read_artifact().metadata["features"])
-
-
-def test_a_model_trained_with_a_planted_personal_attribute_fails_the_feature_test() -> None:
-    planted = train(rows=1500, rounds=20, plant="buyer_age")
-    with pytest.raises(AssertionError):
-        assert_allowed(planted.features)
-    with pytest.raises(ValueError, match="buyer_age"):
-        ModelScorer(
-            Artifact(name="planted", model_text=planted.model_text, metadata=planted.metadata)
-        )
-
-
-def test_the_training_script_reproduces_the_artifact() -> None:
-    committed = read_artifact()
-    settings = committed.metadata["training"]
-    retrained = train(rows=settings["rows"], seed=settings["seed"], rounds=settings["rounds"])
-    assert retrained.metadata["metrics"] == committed.metadata["metrics"]
-    probe = [encode(f) for f in generate(300, seed=99)[0]]
-    again = ModelScorer(Artifact("retrained", retrained.model_text, retrained.metadata))
-    assert again.predict(probe) == pytest.approx(ModelScorer(committed).predict(probe), abs=1e-4)
 
 
 @pytest.mark.parametrize(
@@ -145,7 +142,7 @@ def test_a_new_lead_is_scored_with_reasons_within_one_drain(
     assert score.inputs["phase_release"] == "upcoming"
     assert score.inputs["days_since_buyer_activity"] == 0
     assert 0 < score.score < 1
-    assert len(score.reasons) >= MIN_REASONS
+    assert len(score.reasons) >= 3
     assert {r["code"] for r in score.reasons} <= ALLOWED_FEATURES
     assert all(r["text"] and r["weight"] != 0 for r in score.reasons)
 
@@ -171,36 +168,6 @@ def test_won_and_lost_leads_are_not_scored(
         conn.execute(text("UPDATE leads SET stage = 'lost' WHERE id = :id"), {"id": lead_id})
     score_now(lead_id)
     assert scores(db, lead_id) == []
-
-
-def test_the_model_scores_replying_and_asking_for_a_hold_better_than_going_quiet() -> None:
-    model = get_scorer()
-    keen = model.score(
-        features(stage="engaged", replies=1, hold_requests=1, days_since_buyer_activity=2)
-    )
-    quiet = model.score(
-        features(touches=3, days_since_buyer_activity=40, days_since_first_contact=45)
-    )
-    assert keen.score < 0.5 < quiet.score
-    assert keen.reasons[0].text == "Asked to hold a lot"
-    assert keen.reasons[0].weight < 0
-    assert {"touches", "replies", "days_since_buyer_activity"} <= {r.code for r in quiet.reasons}
-    assert all(r.weight > 0 for r in quiet.reasons[:3])
-
-
-def test_every_synthetic_lead_gets_at_least_three_reasons_in_words() -> None:
-    model = get_scorer()
-    for lead in generate(400, seed=5)[0]:
-        result = model.score(lead)
-        assert len(result.reasons) >= MIN_REASONS
-        assert all(r.text for r in result.reasons)
-
-
-def test_a_reply_that_raises_the_risk_says_only() -> None:
-    assert describe("replies", 1, 0.2) == "Replied only once"
-    assert describe("replies", 2, -0.2) == "Replied 2 times"
-    reasons = explain(features(replies=1), [0.0, 0.0, 0.3] + [0.0] * 8)
-    assert reasons[0].text == "Replied only once"
 
 
 def test_the_rules_baseline_scores_replying_and_asking_for_a_hold_better_than_going_quiet() -> None:
@@ -319,7 +286,7 @@ def test_leads_and_holds_show_the_latest_score(
     leads = alpha_owner.get(f"/v1/tenants/{listing.tenant.tenant_id}/leads").json()["leads"]
     [lead] = [lead for lead in leads if lead["id"] == str(lead_id)]
     assert lead["score"]["model_version"] == "lgbm-lead-v1"
-    assert len(lead["score"]["reasons"]) >= MIN_REASONS
+    assert len(lead["score"]["reasons"]) >= 3
     assert hold["score"]["id"] == lead["score"]["id"]
     assert _lead_page(alpha_owner, listing, lead_id)["score"]["id"] == lead["score"]["id"]
 
@@ -406,3 +373,158 @@ def test_marking_a_lead_won_or_lost_is_a_decision_and_other_stages_are_not(
     assert won.status_code == 200, won.text
     alpha_owner.patch(url, json={"stage": "won", "score_id": shown["id"]})
     assert decided() == [{"kind": "lead_won", "score": shown}]
+
+
+# --- P3-04: scoring in its own service (ADR-048) -------------------------------------------
+
+SERVICE = "http://decisioning.test"
+
+
+def _service_client() -> TestClient:
+    from cornerpin_decisioning.app import app
+
+    return TestClient(app, base_url=SERVICE)
+
+
+def _forward(service: TestClient, request: httpx.Request) -> httpx.Response:
+    found = service.post(request.url.path, content=request.content, headers=request.headers)
+    return httpx.Response(found.status_code, content=found.content, headers=found.headers)
+
+
+def _to_service() -> httpx.Client:
+    """An HTTP client whose requests reach the real service app, in this process."""
+    service = _service_client()
+    return httpx.Client(transport=httpx.MockTransport(lambda r: _forward(service, r)))
+
+
+def test_a_score_round_trips_through_the_service() -> None:
+    lead = features(stage="engaged", replies=1, hold_requests=1, days_since_buyer_activity=2)
+    through_service = ServiceScorer(SERVICE, client=_to_service()).score(lead)
+    assert through_service.model_version == "lgbm-lead-v1"
+    assert len(through_service.reasons) >= 3
+    assert through_service == InProcessScorer().score(lead)
+
+
+def test_an_https_service_is_called_with_an_id_token_for_its_url() -> None:
+    seen: dict[str, str] = {}
+    answer = Score(model_version="lgbm-lead-v1", score=0.4, reasons=[])
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        seen["url"] = str(request.url)
+        seen["authorization"] = request.headers.get("authorization", "")
+        return httpx.Response(200, json=answer.model_dump())
+
+    url = "https://decisioning-123.us-west1.run.app"
+    scorer = ServiceScorer(
+        url,
+        token=lambda audience: f"token-for-{audience}",
+        client=httpx.Client(transport=httpx.MockTransport(respond)),
+    )
+    assert scorer.score(features()) == answer
+    assert seen == {"url": f"{url}/v1/score", "authorization": f"Bearer token-for-{url}"}
+
+
+@pytest.fixture
+def service_url(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
+    monkeypatch.setenv("DECISIONING_URL", SERVICE)
+    get_settings.cache_clear()
+    get_scorer.cache_clear()
+    yield SERVICE
+    monkeypatch.delenv("DECISIONING_URL")
+    get_settings.cache_clear()
+    get_scorer.cache_clear()
+
+
+def test_the_api_uses_the_service_when_one_is_configured(service_url: str) -> None:
+    assert isinstance(get_scorer(), ServiceScorer)
+
+
+def test_without_a_service_url_scoring_runs_in_process_locally() -> None:
+    get_scorer.cache_clear()
+    assert isinstance(get_scorer(), InProcessScorer)
+
+
+def test_a_service_outage_is_retried_without_a_duplicate_score(
+    db: Databases,
+    listing: Listing,
+    buyer: TestClient,
+    outreach_mail: object,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service = _service_client()
+    state = {"down": True}
+
+    def respond(request: httpx.Request) -> httpx.Response:
+        if state["down"]:
+            return httpx.Response(503, text="Service Unavailable")
+        return _forward(service, request)
+
+    scorer = ServiceScorer(SERVICE, client=httpx.Client(transport=httpx.MockTransport(respond)))
+    monkeypatch.setattr(handlers, "get_scorer", lambda: scorer)
+
+    inquire(buyer, listing, allow_email=True)
+    lead_id = lead_of(db, listing, email_of(buyer))
+    drain()
+    assert scores(db, lead_id) == []
+    waiting = text(
+        "SELECT attempts, last_error FROM outbox WHERE event_type = 'decisioning.score_lead'"
+        " AND payload->>'lead_id' = :id AND processed_at IS NULL"
+    )
+    with db.owner.connect() as conn:
+        failed = conn.execute(waiting, {"id": str(lead_id)}).all()
+    assert failed and all(row.attempts == 1 and "503" in row.last_error for row in failed)
+
+    state["down"] = False
+    with db.owner.begin() as conn:  # the retries' back-off, skipped
+        conn.execute(
+            text(
+                "UPDATE outbox SET available_at = now() WHERE event_type = 'decisioning.score_lead'"
+                " AND payload->>'lead_id' = :id AND processed_at IS NULL"
+            ),
+            {"id": str(lead_id)},
+        )
+    drain()
+    assert len(scores(db, lead_id)) == 1
+    with db.owner.connect() as conn:
+        assert conn.execute(waiting, {"id": str(lead_id)}).all() == []
+
+
+API = Path(__file__).resolve().parents[1]
+
+# Imports the API and its outbox handlers with the model's libraries made unimportable, as in
+# the API image, and checks scoring would go to the service.
+WITHOUT_ML = """
+import importlib.abc
+import sys
+
+BLOCKED = {"lightgbm", "numpy", "scipy", "cornerpin_decisioning"}
+
+
+class Block(importlib.abc.MetaPathFinder):
+    def find_spec(self, name, path=None, target=None):
+        if name.split(".")[0] in BLOCKED:
+            raise ImportError(f"blocked: {name}")
+        return None
+
+
+sys.meta_path.insert(0, Block())
+import cornerpin.main
+from cornerpin.decisioning import handlers
+from cornerpin.decisioning.scoring import ServiceScorer, get_scorer
+
+assert isinstance(get_scorer(), ServiceScorer)
+print("loaded", sorted(m for m in sys.modules if m.split(".")[0] in BLOCKED))
+"""
+
+
+def test_the_api_runs_without_the_model_or_its_libraries() -> None:
+    declared = tomllib.loads((API / "pyproject.toml").read_text(encoding="utf-8"))
+    names = " ".join(declared["project"]["dependencies"]).lower()
+    assert not any(lib in names for lib in ("lightgbm", "numpy", "scipy", "decisioning"))
+
+    env = os.environ | {"DECISIONING_URL": "http://decisioning.invalid"}
+    run = subprocess.run(  # noqa: S603 -- our own interpreter and a fixed script
+        [sys.executable, "-c", WITHOUT_ML], env=env, capture_output=True, text=True, check=False
+    )
+    assert run.returncode == 0, run.stderr
+    assert run.stdout.strip() == "loaded []"

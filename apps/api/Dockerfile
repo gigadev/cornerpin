@@ -8,6 +8,8 @@ WORKDIR /repo
 # Dependencies first, so code changes don't reinstall them.
 COPY pyproject.toml uv.lock ./
 COPY apps/api/pyproject.toml apps/api/
+# uv reads every workspace member's manifest to check the lock; only the API is installed.
+COPY apps/decisioning/pyproject.toml apps/decisioning/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --no-install-workspace --package cornerpin-api
 COPY alembic.ini ./
@@ -16,9 +18,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev --package cornerpin-api
 
 FROM python:3.13-slim-bookworm
-# LightGBM's wheel needs the OpenMP runtime (ADR-046), until scoring moves to its own service.
-RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
-    && rm -rf /var/lib/apt/lists/*
 ENV PATH=/repo/.venv/bin:$PATH PYTHONUNBUFFERED=1 PORT=8080
 WORKDIR /repo
 COPY --from=build /repo /repo

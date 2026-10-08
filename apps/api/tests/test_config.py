@@ -1,5 +1,5 @@
 """Outside local, the API refuses to start with local defaults or half-configured features, so a
-deploy missing a secret fails loudly instead of running insecurely (ADR-032, ADR-040)."""
+deploy missing a secret fails loudly instead of running insecurely (ADR-032, ADR-040, ADR-048)."""
 
 import base64
 
@@ -14,6 +14,7 @@ PRODUCTION: dict[str, object] = {
     "turnstile_site_key": "0x4AAAAAA-site",
     "turnstile_secret_key": "0x4AAAAAA-secret",
     "integrations_key": base64.b64encode(b"p" * 32).decode(),
+    "decisioning_url": "https://decisioning-1.us-west1.run.app",
 }
 
 
@@ -32,6 +33,7 @@ def test_a_complete_production_configuration_starts() -> None:
         ({"secret_key": Settings().secret_key}, "SECRET_KEY must be set"),
         ({"inbound_email_domain": "reply.cornerpin.app"}, "RESEND_WEBHOOK_SECRET"),
         ({"email_backend": "resend"}, "RESEND_API_KEY must be set"),
+        ({"decisioning_url": None}, "DECISIONING_URL must be set"),
     ],
 )
 def test_production_refuses_local_defaults_and_half_set_features(

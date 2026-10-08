@@ -93,6 +93,9 @@ class Settings(BaseSettings):
     internal_base_url: str | None = None
     # The service account Cloud Tasks and Cloud Scheduler sign their calls as.
     tasks_service_account: str | None = None
+    # The decisioning service that holds the lead model (ADR-048). Unset, scoring runs
+    # in-process, which needs the service's package installed: local development and tests only.
+    decisioning_url: str | None = None
 
     # Web push (ADR-029) stays dormant until both keys exist. Generate a pair locally with
     # `uv run python -m cornerpin.devtools vapid-keys`.
@@ -149,6 +152,8 @@ class Settings(BaseSettings):
                 "CLOUD_TASKS_QUEUE, INTERNAL_BASE_URL and TASKS_SERVICE_ACCOUNT must be set"
                 " for the cloudtasks outbox runner"
             )
+        if not self.decisioning_url:
+            problems.append("DECISIONING_URL must be set: the API image has no model (ADR-048)")
         if problems:
             raise ValueError("; ".join(problems))
         return self

@@ -15,6 +15,19 @@
       "port": 8000
     },
     {
+      "name": "decisioning",
+      "runtimeExecutable": "C:\\Users\\scott\\.local\\bin\\uv.exe",
+      "runtimeArgs": [
+        "run",
+        "uvicorn",
+        "cornerpin_decisioning.app:app",
+        "--port",
+        "8200",
+        "--reload"
+      ],
+      "port": 8200
+    },
+    {
       "name": "web",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": [

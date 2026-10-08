@@ -1,8 +1,7 @@
 """The trained lead model (ADR-046): how features become the model's inputs, and how its
 per-feature contributions become reasons in plain words.
 
-LightGBM is imported only when a model is loaded, so the API starts as fast as before. P3-04
-moves this into the decisioning service."""
+Runs in the decisioning service (ADR-048); LightGBM is imported when the model is loaded."""
 
 import json
 import math
@@ -13,13 +12,12 @@ from typing import Any
 
 import numpy as np
 
-from cornerpin.decisioning.features import LeadFeatures
-from cornerpin.decisioning.scoring import Reason, Score
+from cornerpin_decisioning.contract import Features, Reason, Score
 
 MODELS = Path(__file__).parent / "models"
 CURRENT = "lead-v1"
 
-FEATURES: tuple[str, ...] = tuple(LeadFeatures.model_fields)
+FEATURES: tuple[str, ...] = tuple(Features.model_fields)
 # Categorical features, coded by their position here; missing values stay missing.
 CATEGORIES: dict[str, tuple[str, ...]] = {
     "stage": ("new", "contacted", "engaged", "holding"),
@@ -40,7 +38,7 @@ MAX_REASONS = 5
 NOTABLE = 0.1  # log-odds; a reason past the first three must move the risk at least this much
 
 
-def encode(features: LeadFeatures) -> list[float]:
+def encode(features: Features) -> list[float]:
     row: list[float] = []
     for name in FEATURES:
         value = getattr(features, name)
@@ -121,7 +119,7 @@ def describe(name: str, value: Any, weight: float = 0.0) -> str:
             raise ValueError(f"no wording for feature {name}")
 
 
-def explain(features: LeadFeatures, contributions: list[float]) -> list[Reason]:
+def explain(features: Features, contributions: list[float]) -> list[Reason]:
     """The features that moved the risk most: always three, up to five if they matter."""
     ranked = sorted(
         zip(FEATURES, contributions, strict=True), key=lambda pair: abs(pair[1]), reverse=True
@@ -177,7 +175,7 @@ class ModelScorer:
         found = self._booster.predict(np.array(rows, dtype=float))  # pyright: ignore[reportUnknownMemberType]
         return [float(p) for p in np.asarray(found).ravel()]
 
-    def score(self, features: LeadFeatures) -> Score:
+    def score(self, features: Features) -> Score:
         row = np.array([encode(features)], dtype=float)
         risk = self.predict([encode(features)])[0]
         contrib = self._booster.predict(row, pred_contrib=True)  # pyright: ignore[reportUnknownMemberType]

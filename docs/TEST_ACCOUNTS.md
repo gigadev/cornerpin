@@ -29,6 +29,7 @@ stays switched off until a Google client id exists.
 | Mailpit (all local email) | http://localhost:8025 |
 | API | http://localhost:8000 |
 | API docs (try requests here) | http://localhost:8000/docs |
+| Decisioning service (optional locally; the API scores in-process unless `DECISIONING_URL=http://localhost:8200` is in `.env`) | http://localhost:8200/docs, started with `uv run uvicorn cornerpin_decisioning.app:app --port 8200` |
 | Public GraphQL explorer (GraphiQL) | http://localhost:8000/graphql |
 | Postgres + PostGIS | `localhost:5434`, database `cornerpin` |
 | Uploaded photos and documents | the `var/storage` folder in the repo (gitignored) |
