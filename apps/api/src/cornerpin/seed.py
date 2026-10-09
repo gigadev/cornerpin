@@ -15,6 +15,7 @@ from uuid import NAMESPACE_URL, UUID, uuid5
 from sqlalchemy import Connection, create_engine, text
 
 from cornerpin.core.config import get_settings
+from cornerpin.financing.demo import seed_financing
 
 DEMO_TENANT_ID = uuid5(NAMESPACE_URL, "https://cornerpin.app/tenants/demo")
 DEMO_OWNER_EMAIL = "owner@demo.cornerpin.test"
@@ -132,8 +133,9 @@ def lot_polygon_wkt(corners: tuple[Point, ...]) -> str:
 def seed(conn: Connection, owner_email: str = DEMO_OWNER_EMAIL) -> UUID:
     """Rebuild the demo tenant from scratch. `owner_email` is its owner: the .test address
     locally, a real one in production (`python -m cornerpin.ops seed-demo`)."""
-    # Buyer records block deleting their lot (migration 0004), so clear them first.
-    for table in ("inquiries", "hold_requests"):
+    # Buyer records and financing applications block deleting their lot (migrations 0004, 0019),
+    # so clear them first.
+    for table in ("inquiries", "hold_requests", "financing_applications"):
         conn.execute(text(f"DELETE FROM {table} WHERE tenant_id = :id"), {"id": DEMO_TENANT_ID})  # noqa: S608
     conn.execute(text("DELETE FROM tenants WHERE id = :id"), {"id": DEMO_TENANT_ID})
     conn.execute(
@@ -237,6 +239,8 @@ def seed(conn: Connection, owner_email: str = DEMO_OWNER_EMAIL) -> UUID:
         ),
         {"s": subdivision_id},
     )
+    # The demo tenant alone has the synthetic owner-financing module (ADR-013, ADR-049).
+    seed_financing(conn, DEMO_TENANT_ID)
     return subdivision_id
 
 

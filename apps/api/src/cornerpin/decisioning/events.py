@@ -11,3 +11,11 @@ class ScoreLead(Event):
     event_type: ClassVar[str] = "decisioning.score_lead"
 
     lead_id: UUID
+
+
+class ScoreApplication(Event):
+    """A financing application was made (ADR-049). Queued by a trigger (migration 0019)."""
+
+    event_type: ClassVar[str] = "decisioning.score_application"
+
+    application_id: UUID

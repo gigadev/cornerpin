@@ -46,6 +46,15 @@ def latest_score_sql(lead_id: str) -> str:
     )
 
 
+def latest_application_score_sql(application_id: str) -> str:
+    """A SQL expression: a financing application's latest score as JSON, or NULL (ADR-049)."""
+    return (
+        f"(SELECT {_score_json('r')} FROM risk_scores r"  # noqa: S608 -- fixed SQL
+        f" WHERE r.financing_application_id = {application_id}"
+        " ORDER BY r.scored_at DESC, r.id DESC LIMIT 1)"
+    )
+
+
 class UnknownScore(Exception):
     """The score named isn't one of this lead's."""
 

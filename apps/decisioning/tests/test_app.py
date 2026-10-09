@@ -22,7 +22,11 @@ FEATURES = {
 
 
 def test_health_names_the_model() -> None:
-    assert client.get("/health").json() == {"status": "ok", "model_version": "lgbm-lead-v1"}
+    assert client.get("/health").json() == {
+        "status": "ok",
+        "model_version": "lgbm-lead-v1",
+        "application_model_version": "lgbm-application-v1",
+    }
 
 
 def test_a_score_comes_back_with_its_reasons() -> None:
@@ -40,3 +44,26 @@ def test_anything_beyond_the_contract_is_refused() -> None:
     assert planted.status_code == 422
     missing = {k: v for k, v in FEATURES.items() if k != "replies"}
     assert client.post("/v1/score", json={"features": missing}).status_code == 422
+
+
+APPLICATION = {
+    "down_payment_ratio": 0.1,
+    "term_months": 360,
+    "payment_to_income": 0.38,
+    "lot_price_band": "high",
+    "listing_type": "land_only",
+}
+
+
+def test_an_application_is_scored_with_its_reasons() -> None:
+    found = client.post("/v1/score/application", json={"features": APPLICATION})
+    assert found.status_code == 200
+    body = found.json()
+    assert body["model_version"] == "lgbm-application-v1"
+    assert len(body["reasons"]) >= 3
+
+
+def test_an_application_with_anything_about_the_person_is_refused() -> None:
+    for extra in ({"buyer_age": 40}, {"zip_code": "83702"}, {"income": 85000}):
+        refused = client.post("/v1/score/application", json={"features": APPLICATION | extra})
+        assert refused.status_code == 422

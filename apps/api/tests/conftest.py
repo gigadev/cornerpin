@@ -196,6 +196,50 @@ def add_decisioning_rows(conn: Connection, tenant: TenantData) -> None:
     )
 
 
+def add_financing_rows(conn: Connection, tenant: TenantData) -> None:
+    """One of each financing row (P3-05), so isolation is tested for all of them. The tables
+    don't check the tenant's switch; the routes do."""
+    params = {"t": tenant.tenant_id, "lot": tenant.lot_id}
+    application = conn.execute(
+        text(
+            "INSERT INTO financing_applications (tenant_id, lot_id, applicant_name,"
+            " applicant_email, amount, down_payment, term_months, income_band, status)"
+            " VALUES (:t, :lot, 'Fixture Applicant', 'fixture@synthetic.example', 80000, 20000,"
+            " 120, '50k_100k', 'approved') RETURNING id"
+        ),
+        params,
+    ).scalar_one()
+    conn.execute(
+        text(
+            "INSERT INTO financing_decisions (tenant_id, application_id, kind, reason)"
+            " VALUES (:t, :a, 'approved', 'fixture')"
+        ),
+        {**params, "a": application},
+    )
+    loan = conn.execute(
+        text(
+            "INSERT INTO loans (tenant_id, application_id, principal, annual_rate, term_months,"
+            " first_due_on) VALUES (:t, :a, 80000, 0.075, 120, '2026-01-01') RETURNING id"
+        ),
+        {**params, "a": application},
+    ).scalar_one()
+    conn.execute(
+        text(
+            "INSERT INTO loan_schedules (tenant_id, loan_id, number, due_on, payment, principal,"
+            " interest, balance) VALUES (:t, :l, 1, '2026-01-01', 949.62, 449.62, 500.00,"
+            " 79550.38)"
+        ),
+        {**params, "l": loan},
+    )
+    conn.execute(
+        text(
+            "INSERT INTO loan_payments (tenant_id, loan_id, paid_on, amount)"
+            " VALUES (:t, :l, '2026-01-01', 949.62)"
+        ),
+        {**params, "l": loan},
+    )
+
+
 @pytest.fixture(scope="session")
 def tenants(db: Databases) -> tuple[TenantData, TenantData]:
     with db.owner.begin() as conn:
@@ -203,6 +247,7 @@ def tenants(db: Databases) -> tuple[TenantData, TenantData]:
         for tenant in built:
             add_outreach_rows(conn, tenant)
             add_decisioning_rows(conn, tenant)
+            add_financing_rows(conn, tenant)
         return built
 
 

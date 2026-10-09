@@ -59,6 +59,7 @@ not started yet is still binding: it describes how that part will be built.
 | [046](046-lead-model-on-synthetic-history.md) | The lead model: LightGBM on synthetic history, explained by its own contributions | P3-02 | Accepted |
 | [047](047-scores-and-decisions-in-the-portal.md) | Scores in the portal, and decisions logged with the score the owner saw | P3-03 | Accepted |
 | [048](048-decisioning-service.md) | The decisioning service: the model in its own Cloud Run service, called by the API | P3-04 | Accepted |
+| [049](049-financing-demo.md) | The financing demo: a switch, five tables, synthetic data and an affordability score | P3-05 | Accepted |
 
 ## Adding a decision
 

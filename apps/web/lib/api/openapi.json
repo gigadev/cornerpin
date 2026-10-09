@@ -1,6 +1,114 @@
 {
   "components": {
     "schemas": {
+      "ApplicationOut": {
+        "description": "A synthetic buyer's application to finance a lot through the owner (demo tenant only).",
+        "properties": {
+          "amount": {
+            "description": "The loan asked for",
+            "title": "Amount",
+            "type": "string"
+          },
+          "applicant_email": {
+            "title": "Applicant Email",
+            "type": "string"
+          },
+          "applicant_name": {
+            "title": "Applicant Name",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FinancingDecisionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "down_payment": {
+            "title": "Down Payment",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "income_band": {
+            "enum": [
+              "under_50k",
+              "50k_100k",
+              "100k_150k",
+              "over_150k"
+            ],
+            "title": "Income Band",
+            "type": "string"
+          },
+          "lot_id": {
+            "format": "uuid",
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "lot_number": {
+            "title": "Lot Number",
+            "type": "string"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LeadScore"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Risk of falling behind: advice, not a decision"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "approved",
+              "declined",
+              "withdrawn"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          },
+          "term_months": {
+            "title": "Term Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "lot_id",
+          "lot_number",
+          "subdivision_name",
+          "applicant_name",
+          "applicant_email",
+          "amount",
+          "down_payment",
+          "term_months",
+          "income_band",
+          "status",
+          "created_at",
+          "score",
+          "decision"
+        ],
+        "title": "ApplicationOut",
+        "type": "object"
+      },
       "AuthProviders": {
         "properties": {
           "google": {
@@ -444,6 +552,47 @@
           "features"
         ],
         "title": "FeatureCollection",
+        "type": "object"
+      },
+      "FinancingDecisionOut": {
+        "properties": {
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "decided_by_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None for the synthetic seed's decisions",
+            "title": "Decided By Email"
+          },
+          "kind": {
+            "enum": [
+              "approved",
+              "declined"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "reason",
+          "decided_at",
+          "decided_by_email"
+        ],
+        "title": "FinancingDecisionOut",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -1016,6 +1165,46 @@
           "created_at"
         ],
         "title": "InquiryOut",
+        "type": "object"
+      },
+      "Installment": {
+        "properties": {
+          "balance": {
+            "description": "Still owed once this installment is paid",
+            "title": "Balance",
+            "type": "string"
+          },
+          "due_on": {
+            "format": "date",
+            "title": "Due On",
+            "type": "string"
+          },
+          "interest": {
+            "title": "Interest",
+            "type": "string"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "payment": {
+            "title": "Payment",
+            "type": "string"
+          },
+          "principal": {
+            "title": "Principal",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "due_on",
+          "payment",
+          "principal",
+          "interest",
+          "balance"
+        ],
+        "title": "Installment",
         "type": "object"
       },
       "Integration": {
@@ -1796,6 +1985,221 @@
         "title": "ListingType",
         "type": "string"
       },
+      "LoanDetail": {
+        "properties": {
+          "annual_rate": {
+            "description": "0.075 is 7.5% a year",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Rate",
+            "type": "string"
+          },
+          "applicant_name": {
+            "title": "Applicant Name",
+            "type": "string"
+          },
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "days_past_due": {
+            "description": "Since the oldest unpaid installment fell due",
+            "title": "Days Past Due",
+            "type": "integer"
+          },
+          "first_due_on": {
+            "format": "date",
+            "title": "First Due On",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_number": {
+            "title": "Lot Number",
+            "type": "string"
+          },
+          "monthly_payment": {
+            "title": "Monthly Payment",
+            "type": "string"
+          },
+          "next_due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due On"
+          },
+          "outstanding_balance": {
+            "description": "Principal still owed after the payments",
+            "title": "Outstanding Balance",
+            "type": "string"
+          },
+          "paid_to_date": {
+            "title": "Paid To Date",
+            "type": "string"
+          },
+          "past_due": {
+            "description": "Due by today but not yet paid",
+            "title": "Past Due",
+            "type": "string"
+          },
+          "payments": {
+            "description": "Oldest first",
+            "items": {
+              "$ref": "#/components/schemas/Payment"
+            },
+            "title": "Payments",
+            "type": "array"
+          },
+          "principal": {
+            "title": "Principal",
+            "type": "string"
+          },
+          "schedule": {
+            "items": {
+              "$ref": "#/components/schemas/Installment"
+            },
+            "title": "Schedule",
+            "type": "array"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          },
+          "term_months": {
+            "title": "Term Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "application_id",
+          "applicant_name",
+          "lot_number",
+          "subdivision_name",
+          "principal",
+          "annual_rate",
+          "term_months",
+          "monthly_payment",
+          "first_due_on",
+          "paid_to_date",
+          "outstanding_balance",
+          "past_due",
+          "days_past_due",
+          "next_due_on",
+          "schedule",
+          "payments"
+        ],
+        "title": "LoanDetail",
+        "type": "object"
+      },
+      "LoanSummary": {
+        "properties": {
+          "annual_rate": {
+            "description": "0.075 is 7.5% a year",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Rate",
+            "type": "string"
+          },
+          "applicant_name": {
+            "title": "Applicant Name",
+            "type": "string"
+          },
+          "application_id": {
+            "format": "uuid",
+            "title": "Application Id",
+            "type": "string"
+          },
+          "days_past_due": {
+            "description": "Since the oldest unpaid installment fell due",
+            "title": "Days Past Due",
+            "type": "integer"
+          },
+          "first_due_on": {
+            "format": "date",
+            "title": "First Due On",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_number": {
+            "title": "Lot Number",
+            "type": "string"
+          },
+          "monthly_payment": {
+            "title": "Monthly Payment",
+            "type": "string"
+          },
+          "next_due_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due On"
+          },
+          "outstanding_balance": {
+            "description": "Principal still owed after the payments",
+            "title": "Outstanding Balance",
+            "type": "string"
+          },
+          "paid_to_date": {
+            "title": "Paid To Date",
+            "type": "string"
+          },
+          "past_due": {
+            "description": "Due by today but not yet paid",
+            "title": "Past Due",
+            "type": "string"
+          },
+          "principal": {
+            "title": "Principal",
+            "type": "string"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          },
+          "term_months": {
+            "title": "Term Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "application_id",
+          "applicant_name",
+          "lot_number",
+          "subdivision_name",
+          "principal",
+          "annual_rate",
+          "term_months",
+          "monthly_payment",
+          "first_due_on",
+          "paid_to_date",
+          "outstanding_balance",
+          "past_due",
+          "days_past_due",
+          "next_due_on"
+        ],
+        "title": "LoanSummary",
+        "type": "object"
+      },
       "LotCreate": {
         "properties": {
           "acreage": {
@@ -2536,6 +2940,44 @@
           }
         },
         "title": "OverlayUpdate",
+        "type": "object"
+      },
+      "Payment": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "paid_on": {
+            "format": "date",
+            "title": "Paid On",
+            "type": "string"
+          },
+          "recorded_by_email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None for the synthetic seed's payments",
+            "title": "Recorded By Email"
+          }
+        },
+        "required": [
+          "id",
+          "paid_on",
+          "amount",
+          "recorded_by_email"
+        ],
+        "title": "Payment",
         "type": "object"
       },
       "PhaseCreate": {
@@ -4859,6 +5301,285 @@
         "summary": "Document File",
         "tags": [
           "media"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/financing/applications": {
+      "get": {
+        "description": "Waiting for a decision first, then newest first.",
+        "operationId": "list_applications_v1_tenants__tenant_id__financing_applications_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ApplicationOut"
+                  },
+                  "title": "Response List Applications V1 Tenants  Tenant Id  Financing Applications Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, not your tenant, or the tenant has no financing demo"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Applications",
+        "tags": [
+          "financing"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/financing/applications/{application_id}": {
+      "get": {
+        "operationId": "get_application_v1_tenants__tenant_id__financing_applications__application_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, not your tenant, or the tenant has no financing demo"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Application",
+        "tags": [
+          "financing"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/financing/loans": {
+      "get": {
+        "description": "Every loan with where it stands today.",
+        "operationId": "list_loans_v1_tenants__tenant_id__financing_loans_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LoanSummary"
+                  },
+                  "title": "Response List Loans V1 Tenants  Tenant Id  Financing Loans Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, not your tenant, or the tenant has no financing demo"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Loans",
+        "tags": [
+          "financing"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/financing/loans/{loan_id}": {
+      "get": {
+        "description": "A loan with its whole schedule and every payment.",
+        "operationId": "get_loan_v1_tenants__tenant_id__financing_loans__loan_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "loan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Loan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, not your tenant, or the tenant has no financing demo"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Loan",
+        "tags": [
+          "financing"
         ]
       }
     },

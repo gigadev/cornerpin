@@ -13,7 +13,7 @@ import httpx
 from pydantic import BaseModel, ConfigDict
 
 from cornerpin.core.config import get_settings
-from cornerpin.decisioning.features import LeadFeatures
+from cornerpin.decisioning.features import ApplicationFeatures, LeadFeatures
 
 # Seconds. A cold start (the service waking from zero and loading the model) measured 10.6 s on
 # Cloud Run; a slower one still gets a retry from the outbox.
@@ -39,6 +39,8 @@ class Score(BaseModel):
 
 class Scorer(Protocol):
     def score(self, features: LeadFeatures) -> Score: ...
+
+    def score_application(self, features: ApplicationFeatures) -> Score: ...
 
 
 QUIET_DAYS = 30
@@ -117,9 +119,15 @@ class ServiceScorer:
         self._client = client or httpx.Client(timeout=SERVICE_TIMEOUT)
 
     def score(self, features: LeadFeatures) -> Score:
+        return self._post("/v1/score", features)
+
+    def score_application(self, features: ApplicationFeatures) -> Score:
+        return self._post("/v1/score/application", features)
+
+    def _post(self, path: str, features: BaseModel) -> Score:
         headers = {"Authorization": f"Bearer {self._token(self._url)}"} if self._token else {}
         response = self._client.post(
-            f"{self._url}/v1/score",
+            f"{self._url}{path}",
             json={"features": features.model_dump(mode="json")},
             headers=headers,
         )
@@ -137,6 +145,13 @@ class InProcessScorer:
         from cornerpin_decisioning.model import current_scorer
 
         result = current_scorer().score(Features.model_validate(features.model_dump()))
+        return Score.model_validate(result.model_dump())
+
+    def score_application(self, features: ApplicationFeatures) -> Score:
+        from cornerpin_decisioning.contract import ApplicationFeatures as Theirs
+        from cornerpin_decisioning.model import current_application_scorer
+
+        result = current_application_scorer().score(Theirs.model_validate(features.model_dump()))
         return Score.model_validate(result.model_dump())
 
 

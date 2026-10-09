@@ -6,9 +6,11 @@ from dataclasses import dataclass
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+
+from cornerpin.financing.terms import payment_to_income
 
 OpenStage = Literal["new", "contacted", "engaged", "holding"]
 PriceBand = Literal["low", "mid", "high"]
@@ -116,3 +118,54 @@ def lead_features(session: Session, lead_id: UUID) -> ScoringSubject | None:
         phase_release=lot.phase_release if lot else None,
     )
     return ScoringSubject(tenant_id=lead.tenant_id, lead_id=lead_id, features=features)
+
+
+# --- financing applications (ADR-049), the demo tenant's synthetic module ---------------------
+
+
+class ApplicationFeatures(BaseModel):
+    """A financing application's terms and its lot. The buyer's stated income enters only as
+    the share of it this loan's payment would take; nothing about who they are."""
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    down_payment_ratio: float = Field(ge=0, le=1)
+    term_months: int = Field(gt=0)
+    payment_to_income: float = Field(ge=0)
+    lot_price_band: PriceBand | None
+    listing_type: Literal["land_only", "lot_and_home"] | None
+
+
+@dataclass(frozen=True)
+class ApplicationSubject:
+    tenant_id: UUID
+    application_id: UUID
+    features: ApplicationFeatures
+
+
+APPLICATION = text(
+    """
+    SELECT a.tenant_id, a.lot_id, a.amount, a.down_payment, a.term_months,
+           a.income_band::text AS income_band, a.status::text AS status
+    FROM financing_applications a WHERE a.id = :id
+    """
+)
+
+
+def application_features(session: Session, application_id: UUID) -> ApplicationSubject | None:
+    """The application's features, or None if it's gone or no longer waiting for a decision."""
+    found = session.execute(APPLICATION, {"id": application_id}).one_or_none()
+    if found is None or found.status != "submitted":
+        return None
+    lot = session.execute(LOT, {"lot_id": found.lot_id}).one_or_none()
+    price = found.amount + found.down_payment
+    features = ApplicationFeatures(
+        down_payment_ratio=round(float(found.down_payment / price), 3),
+        term_months=found.term_months,
+        payment_to_income=payment_to_income(found.amount, found.term_months, found.income_band),
+        lot_price_band=price_band(lot.price_rank) if lot else None,
+        listing_type=lot.listing_type if lot else None,
+    )
+    return ApplicationSubject(
+        tenant_id=found.tenant_id, application_id=application_id, features=features
+    )

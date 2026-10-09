@@ -404,6 +404,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/financing/applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Applications
+         * @description Waiting for a decision first, then newest first.
+         */
+        get: operations["list_applications_v1_tenants__tenant_id__financing_applications_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/financing/applications/{application_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Application */
+        get: operations["get_application_v1_tenants__tenant_id__financing_applications__application_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/financing/loans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Loans
+         * @description Every loan with where it stands today.
+         */
+        get: operations["list_loans_v1_tenants__tenant_id__financing_loans_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/financing/loans/{loan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Loan
+         * @description A loan with its whole schedule and every payment.
+         */
+        get: operations["get_loan_v1_tenants__tenant_id__financing_loans__loan_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/hold-requests": {
         parameters: {
             query?: never;
@@ -982,6 +1059,57 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * ApplicationOut
+         * @description A synthetic buyer's application to finance a lot through the owner (demo tenant only).
+         */
+        ApplicationOut: {
+            /**
+             * Amount
+             * @description The loan asked for
+             */
+            amount: string;
+            /** Applicant Email */
+            applicant_email: string;
+            /** Applicant Name */
+            applicant_name: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            decision: components["schemas"]["FinancingDecisionOut"] | null;
+            /** Down Payment */
+            down_payment: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Income Band
+             * @enum {string}
+             */
+            income_band: "under_50k" | "50k_100k" | "100k_150k" | "over_150k";
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /** Lot Number */
+            lot_number: string;
+            /** @description Risk of falling behind: advice, not a decision */
+            score: components["schemas"]["LeadScore"] | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "submitted" | "approved" | "declined" | "withdrawn";
+            /** Subdivision Name */
+            subdivision_name: string;
+            /** Term Months */
+            term_months: number;
+        };
         /** AuthProviders */
         AuthProviders: {
             /** Google */
@@ -1182,6 +1310,26 @@ export interface components {
              * @constant
              */
             type: "FeatureCollection";
+        };
+        /** FinancingDecisionOut */
+        FinancingDecisionOut: {
+            /**
+             * Decided At
+             * Format: date-time
+             */
+            decided_at: string;
+            /**
+             * Decided By Email
+             * @description None for the synthetic seed's decisions
+             */
+            decided_by_email: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "approved" | "declined";
+            /** Reason */
+            reason: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1386,6 +1534,27 @@ export interface components {
             signed_in: boolean;
             /** Subdivision Name */
             subdivision_name: string;
+        };
+        /** Installment */
+        Installment: {
+            /**
+             * Balance
+             * @description Still owed once this installment is paid
+             */
+            balance: string;
+            /**
+             * Due On
+             * Format: date
+             */
+            due_on: string;
+            /** Interest */
+            interest: string;
+            /** Number */
+            number: number;
+            /** Payment */
+            payment: string;
+            /** Principal */
+            principal: string;
         };
         /** Integration */
         Integration: {
@@ -1700,6 +1869,121 @@ export interface components {
          * @enum {string}
          */
         ListingType: "land_only" | "lot_and_home";
+        /** LoanDetail */
+        LoanDetail: {
+            /**
+             * Annual Rate
+             * @description 0.075 is 7.5% a year
+             */
+            annual_rate: string;
+            /** Applicant Name */
+            applicant_name: string;
+            /**
+             * Application Id
+             * Format: uuid
+             */
+            application_id: string;
+            /**
+             * Days Past Due
+             * @description Since the oldest unpaid installment fell due
+             */
+            days_past_due: number;
+            /**
+             * First Due On
+             * Format: date
+             */
+            first_due_on: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lot Number */
+            lot_number: string;
+            /** Monthly Payment */
+            monthly_payment: string;
+            /** Next Due On */
+            next_due_on: string | null;
+            /**
+             * Outstanding Balance
+             * @description Principal still owed after the payments
+             */
+            outstanding_balance: string;
+            /** Paid To Date */
+            paid_to_date: string;
+            /**
+             * Past Due
+             * @description Due by today but not yet paid
+             */
+            past_due: string;
+            /**
+             * Payments
+             * @description Oldest first
+             */
+            payments: components["schemas"]["Payment"][];
+            /** Principal */
+            principal: string;
+            /** Schedule */
+            schedule: components["schemas"]["Installment"][];
+            /** Subdivision Name */
+            subdivision_name: string;
+            /** Term Months */
+            term_months: number;
+        };
+        /** LoanSummary */
+        LoanSummary: {
+            /**
+             * Annual Rate
+             * @description 0.075 is 7.5% a year
+             */
+            annual_rate: string;
+            /** Applicant Name */
+            applicant_name: string;
+            /**
+             * Application Id
+             * Format: uuid
+             */
+            application_id: string;
+            /**
+             * Days Past Due
+             * @description Since the oldest unpaid installment fell due
+             */
+            days_past_due: number;
+            /**
+             * First Due On
+             * Format: date
+             */
+            first_due_on: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Lot Number */
+            lot_number: string;
+            /** Monthly Payment */
+            monthly_payment: string;
+            /** Next Due On */
+            next_due_on: string | null;
+            /**
+             * Outstanding Balance
+             * @description Principal still owed after the payments
+             */
+            outstanding_balance: string;
+            /** Paid To Date */
+            paid_to_date: string;
+            /**
+             * Past Due
+             * @description Due by today but not yet paid
+             */
+            past_due: string;
+            /** Principal */
+            principal: string;
+            /** Subdivision Name */
+            subdivision_name: string;
+            /** Term Months */
+            term_months: number;
+        };
         /** LotCreate */
         LotCreate: {
             /** Acreage */
@@ -1948,6 +2232,26 @@ export interface components {
             corners?: number[][] | null;
             /** Opacity */
             opacity?: number | null;
+        };
+        /** Payment */
+        Payment: {
+            /** Amount */
+            amount: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Paid On
+             * Format: date
+             */
+            paid_on: string;
+            /**
+             * Recorded By Email
+             * @description None for the synthetic seed's payments
+             */
+            recorded_by_email: string | null;
         };
         /** PhaseCreate */
         PhaseCreate: {
@@ -3213,6 +3517,168 @@ export interface operations {
                 };
             };
             /** @description Not found, or not your tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_applications_v1_tenants__tenant_id__financing_applications_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"][];
+                };
+            };
+            /** @description Not found, not your tenant, or the tenant has no financing demo */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_application_v1_tenants__tenant_id__financing_applications__application_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                application_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"];
+                };
+            };
+            /** @description Not found, not your tenant, or the tenant has no financing demo */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_loans_v1_tenants__tenant_id__financing_loans_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoanSummary"][];
+                };
+            };
+            /** @description Not found, not your tenant, or the tenant has no financing demo */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_loan_v1_tenants__tenant_id__financing_loans__loan_id__get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                loan_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoanDetail"];
+                };
+            };
+            /** @description Not found, not your tenant, or the tenant has no financing demo */
             404: {
                 headers: {
                     [name: string]: unknown;

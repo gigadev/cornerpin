@@ -15,6 +15,7 @@ stays switched off until a Google client id exists.
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
 | Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
+| Owner financing, synthetic and demo tenant only (owner, API for now; screens come with P3-06) | http://localhost:8000/docs → `financing`: `/v1/tenants/957ccd5e-b6d1-531f-a102-ddef309c396e/financing/applications` and `/financing/loans`, signed in as the demo owner. Any other tenant gets 404 |
 | A lead's advisory risk score and its reasons (owner) | Owner portal → Demo Land Co. → Leads → a lead. Scores appear a moment after the buyer's activity |
 | Unsubscribe from an owner's outreach | The "Stop these emails" link in an outreach email (`/unsubscribe?token=…`) |
 | Play a buyer replying to outreach (local only) | `POST http://localhost:8000/v1/dev/inbound-email` with `to` set to the email's Reply-To (needs `INBOUND_EMAIL_DOMAIN=reply.cornerpin.test` in `.env`) |
@@ -131,7 +132,9 @@ uv run python -m cornerpin.seed
 ```
 
 This rebuilds Demo Land Co. and Juniper Bench from scratch: 48 lots in three blocks, the 32 in
-phase 1 published and the 16 in phase 2 not. Accounts you created stay, but everything attached to Demo Land Co. is removed:
+phase 1 published and the 16 in phase 2 not. It also switches on the synthetic owner-financing demo (ADR-049):
+twelve made-up applicants, named "… (synthetic)" with `@synthetic.example` addresses, six of
+them with loans (two behind on payments), three declined and three waiting for a decision. Accounts you created stay, but everything attached to Demo Land Co. is removed:
 lots and subdivisions you added, and owners you added with the SQL above (run it again).
 
 ## Accounts used only by automated tests
