@@ -126,6 +126,47 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/lots/{lot_id}/financing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Financing Offer
+         * @description The demo's terms on this lot. Anyone may look; applying needs a sign-in.
+         */
+        get: operations["financing_offer_v1_lots__lot_id__financing_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/lots/{lot_id}/financing-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply
+         * @description Apply to finance this lot through its owner. The application is scored in the
+         *     background, and the owner decides.
+         */
+        post: operations["apply_v1_lots__lot_id__financing_applications_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/lots/{lot_id}/hold-requests": {
         parameters: {
             query?: never;
@@ -197,6 +238,26 @@ export interface paths {
          *     account page, so a first answer always comes from a lot page.
          */
         post: operations["change_consent_v1_me_consents_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/financing-applications": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * My Applications
+         * @description The buyer's own applications, newest first, with any decision and its reasons.
+         */
+        get: operations["my_applications_v1_me_financing_applications_get"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -441,6 +502,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/financing/applications/{application_id}/decision": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Decide Application
+         * @description Approve, which opens the loan and its schedule (first payment due on the 1st of next
+         *     month), or decline with a reason the buyer is shown. Logged as the signed-in person, with
+         *     the score they saw (ADR-050).
+         */
+        post: operations["decide_application_v1_tenants__tenant_id__financing_applications__application_id__decision_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/financing/loans": {
         parameters: {
             query?: never;
@@ -475,6 +558,26 @@ export interface paths {
         get: operations["get_loan_v1_tenants__tenant_id__financing_loans__loan_id__get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/tenants/{tenant_id}/financing/loans/{loan_id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record Payment
+         * @description Record a payment received, as the signed-in person. It fills installments in order.
+         */
+        post: operations["record_payment_v1_tenants__tenant_id__financing_loans__loan_id__payments_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1060,6 +1163,49 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /**
+         * ApplicationCreate
+         * @description No SSN, no date of birth, no credit check: a demonstration (ADR-050).
+         */
+        ApplicationCreate: {
+            /**
+             * Down Payment
+             * @description Whole dollars
+             */
+            down_payment: number;
+            /**
+             * Income Band
+             * @description Stated by the buyer, never checked
+             * @enum {string}
+             */
+            income_band: "under_50k" | "50k_100k" | "100k_150k" | "over_150k";
+            /** Name */
+            name: string;
+            /**
+             * Term Months
+             * @enum {integer}
+             */
+            term_months: 60 | 120 | 180 | 240 | 360;
+        };
+        /** ApplicationDecision */
+        ApplicationDecision: {
+            /**
+             * Decision
+             * @enum {string}
+             */
+            decision: "approve" | "decline";
+            /**
+             * Reason
+             * @description Required to decline; shown to the buyer
+             * @default
+             */
+            reason?: string;
+            /**
+             * Score Id
+             * @description The score the owner saw when deciding, if one was shown
+             */
+            score_id?: string | null;
+        };
+        /**
          * ApplicationOut
          * @description A synthetic buyer's application to finance a lot through the owner (demo tenant only).
          */
@@ -1169,6 +1315,23 @@ export interface components {
              * @description Numbers of lots whose interiors overlap this one
              */
             overlaps: string[];
+        };
+        /** BuyerDecision */
+        BuyerDecision: {
+            /**
+             * Decided At
+             * Format: date-time
+             */
+            decided_at: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "approved" | "declined";
+            /** Principal Reasons */
+            principal_reasons: string[];
+            /** Reason */
+            reason: string;
         };
         /**
          * BuyerLotState
@@ -1328,8 +1491,39 @@ export interface components {
              * @enum {string}
              */
             kind: "approved" | "declined";
+            /**
+             * Principal Reasons
+             * @description What raised the risk most, as the buyer was told on a decline
+             */
+            principal_reasons: string[];
             /** Reason */
             reason: string;
+        };
+        /**
+         * FinancingOffer
+         * @description What the owner offers on an available lot, for the lot page's form. Synthetic terms.
+         */
+        FinancingOffer: {
+            /**
+             * Annual Rate
+             * @description 0.075 is 7.5% a year
+             */
+            annual_rate: string;
+            /** Income Bands */
+            income_bands: ("under_50k" | "50k_100k" | "100k_150k" | "over_150k")[];
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /** Max Down */
+            max_down: string;
+            /** Min Down */
+            min_down: string;
+            /** Price */
+            price: string;
+            /** Terms */
+            terms: (60 | 120 | 180 | 240 | 360)[];
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2195,6 +2389,52 @@ export interface components {
              */
             type: "MultiPolygon";
         };
+        /** MyApplication */
+        MyApplication: {
+            /** Amount */
+            amount: string;
+            /** Annual Rate */
+            annual_rate: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            decision: components["schemas"]["BuyerDecision"] | null;
+            /** Down Payment */
+            down_payment: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Lot Id
+             * Format: uuid
+             */
+            lot_id: string;
+            /**
+             * Lot Number
+             * @description None if the lot is no longer public
+             */
+            lot_number: string | null;
+            /**
+             * Monthly Payment
+             * @description At the demo's rate, if approved as asked
+             */
+            monthly_payment: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "submitted" | "approved" | "declined" | "withdrawn";
+            /** Subdivision Name */
+            subdivision_name: string | null;
+            /** Subdivision Slug */
+            subdivision_slug: string | null;
+            /** Term Months */
+            term_months: number;
+        };
         /** NoteCreate */
         NoteCreate: {
             /** Text */
@@ -2252,6 +2492,16 @@ export interface components {
              * @description None for the synthetic seed's payments
              */
             recorded_by_email: string | null;
+        };
+        /** PaymentCreate */
+        PaymentCreate: {
+            /** Amount */
+            amount: number | string;
+            /**
+             * Paid On
+             * @description Defaults to today
+             */
+            paid_on?: string | null;
         };
         /** PhaseCreate */
         PhaseCreate: {
@@ -2560,6 +2810,11 @@ export interface components {
         /** Tenant */
         Tenant: {
             /**
+             * Financing Demo
+             * @description The synthetic owner-financing demo is on (ADR-049)
+             */
+            financing_demo: boolean;
+            /**
              * Id
              * Format: uuid
              */
@@ -2809,6 +3064,93 @@ export interface operations {
             };
         };
     };
+    financing_offer_v1_lots__lot_id__financing_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FinancingOffer"];
+                };
+            };
+            /** @description No such lot, or it doesn't offer financing */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_v1_lots__lot_id__financing_applications_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                lot_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Created"];
+                };
+            };
+            /** @description No such lot, or it doesn't offer financing */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Already applied for this lot */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Down payment out of range */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     create_hold_request_v1_lots__lot_id__hold_requests_post: {
         parameters: {
             query?: never;
@@ -3036,6 +3378,37 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    my_applications_v1_me_financing_applications_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyApplication"][];
+                };
             };
             /** @description Validation Error */
             422: {
@@ -3615,6 +3988,56 @@ export interface operations {
             };
         };
     };
+    decide_application_v1_tenants__tenant_id__financing_applications__application_id__decision_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                application_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationDecision"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationOut"];
+                };
+            };
+            /** @description Not found, not your tenant, or the tenant has no financing demo */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Already decided */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description The score isn't this one's */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     list_loans_v1_tenants__tenant_id__financing_loans_get: {
         parameters: {
             query?: never;
@@ -3693,6 +4116,49 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
                 };
+            };
+        };
+    };
+    record_payment_v1_tenants__tenant_id__financing_loans__loan_id__payments_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+                loan_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PaymentCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LoanDetail"];
+                };
+            };
+            /** @description Not found, not your tenant, or the tenant has no financing demo */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Dated in the future, or more than is still owed */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
         };
     };

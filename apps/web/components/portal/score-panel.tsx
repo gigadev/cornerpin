@@ -1,9 +1,28 @@
 import { formatWhen } from "@/lib/format";
-import { modelLabel, reasonEffect, type LeadScore } from "@/lib/scores";
+import { modelLabel, reasonEffect, type LeadScore, type ScoreReason } from "@/lib/scores";
 import { RiskBadge } from "./risk-badge";
 
-// A lead's score and the reasons behind it (P3-03; ADR-013, ADR-047). Always marked as advice:
-// the owner decides, and the decision is logged with this score.
+// A score and the reasons behind it (P3-03, P3-06; ADR-013, ADR-047, ADR-050). Always marked as
+// advice: the owner decides, and the decision is logged with this score.
+
+/** Each reason, with which way it pushed the risk. */
+export function ScoreReasons({ reasons }: { reasons: ScoreReason[] }) {
+  return (
+    <ul className="grid gap-1 text-sm">
+      {reasons.map((reason) => (
+        <li key={reason.code} className="grid grid-cols-[1rem_minmax(0,1fr)] gap-x-2">
+          <span aria-hidden="true" className="text-muted-foreground">
+            {reason.weight > 0 ? "↑" : reason.weight < 0 ? "↓" : "·"}
+          </span>
+          <span>
+            {reason.text}{" "}
+            <span className="text-muted-foreground">({reasonEffect(reason)})</span>
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function ScorePanel({ score, timeZone }: { score: LeadScore | null; timeZone: string }) {
   return (
@@ -22,19 +41,7 @@ export function ScorePanel({ score, timeZone }: { score: LeadScore | null; timeZ
       </div>
       {score ? (
         <>
-          <ul className="grid gap-1 text-sm">
-            {score.reasons.map((reason) => (
-              <li key={reason.code} className="grid grid-cols-[1rem_minmax(0,1fr)] gap-x-2">
-                <span aria-hidden="true" className="text-muted-foreground">
-                  {reason.weight > 0 ? "↑" : reason.weight < 0 ? "↓" : "·"}
-                </span>
-                <span>
-                  {reason.text}{" "}
-                  <span className="text-muted-foreground">({reasonEffect(reason)})</span>
-                </span>
-              </li>
-            ))}
-          </ul>
+          <ScoreReasons reasons={score.reasons} />
           <p className="text-sm text-muted-foreground">
             From {modelLabel(score.model_version)}, scored{" "}
             {formatWhen(score.scored_at, timeZone)}. It&apos;s a guide only: you make the

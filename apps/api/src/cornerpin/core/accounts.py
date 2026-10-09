@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, StringConstraints
+from pydantic import BaseModel, Field, StringConstraints
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -50,6 +50,7 @@ class Tenant(BaseModel):
     id: UUID
     name: str
     role: Role
+    financing_demo: bool = Field(description="The synthetic owner-financing demo is on (ADR-049)")
 
 
 @router.get("/me")
@@ -103,11 +104,11 @@ def tenant(tenant_id: UUID, user: SignedInUser) -> Tenant:
     with user_session(user.id, tenant_id) as session:
         row = session.execute(
             text(
-                "SELECT t.id, t.name, m.role FROM tenants t"
+                "SELECT t.id, t.name, m.role, t.financing_demo FROM tenants t"
                 " JOIN memberships m ON m.tenant_id = t.id"
                 " WHERE t.id = app_tenant_id()"
             )
         ).one_or_none()
     if row is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Not found")
-    return Tenant(id=row.id, name=row.name, role=row.role)
+    return Tenant(id=row.id, name=row.name, role=row.role, financing_demo=row.financing_demo)

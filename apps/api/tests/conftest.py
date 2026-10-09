@@ -23,6 +23,7 @@ from cornerpin.core.auth.turnstile import get_turnstile
 from cornerpin.core.config import get_settings
 from cornerpin.devtools import recreate_database
 from cornerpin.main import create_app
+from cornerpin.seed import DEMO_OWNER_EMAIL, seed
 
 if TYPE_CHECKING:  # imported lazily below: outreach_support imports this module
     from .outreach_support import Clock, Mailbox
@@ -382,3 +383,22 @@ def clock(monkeypatch: pytest.MonkeyPatch) -> "Clock":
 
     monkeypatch.setattr(policy, "utcnow", fixed)
     return fixed
+
+
+# --- the demo tenant, financing included (P3-05, P3-06) -------------------------------------
+
+
+@pytest.fixture(scope="module")
+def demo(db: Databases, tenants: tuple[TenantData, TenantData]) -> Iterator[None]:
+    """The demo tenant, seeded as it is everywhere else, financing included."""
+    with db.owner.begin() as conn:
+        seed(conn)
+    yield
+
+
+@pytest.fixture
+def demo_owner(demo: None) -> Iterator[TestClient]:
+    with TestClient(create_app()) as client:
+        signed_in = service.sign_in_verified_email(DEMO_OWNER_EMAIL, None, "/app", "pytest")
+        client.cookies.set(SESSION_COOKIE, signed_in.session_token)
+        yield client

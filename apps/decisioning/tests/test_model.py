@@ -143,7 +143,8 @@ def test_more_down_and_a_lighter_payment_score_better() -> None:
 
 
 def test_application_reasons_read_in_words() -> None:
-    assert describe_application("down_payment_ratio", 0.1) == "10% down"
+    assert describe_application("down_payment_ratio", 0.3, -0.4) == "30% down"
+    assert describe_application("down_payment_ratio", 0.1, 0.4) == "Only 10% down"
     assert describe_application("term_months", 360) == "30-year term"
     assert describe_application("term_months", 90) == "90-month term"
     assert describe_application("payment_to_income", 0.38) == (

@@ -6,6 +6,7 @@ import { cache } from "react";
 import { PublicLotMap } from "@/components/map/public-lot-map";
 import { BuyerLotProvider, SaveLotButton } from "@/components/public/buyer-lot";
 import { ContactOwner } from "@/components/public/contact-owner";
+import { FinancingOffer } from "@/components/public/financing-offer";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { SiteHeader } from "@/components/site-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -246,6 +247,9 @@ export default async function LotPage({ params }: { params: Params }) {
               available={status === "available"}
             />
           </section>
+
+          {/* Only on a demo tenant's available lots; the component asks the API (ADR-050). */}
+          <FinancingOffer />
 
           <p>
             <Link href={`/${subdivision.slug}`} className="underline">

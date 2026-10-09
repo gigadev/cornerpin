@@ -57,6 +57,11 @@ export default async function TenantPortal({
               {pendingHolds > 0 ? ` (${pendingHolds} pending)` : ""}
             </Link>
           </Button>
+          {tenant.financing_demo ? (
+            <Button asChild variant="outline">
+              <Link href={`/app/${tenantId}/financing`}>Financing (demo)</Link>
+            </Button>
+          ) : null}
           <Button asChild>
             <Link href={`/app/${tenantId}/subdivisions/new`}>New subdivision</Link>
           </Button>

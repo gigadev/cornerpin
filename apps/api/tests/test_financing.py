@@ -1,7 +1,6 @@
 """P3-05: the owner-financing demo's schema, seed, read routes and application scores (ADR-013,
 ADR-049)."""
 
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from typing import Any
@@ -12,15 +11,12 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
-from cornerpin.core.auth import service
-from cornerpin.core.auth.deps import SESSION_COOKIE
 from cornerpin.core.outbox import drain
 from cornerpin.decisioning.features import ApplicationFeatures
 from cornerpin.financing.amortization import add_months, monthly_payment, schedule
 from cornerpin.financing.demo import APPLICANTS
 from cornerpin.financing.standing import standing
-from cornerpin.main import create_app
-from cornerpin.seed import DEMO_OWNER_EMAIL, DEMO_TENANT_ID, seed
+from cornerpin.seed import DEMO_TENANT_ID
 
 from .conftest import Databases, TenantData
 from .test_decisioning import looks_personal
@@ -102,22 +98,6 @@ def test_a_part_payment_doesnt_count_as_an_installment() -> None:
 
 
 # --- the seeded demo ------------------------------------------------------------------------
-
-
-@pytest.fixture(scope="module")
-def demo(db: Databases, tenants: tuple[TenantData, TenantData]) -> Iterator[None]:
-    """The demo tenant, seeded as it is everywhere else, financing included."""
-    with db.owner.begin() as conn:
-        seed(conn)
-    yield
-
-
-@pytest.fixture
-def demo_owner(demo: None) -> Iterator[TestClient]:
-    with TestClient(create_app()) as client:
-        signed_in = service.sign_in_verified_email(DEMO_OWNER_EMAIL, None, "/app", "pytest")
-        client.cookies.set(SESSION_COOKIE, signed_in.session_token)
-        yield client
 
 
 BASE = f"/v1/tenants/{DEMO_TENANT_ID}/financing"

@@ -15,7 +15,8 @@ stays switched off until a Google client id exists.
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
 | Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
-| Owner financing, synthetic and demo tenant only (owner, API for now; screens come with P3-06) | http://localhost:8000/docs → `financing`: `/v1/tenants/957ccd5e-b6d1-531f-a102-ddef309c396e/financing/applications` and `/financing/loans`, signed in as the demo owner. Any other tenant gets 404 |
+| Owner financing, synthetic and demo tenant only (owner) | Owner portal → Demo Land Co. → **Financing (demo)**: applications with their scores, decisions, loans behind on payments, and each loan's schedule and payments |
+| Applying for owner financing (buyer, demo tenant only) | A lot page on Juniper Bench that's available, signed in: **Owner financing (demo)** below the contact form. The decision shows on `/account` |
 | A lead's advisory risk score and its reasons (owner) | Owner portal → Demo Land Co. → Leads → a lead. Scores appear a moment after the buyer's activity |
 | Unsubscribe from an owner's outreach | The "Stop these emails" link in an outreach email (`/unsubscribe?token=…`) |
 | Play a buyer replying to outreach (local only) | `POST http://localhost:8000/v1/dev/inbound-email` with `to` set to the email's Reply-To (needs `INBOUND_EMAIL_DOMAIN=reply.cornerpin.test` in `.env`) |
@@ -155,6 +156,8 @@ The sign test creates a subdivision called `Sign Ridge <viewport>` and renames i
 | `walkin+mobile@example.test`, `walkin+desktop@example.test` | Not accounts: the email typed into a signed-out question |
 | `visitor+<project>-<time>@cornerpin.test` | Made up per run; a new buyer account |
 | `scored+<viewport>-<time>@buyers.cornerpin.test` | Made up per run; a new buyer who asks to hold lot 3-8 (mobile) or 3-10 (desktop), whose score the owner sees before approving (P3-03) |
+| `financing+<viewport>-<time>@buyers.cornerpin.test` | Made up per run; a new buyer who applies to finance lot 2-10 (mobile) or 3-3 (desktop): declined, then approved into a loan (P3-06) |
+| `owner@other.cornerpin.test` signed in (desktop only) | To check another tenant has no financing; its inbox is shared, so only one project signs in |
 
 Its uploads go to `var/e2e-storage`, emptied at the start of each run.
 

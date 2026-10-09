@@ -7,6 +7,7 @@ import {
   ProfileForm,
   SavedLotRemove,
 } from "@/components/account/account-forms";
+import { FinancingApplications } from "@/components/account/financing-applications";
 import { StatusBadge } from "@/components/portal/status-badge";
 import { SignOutButton } from "@/components/sign-out-button";
 import { SiteHeader } from "@/components/site-header";
@@ -23,12 +24,15 @@ export default async function AccountPage() {
   if (!me) redirect("/signin?next=/account");
 
   const api = await serverApi();
-  const [saved, prefs, consents] = await Promise.all([
+  const [saved, prefs, consents, financing] = await Promise.all([
     api.GET("/v1/me/saved-lots"),
     api.GET("/v1/me/notification-prefs"),
     api.GET("/v1/me/consents"),
+    api.GET("/v1/me/financing-applications"),
   ]);
-  if (!saved.data || !prefs.data || !consents.data) throw new Error("Could not load the account");
+  if (!saved.data || !prefs.data || !consents.data || !financing.data) {
+    throw new Error("Could not load the account");
+  }
 
   return (
     <>
@@ -74,6 +78,19 @@ export default async function AccountPage() {
             </ul>
           )}
         </section>
+
+        {financing.data.length > 0 ? (
+          <section aria-labelledby="financing-heading" className="grid gap-3">
+            <h2 id="financing-heading" className="text-xl font-semibold tracking-tight">
+              Financing applications{" "}
+              <span className="text-base font-normal text-muted-foreground">(demo)</span>
+            </h2>
+            <FinancingApplications
+              applications={financing.data}
+              timeZone={me.time_zone ?? DEFAULT_TIME_ZONE}
+            />
+          </section>
+        ) : null}
 
         <section aria-labelledby="alerts-heading" className="grid gap-3">
           <h2 id="alerts-heading" className="text-xl font-semibold tracking-tight">

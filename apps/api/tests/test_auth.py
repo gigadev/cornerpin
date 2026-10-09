@@ -288,7 +288,12 @@ def test_owner_reaches_own_portal_but_not_another_tenants(
 
     own = client.get(f"/v1/tenants/{alpha.tenant_id}")
     assert own.status_code == 200
-    assert own.json() == {"id": str(alpha.tenant_id), "name": "alpha", "role": "owner"}
+    assert own.json() == {
+        "id": str(alpha.tenant_id),
+        "name": "alpha",
+        "role": "owner",
+        "financing_demo": False,
+    }
 
     assert client.get(f"/v1/tenants/{bravo.tenant_id}").status_code == 404
     memberships = client.get("/v1/me").json()["memberships"]

@@ -1,6 +1,90 @@
 {
   "components": {
     "schemas": {
+      "ApplicationCreate": {
+        "description": "No SSN, no date of birth, no credit check: a demonstration (ADR-050).",
+        "properties": {
+          "down_payment": {
+            "description": "Whole dollars",
+            "minimum": 0.0,
+            "title": "Down Payment",
+            "type": "integer"
+          },
+          "income_band": {
+            "description": "Stated by the buyer, never checked",
+            "enum": [
+              "under_50k",
+              "50k_100k",
+              "100k_150k",
+              "over_150k"
+            ],
+            "title": "Income Band",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "term_months": {
+            "enum": [
+              60,
+              120,
+              180,
+              240,
+              360
+            ],
+            "title": "Term Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "down_payment",
+          "term_months",
+          "income_band"
+        ],
+        "title": "ApplicationCreate",
+        "type": "object"
+      },
+      "ApplicationDecision": {
+        "properties": {
+          "decision": {
+            "enum": [
+              "approve",
+              "decline"
+            ],
+            "title": "Decision",
+            "type": "string"
+          },
+          "reason": {
+            "default": "",
+            "description": "Required to decline; shown to the buyer",
+            "maxLength": 500,
+            "title": "Reason",
+            "type": "string"
+          },
+          "score_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The score the owner saw when deciding, if one was shown",
+            "title": "Score Id"
+          }
+        },
+        "required": [
+          "decision"
+        ],
+        "title": "ApplicationDecision",
+        "type": "object"
+      },
       "ApplicationOut": {
         "description": "A synthetic buyer's application to finance a lot through the owner (demo tenant only).",
         "properties": {
@@ -260,6 +344,42 @@
           "overlaps"
         ],
         "title": "BoundaryOut",
+        "type": "object"
+      },
+      "BuyerDecision": {
+        "properties": {
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "approved",
+              "declined"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "principal_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Principal Reasons",
+            "type": "array"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "reason",
+          "decided_at",
+          "principal_reasons"
+        ],
+        "title": "BuyerDecision",
         "type": "object"
       },
       "BuyerLotState": {
@@ -581,6 +701,14 @@
             "title": "Kind",
             "type": "string"
           },
+          "principal_reasons": {
+            "description": "What raised the risk most, as the buyer was told on a decline",
+            "items": {
+              "type": "string"
+            },
+            "title": "Principal Reasons",
+            "type": "array"
+          },
           "reason": {
             "title": "Reason",
             "type": "string"
@@ -590,9 +718,76 @@
           "kind",
           "reason",
           "decided_at",
-          "decided_by_email"
+          "decided_by_email",
+          "principal_reasons"
         ],
         "title": "FinancingDecisionOut",
+        "type": "object"
+      },
+      "FinancingOffer": {
+        "description": "What the owner offers on an available lot, for the lot page's form. Synthetic terms.",
+        "properties": {
+          "annual_rate": {
+            "description": "0.075 is 7.5% a year",
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Rate",
+            "type": "string"
+          },
+          "income_bands": {
+            "items": {
+              "enum": [
+                "under_50k",
+                "50k_100k",
+                "100k_150k",
+                "over_150k"
+              ],
+              "type": "string"
+            },
+            "title": "Income Bands",
+            "type": "array"
+          },
+          "lot_id": {
+            "format": "uuid",
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "max_down": {
+            "title": "Max Down",
+            "type": "string"
+          },
+          "min_down": {
+            "title": "Min Down",
+            "type": "string"
+          },
+          "price": {
+            "title": "Price",
+            "type": "string"
+          },
+          "terms": {
+            "items": {
+              "enum": [
+                60,
+                120,
+                180,
+                240,
+                360
+              ],
+              "type": "integer"
+            },
+            "title": "Terms",
+            "type": "array"
+          }
+        },
+        "required": [
+          "lot_id",
+          "price",
+          "annual_rate",
+          "terms",
+          "income_bands",
+          "min_down",
+          "max_down"
+        ],
+        "title": "FinancingOffer",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -2828,6 +3023,118 @@
         "title": "MultiPolygonGeometry",
         "type": "object"
       },
+      "MyApplication": {
+        "properties": {
+          "amount": {
+            "title": "Amount",
+            "type": "string"
+          },
+          "annual_rate": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Annual Rate",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "decision": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BuyerDecision"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "down_payment": {
+            "title": "Down Payment",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "lot_id": {
+            "format": "uuid",
+            "title": "Lot Id",
+            "type": "string"
+          },
+          "lot_number": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "None if the lot is no longer public",
+            "title": "Lot Number"
+          },
+          "monthly_payment": {
+            "description": "At the demo's rate, if approved as asked",
+            "title": "Monthly Payment",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "submitted",
+              "approved",
+              "declined",
+              "withdrawn"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "subdivision_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subdivision Name"
+          },
+          "subdivision_slug": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subdivision Slug"
+          },
+          "term_months": {
+            "title": "Term Months",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "lot_id",
+          "lot_number",
+          "subdivision_name",
+          "subdivision_slug",
+          "amount",
+          "down_payment",
+          "term_months",
+          "annual_rate",
+          "monthly_payment",
+          "status",
+          "created_at",
+          "decision"
+        ],
+        "title": "MyApplication",
+        "type": "object"
+      },
       "NoteCreate": {
         "properties": {
           "text": {
@@ -2978,6 +3285,41 @@
           "recorded_by_email"
         ],
         "title": "Payment",
+        "type": "object"
+      },
+      "PaymentCreate": {
+        "properties": {
+          "amount": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,10}|(?=[\\d.]{1,13}0*$)\\d{0,10}\\.\\d{0,2}0*$)",
+                "type": "string"
+              }
+            ],
+            "title": "Amount"
+          },
+          "paid_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Defaults to today",
+            "title": "Paid On"
+          }
+        },
+        "required": [
+          "amount"
+        ],
+        "title": "PaymentCreate",
         "type": "object"
       },
       "PhaseCreate": {
@@ -3822,6 +4164,11 @@
       },
       "Tenant": {
         "properties": {
+          "financing_demo": {
+            "description": "The synthetic owner-financing demo is on (ADR-049)",
+            "title": "Financing Demo",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -3843,7 +4190,8 @@
         "required": [
           "id",
           "name",
-          "role"
+          "role",
+          "financing_demo"
         ],
         "title": "Tenant",
         "type": "object"
@@ -4210,6 +4558,122 @@
         ]
       }
     },
+    "/v1/lots/{lot_id}/financing": {
+      "get": {
+        "description": "The demo's terms on this lot. Anyone may look; applying needs a sign-in.",
+        "operationId": "financing_offer_v1_lots__lot_id__financing_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FinancingOffer"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No such lot, or it doesn't offer financing"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Financing Offer",
+        "tags": [
+          "financing"
+        ]
+      }
+    },
+    "/v1/lots/{lot_id}/financing-applications": {
+      "post": {
+        "description": "Apply to finance this lot through its owner. The application is scored in the\nbackground, and the owner decides.",
+        "operationId": "apply_v1_lots__lot_id__financing_applications_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Created"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No such lot, or it doesn't offer financing"
+          },
+          "409": {
+            "description": "Already applied for this lot"
+          },
+          "422": {
+            "description": "Down payment out of range"
+          }
+        },
+        "summary": "Apply",
+        "tags": [
+          "financing"
+        ]
+      }
+    },
     "/v1/lots/{lot_id}/hold-requests": {
       "post": {
         "operationId": "create_hold_request_v1_lots__lot_id__hold_requests_post",
@@ -4571,6 +5035,60 @@
         "summary": "Change Consent",
         "tags": [
           "buyers"
+        ]
+      }
+    },
+    "/v1/me/financing-applications": {
+      "get": {
+        "description": "The buyer's own applications, newest first, with any decision and its reasons.",
+        "operationId": "my_applications_v1_me_financing_applications_get",
+        "parameters": [
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/MyApplication"
+                  },
+                  "title": "Response My Applications V1 Me Financing Applications Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "My Applications",
+        "tags": [
+          "financing"
         ]
       }
     },
@@ -5443,6 +5961,85 @@
         ]
       }
     },
+    "/v1/tenants/{tenant_id}/financing/applications/{application_id}/decision": {
+      "post": {
+        "description": "Approve, which opens the loan and its schedule (first payment due on the 1st of next\nmonth), or decline with a reason the buyer is shown. Logged as the signed-in person, with\nthe score they saw (ADR-050).",
+        "operationId": "decide_application_v1_tenants__tenant_id__financing_applications__application_id__decision_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "application_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Application Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, not your tenant, or the tenant has no financing demo"
+          },
+          "409": {
+            "description": "Already decided"
+          },
+          "422": {
+            "description": "The score isn't this one's"
+          }
+        },
+        "summary": "Decide Application",
+        "tags": [
+          "financing"
+        ]
+      }
+    },
     "/v1/tenants/{tenant_id}/financing/loans": {
       "get": {
         "description": "Every loan with where it stands today.",
@@ -5578,6 +6175,82 @@
           }
         },
         "summary": "Get Loan",
+        "tags": [
+          "financing"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/financing/loans/{loan_id}/payments": {
+      "post": {
+        "description": "Record a payment received, as the signed-in person. It fills installments in order.",
+        "operationId": "record_payment_v1_tenants__tenant_id__financing_loans__loan_id__payments_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "loan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Loan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaymentCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoanDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, not your tenant, or the tenant has no financing demo"
+          },
+          "422": {
+            "description": "Dated in the future, or more than is still owed"
+          }
+        },
+        "summary": "Record Payment",
         "tags": [
           "financing"
         ]

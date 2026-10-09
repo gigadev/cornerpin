@@ -133,10 +133,13 @@ def describe(name: str, value: Any, weight: float = 0.0) -> str:
 
 
 def describe_application(name: str, value: Any, weight: float = 0.0) -> str:
-    """A financing application's facts, in the owner's words (ADR-049)."""
+    """A financing application's facts, in the owner's words (ADR-049). As with a lead's
+    replies, contributions are measured against the average application, so a down payment
+    that still raises the risk reads "Only"."""
     match name, value:
         case "down_payment_ratio", ratio:
-            return f"{round(ratio * 100)}% down"
+            down = f"{round(ratio * 100)}% down"
+            return f"Only {down}" if weight > 0 else down
         case "term_months", months:
             return f"{months // 12}-year term" if months % 12 == 0 else f"{months}-month term"
         case "payment_to_income", ratio:
