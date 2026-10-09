@@ -11,6 +11,7 @@ from cornerpin.core.config import get_settings
 from cornerpin.core.housekeeping import run_housekeeping
 from cornerpin.core.internal import cloud_tasks_dispatcher
 from cornerpin.core.outbox import InProcessRunner, set_dispatcher
+from cornerpin.dashboard import routes as dashboard_routes
 from cornerpin.decisioning import handlers as decisioning_handlers
 from cornerpin.financing import buyer_routes as financing_buyer_routes
 from cornerpin.financing import routes as financing_routes
@@ -93,6 +94,7 @@ def create_app() -> FastAPI:
     v1.include_router(buyer_routes.router)
     v1.include_router(owner_routes.router)
     v1.include_router(lead_routes.router)
+    v1.include_router(dashboard_routes.router)
     v1.include_router(financing_routes.router)
     v1.include_router(financing_buyer_routes.router)
     v1.include_router(notification_prefs.router)

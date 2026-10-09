@@ -43,6 +43,9 @@ export default async function TenantPortal({
         <h1 className="text-2xl font-semibold tracking-tight">{tenant.name}</h1>
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="outline">
+            <Link href={`/app/${tenantId}/dashboard`}>Dashboard</Link>
+          </Button>
+          <Button asChild variant="outline">
             <Link href={`/app/${tenantId}/leads`}>
               Leads
               {waiting.needs_human > 0 ? ` (${waiting.needs_human} need a person)` : ""}

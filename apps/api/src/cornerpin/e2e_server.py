@@ -28,6 +28,11 @@ PLAT_PDF = b"%PDF-1.4\n1 0 obj << >> endobj\ntrailer << >>\n%%EOF\n"
 OTHER_TENANT_ID = uuid5(NAMESPACE_URL, "https://cornerpin.app/tenants/e2e-other")
 # Owners of the demo tenant: one per Playwright project for the sign-in tests, and one per
 # project for the portal tests' saved session, so parallel tests never share an inbox.
+OTHER_OWNERS = (
+    "owner@other.cornerpin.test",
+    "dashboard+mobile@other.cornerpin.test",
+    "dashboard+desktop@other.cornerpin.test",
+)
 PROJECT_OWNERS = (
     "owner+mobile@demo.cornerpin.test",
     "owner+desktop@demo.cornerpin.test",
@@ -42,13 +47,16 @@ def seed_e2e(conn: Connection) -> None:
         text("INSERT INTO tenants (id, name) VALUES (:id, 'Other Land Co.')"),
         {"id": OTHER_TENANT_ID},
     )
-    other_owner = conn.execute(
-        text("INSERT INTO users (email) VALUES ('owner@other.cornerpin.test') RETURNING id")
-    ).scalar_one()
-    conn.execute(
-        text("INSERT INTO memberships (tenant_id, user_id, role) VALUES (:t, :u, 'owner')"),
-        {"t": OTHER_TENANT_ID, "u": other_owner},
-    )
+    # Owners of the empty tenant: one for the cross-tenant checks, and one per Playwright project
+    # for the dashboard's empty states (P3-07), each with an inbox of its own.
+    for email in OTHER_OWNERS:
+        other_owner = conn.execute(
+            text("INSERT INTO users (email) VALUES (:e) RETURNING id"), {"e": email}
+        ).scalar_one()
+        conn.execute(
+            text("INSERT INTO memberships (tenant_id, user_id, role) VALUES (:t, :u, 'owner')"),
+            {"t": OTHER_TENANT_ID, "u": other_owner},
+        )
     # One owner per Playwright project, so parallel projects never read each other's email.
     for email in PROJECT_OWNERS:
         user_id = conn.execute(

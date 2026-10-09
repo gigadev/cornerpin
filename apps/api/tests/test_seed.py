@@ -1,6 +1,6 @@
 from sqlalchemy import text
 
-from cornerpin.seed import DEMO_TENANT_ID, HOMES, LOTS, seed
+from cornerpin.seed import DEMO_TENANT_ID, HOMES, LOTS, ON_HOLD, SOLD, seed
 
 from .conftest import Databases
 
@@ -47,4 +47,5 @@ def test_seed_builds_demo_subdivision_and_is_repeatable(db: Databases) -> None:
     assert overlaps == 0
     assert all(0.1 < float(value) < 0.4 for value in acres.values())
     assert max(acres, key=lambda number: acres[number]) in {"3-9", "3-10"}
-    assert history == len(LOTS)
+    # Every lot was listed; the sold and held ones changed later (ADR-051).
+    assert history == len(LOTS) + len(SOLD) + len(ON_HOLD)

@@ -14,6 +14,7 @@ stays switched off until a Google client id exists.
 | How Cornerpin is built (services, deploys, languages) | http://localhost:3300/about |
 | Owner portal | http://localhost:3300/app |
 | Inquiries and hold requests (owner) | Owner portal → Demo Land Co. → Inquiries and holds |
+| The owner dashboard: funnel, sales pace, inventory, sources, outreach, scores | Owner portal → Demo Land Co. → **Dashboard** |
 | Leads, one per buyer, with their timeline (owner) | Owner portal → Demo Land Co. → Leads |
 | Owner financing, synthetic and demo tenant only (owner) | Owner portal → Demo Land Co. → **Financing (demo)**: applications with their scores, decisions, loans behind on payments, and each loan's schedule and payments |
 | Applying for owner financing (buyer, demo tenant only) | A lot page on Juniper Bench that's available, signed in: **Owner financing (demo)** below the contact form. The decision shows on `/account` |
@@ -133,7 +134,8 @@ uv run python -m cornerpin.seed
 ```
 
 This rebuilds Demo Land Co. and Juniper Bench from scratch: 48 lots in three blocks, the 32 in
-phase 1 published and the 16 in phase 2 not. It also switches on the synthetic owner-financing demo (ADR-049):
+phase 1 published and the 16 in phase 2 not. Its lots get a past for the dashboard (ADR-051): phase 1 listed about 20
+months ago, its twelve sales spread over the last year. It also switches on the synthetic owner-financing demo (ADR-049):
 twelve made-up applicants, named "… (synthetic)" with `@synthetic.example` addresses, six of
 them with loans (two behind on payments), three declined and three waiting for a decision. Accounts you created stay, but everything attached to Demo Land Co. is removed:
 lots and subdivisions you added, and owners you added with the SQL above (run it again).
@@ -158,6 +160,7 @@ The sign test creates a subdivision called `Sign Ridge <viewport>` and renames i
 | `scored+<viewport>-<time>@buyers.cornerpin.test` | Made up per run; a new buyer who asks to hold lot 3-8 (mobile) or 3-10 (desktop), whose score the owner sees before approving (P3-03) |
 | `financing+<viewport>-<time>@buyers.cornerpin.test` | Made up per run; a new buyer who applies to finance lot 2-10 (mobile) or 3-3 (desktop): declined, then approved into a loan (P3-06) |
 | `owner@other.cornerpin.test` signed in (desktop only) | To check another tenant has no financing; its inbox is shared, so only one project signs in |
+| `dashboard+mobile@other.cornerpin.test`, `dashboard+desktop@other.cornerpin.test` | Owners of the empty Other Land Co., seeded by the e2e server; the dashboard's empty states (P3-07) |
 
 Its uploads go to `var/e2e-storage`, emptied at the start of each run.
 

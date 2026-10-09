@@ -130,6 +130,58 @@ def lot_polygon_wkt(corners: tuple[Point, ...]) -> str:
     return f"MULTIPOLYGON((({points})))"
 
 
+LISTED_DAYS_AGO = {0: 600, 1: 120}  # by phase: phase 1 went up for sale about 20 months ago
+
+
+def _give_lots_a_history(conn: Connection, subdivision_id: UUID) -> None:
+    """A believable past for the owner dashboard (P3-07, ADR-051): phase 1 listed about 20 months
+    ago, its sales spread over the last year, its holds in the last few weeks. Written straight
+    into the history, not by changing lots, so no change notices are queued."""
+    rows = conn.execute(
+        text(
+            "SELECT l.id, l.number, p.sort_order FROM lots l JOIN phases p ON p.id = l.phase_id"
+            " WHERE l.subdivision_id = :s"
+        ),
+        {"s": subdivision_id},
+    ).all()
+    sold = sorted((r for r in rows if r.number in SOLD), key=lambda r: r.number)
+    held = sorted((r for r in rows if r.number in ON_HOLD), key=lambda r: r.number)
+    for row in rows:
+        listed = f"{LISTED_DAYS_AGO[row.sort_order]} days"
+        conn.execute(
+            text("UPDATE lots SET created_at = now() - CAST(:ago AS interval) WHERE id = :id;"),
+            {"id": row.id, "ago": listed},
+        )
+        for table in ("lot_status_history", "lot_price_history"):
+            conn.execute(
+                text(
+                    f"UPDATE {table} SET changed_at = now() - CAST(:ago AS interval)"  # noqa: S608
+                    " WHERE lot_id = :id"
+                ),
+                {"id": row.id, "ago": listed},
+            )
+    # Each lot's one history row already holds its final status; it gets a later date.
+    changes = [(row, 12 + 31 * i + (7 * i) % 11) for i, row in enumerate(sold)]
+    changes += [(row, 4 + 6 * i) for i, row in enumerate(held)]
+    for row, days_ago in changes:
+        # The lot went in as available on the day it was listed, and changed later.
+        conn.execute(
+            text(
+                "UPDATE lot_status_history SET from_status = 'available',"
+                " changed_at = now() - make_interval(days => :days) WHERE lot_id = :id"
+            ),
+            {"id": row.id, "days": days_ago},
+        )
+        conn.execute(
+            text(
+                "INSERT INTO lot_status_history (tenant_id, lot_id, from_status, to_status,"
+                " changed_at) SELECT tenant_id, id, NULL, 'available', created_at FROM lots"
+                " WHERE id = :id"
+            ),
+            {"id": row.id},
+        )
+
+
 def seed(conn: Connection, owner_email: str = DEMO_OWNER_EMAIL) -> UUID:
     """Rebuild the demo tenant from scratch. `owner_email` is its owner: the .test address
     locally, a real one in production (`python -m cornerpin.ops seed-demo`)."""
@@ -221,6 +273,8 @@ def seed(conn: Connection, owner_email: str = DEMO_OWNER_EMAIL) -> UUID:
                 "published": released,
             },
         )
+
+    _give_lots_a_history(conn, subdivision_id)
 
     # Acreage and the subdivision outline come from the lot shapes.
     conn.execute(

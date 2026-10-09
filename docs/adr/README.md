@@ -61,6 +61,7 @@ not started yet is still binding: it describes how that part will be built.
 | [048](048-decisioning-service.md) | The decisioning service: the model in its own Cloud Run service, called by the API | P3-04 | Accepted |
 | [049](049-financing-demo.md) | The financing demo: a switch, five tables, synthetic data and an affordability score | P3-05 | Accepted |
 | [050](050-financing-demo-flow.md) | The financing demo's flow: applying, deciding with the score shown, lending, payments | P3-06 | Accepted |
+| [051](051-owner-dashboard.md) | The owner dashboard: Postgres views read as the owner, one hue, and a believable demo past | P3-07 | Accepted |
 
 ## Adding a decision
 

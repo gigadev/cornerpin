@@ -431,6 +431,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/tenants/{tenant_id}/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Dashboard
+         * @description The tenant's figures, today. A tenant with nothing yet gets zeros and empty lists.
+         */
+        get: operations["dashboard_v1_tenants__tenant_id__dashboard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/tenants/{tenant_id}/documents/{document_id}": {
         parameters: {
             query?: never;
@@ -1417,6 +1437,36 @@ export interface components {
              */
             id: string;
         };
+        /** Dashboard */
+        Dashboard: {
+            /** Days To Sold */
+            days_to_sold: components["schemas"]["PhasePace"][];
+            /**
+             * Funnel
+             * @description The ladder in order, then lost
+             */
+            funnel: components["schemas"]["FunnelStage"][];
+            /** Inventory */
+            inventory: components["schemas"]["PhaseInventory"][];
+            /** Leads */
+            leads: number;
+            outreach: components["schemas"]["Outreach"];
+            /**
+             * Sales By Month
+             * @description The last 12 months, oldest first
+             */
+            sales_by_month: components["schemas"]["MonthSales"][];
+            /**
+             * Scores
+             * @description Open leads' latest scores, by band
+             */
+            scores: components["schemas"]["ScoreBand"][];
+            /**
+             * Sources
+             * @description Most leads first
+             */
+            sources: components["schemas"]["SourceCount"][];
+        };
         /**
          * DocumentKind
          * @enum {string}
@@ -1524,6 +1574,29 @@ export interface components {
             price: string;
             /** Terms */
             terms: (60 | 120 | 180 | 240 | 360)[];
+        };
+        /** FunnelStage */
+        FunnelStage: {
+            /**
+             * Conversion
+             * @description Share of the previous stage's leads that got this far, from 0 to 1
+             */
+            conversion: number | null;
+            /**
+             * Now
+             * @description Leads at this stage today
+             */
+            now: number;
+            /**
+             * Reached
+             * @description Leads that ever got this far; None for lost
+             */
+            reached: number | null;
+            /**
+             * Stage
+             * @enum {string}
+             */
+            stage: "new" | "contacted" | "engaged" | "holding" | "won" | "lost";
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -2379,6 +2452,17 @@ export interface components {
             /** Tenant Name */
             tenant_name: string;
         };
+        /** MonthSales */
+        MonthSales: {
+            /**
+             * Month
+             * Format: date
+             * @description The month's first day
+             */
+            month: string;
+            /** Sold */
+            sold: number;
+        };
         /** MultiPolygonGeometry */
         MultiPolygonGeometry: {
             /** Coordinates */
@@ -2453,6 +2537,15 @@ export interface components {
              */
             push_saved_lot_changes?: boolean;
         };
+        /** Outreach */
+        Outreach: {
+            /** Handed Off */
+            handed_off: number;
+            /** Replied */
+            replied: number;
+            /** Sent */
+            sent: number;
+        };
         /** OverlayOut */
         OverlayOut: {
             /** Corners */
@@ -2515,6 +2608,19 @@ export interface components {
              */
             sort_order?: number;
         };
+        /** PhaseInventory */
+        PhaseInventory: {
+            /** Available */
+            available: number;
+            /** On Hold */
+            on_hold: number;
+            /** Phase Name */
+            phase_name: string;
+            /** Sold */
+            sold: number;
+            /** Subdivision Name */
+            subdivision_name: string;
+        };
         /** PhaseOut */
         PhaseOut: {
             /**
@@ -2529,6 +2635,20 @@ export interface components {
             release_status: components["schemas"]["ReleaseStatus"];
             /** Sort Order */
             sort_order: number;
+        };
+        /** PhasePace */
+        PhasePace: {
+            /**
+             * Median Days
+             * @description From listing (added to Cornerpin) to sold
+             */
+            median_days: number;
+            /** Phase Name */
+            phase_name: string;
+            /** Sold */
+            sold: number;
+            /** Subdivision Name */
+            subdivision_name: string;
         };
         /** PhaseUpdate */
         PhaseUpdate: {
@@ -2657,6 +2777,16 @@ export interface components {
             /** Subdivision Slug */
             subdivision_slug: string;
         };
+        /** ScoreBand */
+        ScoreBand: {
+            /**
+             * Band
+             * @enum {string}
+             */
+            band: "low" | "medium" | "high" | "unscored";
+            /** Leads */
+            leads: number;
+        };
         /** ScoreReason */
         ScoreReason: {
             /** Code */
@@ -2673,6 +2803,13 @@ export interface components {
         SignInResult: {
             /** Next */
             next: string;
+        };
+        /** SourceCount */
+        SourceCount: {
+            /** Leads */
+            leads: number;
+            /** Source */
+            source: string;
         };
         /** StageCount */
         StageCount: {
@@ -3810,6 +3947,46 @@ export interface operations {
                 };
             };
             /** @description Not a member of this tenant */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    dashboard_v1_tenants__tenant_id__dashboard_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                tenant_id: string;
+            };
+            cookie?: {
+                __session?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Dashboard"];
+                };
+            };
+            /** @description Not found, or not your tenant */
             404: {
                 headers: {
                     [name: string]: unknown;

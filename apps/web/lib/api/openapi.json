@@ -540,6 +540,75 @@
         "title": "Created",
         "type": "object"
       },
+      "Dashboard": {
+        "properties": {
+          "days_to_sold": {
+            "items": {
+              "$ref": "#/components/schemas/PhasePace"
+            },
+            "title": "Days To Sold",
+            "type": "array"
+          },
+          "funnel": {
+            "description": "The ladder in order, then lost",
+            "items": {
+              "$ref": "#/components/schemas/FunnelStage"
+            },
+            "title": "Funnel",
+            "type": "array"
+          },
+          "inventory": {
+            "items": {
+              "$ref": "#/components/schemas/PhaseInventory"
+            },
+            "title": "Inventory",
+            "type": "array"
+          },
+          "leads": {
+            "title": "Leads",
+            "type": "integer"
+          },
+          "outreach": {
+            "$ref": "#/components/schemas/Outreach"
+          },
+          "sales_by_month": {
+            "description": "The last 12 months, oldest first",
+            "items": {
+              "$ref": "#/components/schemas/MonthSales"
+            },
+            "title": "Sales By Month",
+            "type": "array"
+          },
+          "scores": {
+            "description": "Open leads' latest scores, by band",
+            "items": {
+              "$ref": "#/components/schemas/ScoreBand"
+            },
+            "title": "Scores",
+            "type": "array"
+          },
+          "sources": {
+            "description": "Most leads first",
+            "items": {
+              "$ref": "#/components/schemas/SourceCount"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "leads",
+          "funnel",
+          "sales_by_month",
+          "days_to_sold",
+          "inventory",
+          "sources",
+          "outreach",
+          "scores"
+        ],
+        "title": "Dashboard",
+        "type": "object"
+      },
       "DocumentKind": {
         "enum": [
           "plat",
@@ -788,6 +857,59 @@
           "max_down"
         ],
         "title": "FinancingOffer",
+        "type": "object"
+      },
+      "FunnelStage": {
+        "properties": {
+          "conversion": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Share of the previous stage's leads that got this far, from 0 to 1",
+            "title": "Conversion"
+          },
+          "now": {
+            "description": "Leads at this stage today",
+            "title": "Now",
+            "type": "integer"
+          },
+          "reached": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Leads that ever got this far; None for lost",
+            "title": "Reached"
+          },
+          "stage": {
+            "enum": [
+              "new",
+              "contacted",
+              "engaged",
+              "holding",
+              "won",
+              "lost"
+            ],
+            "title": "Stage",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stage",
+          "now",
+          "reached",
+          "conversion"
+        ],
+        "title": "FunnelStage",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -2987,6 +3109,26 @@
         "title": "Membership",
         "type": "object"
       },
+      "MonthSales": {
+        "properties": {
+          "month": {
+            "description": "The month's first day",
+            "format": "date",
+            "title": "Month",
+            "type": "string"
+          },
+          "sold": {
+            "title": "Sold",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "month",
+          "sold"
+        ],
+        "title": "MonthSales",
+        "type": "object"
+      },
       "MultiPolygonGeometry": {
         "properties": {
           "coordinates": {
@@ -3164,6 +3306,29 @@
           }
         },
         "title": "NotificationPrefs",
+        "type": "object"
+      },
+      "Outreach": {
+        "properties": {
+          "handed_off": {
+            "title": "Handed Off",
+            "type": "integer"
+          },
+          "replied": {
+            "title": "Replied",
+            "type": "integer"
+          },
+          "sent": {
+            "title": "Sent",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sent",
+          "replied",
+          "handed_off"
+        ],
+        "title": "Outreach",
         "type": "object"
       },
       "OverlayOut": {
@@ -3348,6 +3513,39 @@
         "title": "PhaseCreate",
         "type": "object"
       },
+      "PhaseInventory": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "integer"
+          },
+          "on_hold": {
+            "title": "On Hold",
+            "type": "integer"
+          },
+          "phase_name": {
+            "title": "Phase Name",
+            "type": "string"
+          },
+          "sold": {
+            "title": "Sold",
+            "type": "integer"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subdivision_name",
+          "phase_name",
+          "available",
+          "on_hold",
+          "sold"
+        ],
+        "title": "PhaseInventory",
+        "type": "object"
+      },
       "PhaseOut": {
         "properties": {
           "id": {
@@ -3379,6 +3577,35 @@
           "lot_count"
         ],
         "title": "PhaseOut",
+        "type": "object"
+      },
+      "PhasePace": {
+        "properties": {
+          "median_days": {
+            "description": "From listing (added to Cornerpin) to sold",
+            "title": "Median Days",
+            "type": "number"
+          },
+          "phase_name": {
+            "title": "Phase Name",
+            "type": "string"
+          },
+          "sold": {
+            "title": "Sold",
+            "type": "integer"
+          },
+          "subdivision_name": {
+            "title": "Subdivision Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subdivision_name",
+          "phase_name",
+          "sold",
+          "median_days"
+        ],
+        "title": "PhasePace",
         "type": "object"
       },
       "PhaseUpdate": {
@@ -3736,6 +3963,30 @@
         "title": "SavedLot",
         "type": "object"
       },
+      "ScoreBand": {
+        "properties": {
+          "band": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "unscored"
+            ],
+            "title": "Band",
+            "type": "string"
+          },
+          "leads": {
+            "title": "Leads",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "band",
+          "leads"
+        ],
+        "title": "ScoreBand",
+        "type": "object"
+      },
       "ScoreReason": {
         "properties": {
           "code": {
@@ -3771,6 +4022,24 @@
           "next"
         ],
         "title": "SignInResult",
+        "type": "object"
+      },
+      "SourceCount": {
+        "properties": {
+          "leads": {
+            "title": "Leads",
+            "type": "integer"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "leads"
+        ],
+        "title": "SourceCount",
         "type": "object"
       },
       "StageCount": {
@@ -5686,6 +5955,69 @@
         "summary": "Tenant",
         "tags": [
           "accounts"
+        ]
+      }
+    },
+    "/v1/tenants/{tenant_id}/dashboard": {
+      "get": {
+        "description": "The tenant's figures, today. A tenant with nothing yet gets zeros and empty lists.",
+        "operationId": "dashboard_v1_tenants__tenant_id__dashboard_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "tenant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Tenant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "__session",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "  Session"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Dashboard"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "Not found, or not your tenant"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Dashboard",
+        "tags": [
+          "dashboard"
         ]
       }
     },
